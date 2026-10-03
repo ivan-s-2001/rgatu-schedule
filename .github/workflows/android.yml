@@ -1,0 +1,50 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        run: |
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.1'
+      - name: Check schedule and reminder times
+        run: bash scripts/check.sh
+      - name: Preserve development signing identity
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/rgatu-schedule-debug.keystore
+          key: rgatu-signing-v1-${{ github.repository_id }}
+      - name: Build installable APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          SCHEDULE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          SCHEDULE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          export SCHEDULE_DEBUG_KEYSTORE="$HOME/.android/rgatu-schedule-debug.keystore"
+          if [[ -n "$ANDROID_KEYSTORE_BASE64" && -n "$SCHEDULE_KEYSTORE_PASSWORD" ]]; then
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/rgatu-signing.jks"
+            export SCHEDULE_KEYSTORE="$RUNNER_TEMP/rgatu-signing.jks"
+          fi
+          bash scripts/build.sh
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rgatu-schedule-apk
+          path: dist/rgatu-schedule.apk
+          if-no-files-found: error
+          retention-days: 30
