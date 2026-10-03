@@ -46,9 +46,10 @@ public final class MainActivity extends Activity {
         }
         root.setOnApplyWindowInsetsListener((view, insets) -> {
             if (Build.VERSION.SDK_INT >= 30) {
-                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
                 android.graphics.Insets ime = insets.getInsets(WindowInsets.Type.ime());
                 root.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+                return WindowInsets.CONSUMED;
             } else {
                 root.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
                     insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
@@ -118,6 +119,7 @@ public final class MainActivity extends Activity {
             state.put("enabled", ScheduleRepository.prefs(this).getBoolean("enabled", true));
             state.put("minutes", ScheduleRepository.prefs(this).getInt("minutes", 15));
             state.put("theme", ScheduleRepository.prefs(this).getString("theme", "system"));
+            state.put("systemDark", (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES);
             state.put("notificationsAllowed", ReminderScheduler.notificationsAllowed(this));
             state.put("exactAllowed", ReminderScheduler.exactAllowed(this));
             state.put("scheduledCount", ScheduleRepository.prefs(this).getStringSet("scheduled", java.util.Collections.emptySet()).size());

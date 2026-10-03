@@ -22,7 +22,7 @@ function pairs(count) { return count === 1 ? '1 пара' : count >= 2 && count 
 function changeState(updated) {
   if (updated.error) { $('next-lesson').innerHTML = '<div class="empty-state"><h3>Не удалось открыть расписание</h3><p>'+escapeText(updated.error)+'</p><button class="primary-button" data-action="settings">Настройки</button></div>'; state = updated; return; }
   state = updated;
-  document.documentElement.dataset.theme = state.theme || 'system';
+  document.documentElement.dataset.theme = state.theme === 'system' ? (state.systemDark ? 'dark' : 'light') : (state.theme || 'light');
   if (!selectedDate) selectedDate = state.initialDate || (onDate(today()).some(l => !l.cancelled) ? today() : (nextLesson()?.date || today()));
   if (state.initialDate && !initialApplied) { selectedDate = state.initialDate; activeTab = 'day'; initialApplied = true; }
   render();
@@ -194,7 +194,7 @@ document.addEventListener('submit',e=>{
 setInterval(()=>{ if (state?.schedule && !document.hidden) { renderHero(); if (!modalType) { renderDay(); if (activeTab==='all') renderAll(); } } },30000);
 document.addEventListener('visibilitychange',()=>{ if (!document.hidden && state?.schedule) { if (native) window.onNativeStateChanged(window.Native.getState()); else render(); } });
 async function initialize() {
-  try { if (native) window.onNativeStateChanged(window.Native.getState()); else { const schedule=await (await fetch('schedule.json')).json(); changeState({schedule,theme:'system',minutes:15,enabled:true,notificationsAllowed:false,exactAllowed:false,scheduledCount:0,platform:'preview'}); } }
+  try { if (native) window.onNativeStateChanged(window.Native.getState()); else { const schedule=await (await fetch('schedule.json')).json(); changeState({schedule,theme:'system',systemDark:matchMedia('(prefers-color-scheme: dark)').matches,minutes:15,enabled:true,notificationsAllowed:false,exactAllowed:false,scheduledCount:0,platform:'preview'}); } }
   catch (_) { $('next-lesson').innerHTML='<div class="empty-state"><h3>Расписание не загрузилось</h3><p>Закрой и снова открой приложение.</p></div>'; }
 }
 initialize();

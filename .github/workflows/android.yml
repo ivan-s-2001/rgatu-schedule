@@ -14,14 +14,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
       - name: Set up Android SDK
         run: |
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.1'
+          sdk_root="$RUNNER_TEMP/rgatu-sdk"
+          mkdir -p "$sdk_root"
+          curl --retry 3 -fsSL https://dl.google.com/android/repository/platform-35_r02.zip -o "$sdk_root/platform.zip"
+          curl --retry 3 -fsSL https://dl.google.com/android/repository/build-tools_r35.0.1_linux.zip -o "$sdk_root/buildtools.zip"
+          printf '%s  %s\n' '0bb560a90a7a2cbd0dd8348224d518b638fe7949' "$sdk_root/platform.zip" | sha1sum -c -
+          printf '%s  %s\n' 'e009a9b188cfeb1d2b4c318ab5cb4f1ddc368861' "$sdk_root/buildtools.zip" | sha1sum -c -
+          unzip -q "$sdk_root/platform.zip" -d "$sdk_root/platform"
+          unzip -q "$sdk_root/buildtools.zip" -d "$sdk_root/buildtools"
+          printf 'ANDROID_JAR=%s\n' "$sdk_root/platform/android-35/android.jar" >> "$GITHUB_ENV"
+          printf 'BUILD_TOOLS_DIR=%s\n' "$sdk_root/buildtools/android-15" >> "$GITHUB_ENV"
       - name: Check schedule and reminder times
         run: bash scripts/check.sh
       - name: Preserve development signing identity
