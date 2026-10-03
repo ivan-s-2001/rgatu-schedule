@@ -9,7 +9,8 @@ const root = path.resolve(__dirname, '../app/src/main/assets');
 (async () => {
   const errors = [];
   const server = http.createServer((req,res) => {
-    const file = path.join(root, req.url === '/' ? 'index.html' : req.url.split('?')[0]);
+    const pathname = new URL(req.url,'http://localhost').pathname;
+    const file = path.join(root, pathname === '/' ? 'index.html' : pathname);
     if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
     res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : file.endsWith('.json') ? 'application/json' : 'text/html');
     fs.createReadStream(file).on('error', () => res.writeHead(404).end()).pipe(res);
@@ -19,7 +20,8 @@ const root = path.resolve(__dirname, '../app/src/main/assets');
   try {
     browser = await chromium.launch({headless:true,executablePath:process.env.BROWSER_BIN || undefined,args:['--no-sandbox']});
     const page = await browser.newPage({viewport:{width:390,height:844},colorScheme:'light',timezoneId:'Europe/Stockholm'});
-    page.on('pageerror', error => errors.push(error.message));
+    page.setDefaultTimeout(5000);
+    page.on('pageerror', error => { errors.push(error.message); console.error('Browser error:',error.message); });
     page.on('dialog', dialog => dialog.accept());
     await page.clock.install({time:new Date('2026-10-03T10:30:00Z')});
     await page.goto('http://127.0.0.1:' + server.address().port);

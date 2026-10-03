@@ -182,8 +182,8 @@ document.addEventListener('change',e=>{
 });
 $('search').addEventListener('input',e=>{ searchQuery=e.target.value; renderAll(); });
 document.addEventListener('submit',e=>{
-  if (e.target.id==='date-form') { e.preventDefault(); const date=$('picked-date').value; if (date) { closeModal(); selectDate(date); } }
-  if (e.target.id==='lesson-form') {
+  if (e.target.matches('#date-form')) { e.preventDefault(); const date=$('picked-date').value; if (date) { closeModal(); selectDate(date); } }
+  if (e.target.matches('#lesson-form')) {
     e.preventDefault(); const f=e.target.elements;
     const l={id:f.id.value,date:f.date.value,slot:Number(f.slot.value),subject:f.subject.value.trim(),kind:f.kind.value,room:f.room.value.trim(),teacher:f.teacher.value.trim(),note:f.note.value.trim(),muted:f.muted.checked,cancelled:f.cancelled.checked};
     if (!l.subject || !l.date) return;
