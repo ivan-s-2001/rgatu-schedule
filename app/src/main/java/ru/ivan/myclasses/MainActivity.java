@@ -118,9 +118,16 @@ public final class MainActivity extends Activity {
             state.put("schedule", schedule);
             state.put("enabled", ScheduleRepository.prefs(this).getBoolean("enabled", true));
             state.put("minutes", ScheduleRepository.prefs(this).getInt("minutes", 15));
+            state.put("eveningEnabled", ScheduleRepository.prefs(this).getBoolean("eveningEnabled",true));
+            state.put("eveningTime", ScheduleRepository.prefs(this).getString("eveningTime","20:00"));
+            state.put("travelMinutes", ScheduleRepository.prefs(this).getInt("travelMinutes",-1));
+            state.put("preparations", PreparationRepository.load(this));
+            state.put("packingDefaults", PreparationRepository.defaults(this));
             state.put("theme", ScheduleRepository.prefs(this).getString("theme", "system"));
             state.put("systemDark", (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES);
             state.put("notificationsAllowed", ReminderScheduler.notificationsAllowed(this));
+            state.put("lessonChannelAllowed", ReminderScheduler.channelAllowed(this,ReminderScheduler.CHANNEL));
+            state.put("eveningChannelAllowed", ReminderScheduler.channelAllowed(this,ReminderScheduler.EVENING_CHANNEL));
             state.put("exactAllowed", ReminderScheduler.exactAllowed(this));
             state.put("scheduledCount", ScheduleRepository.prefs(this).getStringSet("scheduled", java.util.Collections.emptySet()).size());
             state.put("schedulerError", ScheduleRepository.prefs(this).getString("schedulerError", ""));
@@ -128,6 +135,8 @@ public final class MainActivity extends Activity {
             state.put("now", System.currentTimeMillis());
             state.put("initialDate", getIntent().getStringExtra("date"));
             state.put("initialLessonId", getIntent().getStringExtra("lessonId"));
+            state.put("initialScreen", getIntent().getStringExtra("screen"));
+            state.put("navigationToken", getIntent().getStringExtra("navigationToken"));
             state.put("platform", "android");
             return state.toString();
         } catch (Exception exception) {
@@ -169,6 +178,13 @@ public final class MainActivity extends Activity {
                 JSONObject options = new JSONObject(json);
                 android.content.SharedPreferences.Editor editor = ScheduleRepository.prefs(MainActivity.this).edit();
                 if (options.has("enabled")) editor.putBoolean("enabled", options.getBoolean("enabled"));
+                if (options.has("eveningEnabled")) editor.putBoolean("eveningEnabled", options.getBoolean("eveningEnabled"));
+                if (options.has("eveningTime")) editor.putString("eveningTime",TimeRules.checkEveningTime(options.getString("eveningTime")));
+                if (options.has("travelMinutes")) {
+                    int travel=options.getInt("travelMinutes");
+                    if (travel < -1 || travel > 240) throw new IllegalArgumentException("Время на дорогу: от 0 до 240 минут");
+                    editor.putInt("travelMinutes",travel);
+                }
                 if (options.has("minutes")) {
                     int minutes = options.getInt("minutes");
                     if (minutes < 0 || minutes > 180) throw new IllegalArgumentException("Интервал: от 0 до 180 минут");
@@ -187,7 +203,6 @@ public final class MainActivity extends Activity {
         }
         @JavascriptInterface public void requestNotifications() {
             runOnUiThread(() -> {
-                ScheduleRepository.prefs(MainActivity.this).edit().putBoolean("enabled", true).apply();
                 if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     boolean asked = ScheduleRepository.prefs(MainActivity.this).getBoolean("notificationPermissionAsked", false);
                     if (asked && !shouldShowRequestPermissionRationale("android.permission.POST_NOTIFICATIONS")) {
@@ -216,13 +231,34 @@ public final class MainActivity extends Activity {
                 if (!ReminderScheduler.notificationsAllowed(MainActivity.this)) {
                     Toast.makeText(MainActivity.this, "Сначала разрешите уведомления", Toast.LENGTH_LONG).show(); return;
                 }
-                ReminderScheduler.scheduleTest(MainActivity.this);
+                ReminderScheduler.scheduleTest(MainActivity.this,false);
                 Toast.makeText(MainActivity.this, ReminderScheduler.exactAllowed(MainActivity.this) ? "Уведомление через 10 секунд. Можно закрыть приложение." : "Проверка запланирована. Для точного времени разрешите будильники и напоминания.", Toast.LENGTH_LONG).show();
             });
         }
         @JavascriptInterface public void openNotificationSettings() {
             runOnUiThread(() -> startActivity(new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()).putExtra(Settings.EXTRA_CHANNEL_ID, ReminderScheduler.CHANNEL)));
+        }
+        @JavascriptInterface public String savePreparation(String json) {
+            try { PreparationRepository.save(MainActivity.this,new JSONObject(json)); return success(); }
+            catch (Exception e) { return failure(e); }
+        }
+        @JavascriptInterface public String resetPreparation(String date) {
+            try { PreparationRepository.reset(MainActivity.this,date); return success(); }
+            catch (Exception e) { return failure(e); }
+        }
+        @JavascriptInterface public void testEveningNotification() {
+            runOnUiThread(() -> {
+                if (!ReminderScheduler.channelAllowed(MainActivity.this,ReminderScheduler.EVENING_CHANNEL)) {
+                    Toast.makeText(MainActivity.this,"Сначала разреши вечерние уведомления",Toast.LENGTH_LONG).show(); return;
+                }
+                ReminderScheduler.scheduleTest(MainActivity.this,true);
+                Toast.makeText(MainActivity.this,"Проверка через 10 секунд. Нажми на уведомление, чтобы открыть список вещей.",Toast.LENGTH_LONG).show();
+            });
+        }
+        @JavascriptInterface public void openEveningNotificationSettings() {
+            runOnUiThread(() -> startActivity(new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE,getPackageName()).putExtra(Settings.EXTRA_CHANNEL_ID,ReminderScheduler.EVENING_CHANNEL)));
         }
         @JavascriptInterface public void importSchedule() {
             runOnUiThread(() -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)

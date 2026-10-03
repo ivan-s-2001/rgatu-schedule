@@ -31,4 +31,21 @@ public final class TimeRules {
         if (minutes < 0 || minutes > 180) throw new IllegalArgumentException("Интервал: от 0 до 180 минут");
         return millis(date, slot, false) - minutes * 60000L;
     }
+
+    public static String checkEveningTime(String time) {
+        LocalTime parsed = LocalTime.parse(time);
+        if (!time.matches("\\d{2}:\\d{2}") || !parsed.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")).equals(time))
+            throw new IllegalArgumentException("Время должно быть в формате ЧЧ:ММ");
+        return time;
+    }
+
+    public static long eveningAt(String studyDate, String time) {
+        return LocalDate.parse(studyDate).minusDays(1).atTime(LocalTime.parse(checkEveningTime(time)))
+            .atZone(ZoneId.of(ZONE)).toInstant().toEpochMilli();
+    }
+
+    public static long departureAt(String date, int firstSlot, int travelMinutes) {
+        if (travelMinutes < 0 || travelMinutes > 240) throw new IllegalArgumentException("Время на дорогу: от 0 до 240 минут");
+        return millis(date, firstSlot, false) - travelMinutes * 60000L;
+    }
 }
