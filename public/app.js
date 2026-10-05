@@ -70,7 +70,7 @@
     return `<header class="topbar"><div class="brand"><img class="brand-logo" src="./icons/icon.svg" alt="" aria-hidden="true"><div><strong class="brand-title">Расписание ФЗО</strong><div class="brand-sub"><span class="unofficial-chip">неофициальное</span><span>от студента</span></div></div></div><button class="group-switch" data-action="group" aria-label="Сменить группу, сейчас ${escape(group.id)}"><span>${escape(group.id)}</span>${icon('down')}</button></header>`;
   }
   function nav(page) {
-    return `<nav class="bottom-nav" aria-label="Главное меню">${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search','teachers'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
+    return `<nav class="bottom-nav" aria-label="Главное меню"><span class="desktop-nav-title">Разделы</span>${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Моя группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search','teachers'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
   }
   function scheduleTabs(active) {
     return `<div class="schedule-switcher" role="tablist" aria-label="Вид расписания"><button class="schedule-tab" role="tab" data-action="group-schedule" aria-selected="${active==='group'}" aria-controls="content"><span>По группе</span></button><button class="schedule-tab" role="tab" data-action="teachers" aria-selected="${active==='teachers'}" aria-controls="content"><span>По преподавателю</span></button></div>`;
