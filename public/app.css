@@ -543,6 +543,20 @@ html[data-theme=dark] .date-description h2{color:var(--body)}
 html[data-theme=dark] .kind{background:var(--soft);color:var(--text)}
 .kind.practice{background:var(--warn);color:var(--warnText)}
 .kind.lab{background:var(--accent);color:var(--secondary)}
+.subgroup-note{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:var(--secondary);
+  font-size:11.5px;
+  font-weight:700;
+}
+.subgroup-note::before{
+  content:"";
+  width:4px;height:4px;
+  border-radius:50%;
+  background:var(--secondary);
+}
 .current-word{color:var(--red);font-size:10.5px;font-weight:700;text-transform:uppercase}
 .lesson h3{color:var(--dark);font-size:16px;font-weight:700;line-height:1.35}
 html[data-theme=dark] .lesson h3{color:var(--body)}
@@ -1133,6 +1147,144 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .profile-group{padding:20px}
   .settings{padding:0 14px}
   .install-block,.about-card{padding:20px}
+}
+
+
+/* Android app mode: native mobile rhythm, no browser-like shell. */
+@media(max-width:767.98px){
+  html.android-app{scroll-padding-top:68px;background:var(--white)}
+  html.android-app body{
+    min-height:100dvh;
+    line-height:1.5;
+    overscroll-behavior-y:none;
+    background:var(--white);
+  }
+  html.android-app .topbar{
+    min-height:64px;
+    box-shadow:none;
+    border-bottom:1px solid rgba(255,255,255,.11);
+  }
+  html.android-app .topbar-inner{
+    width:100%;
+    min-height:64px;
+    padding:9px 16px;
+  }
+  html.android-app .brand{gap:9px}
+  html.android-app .brand-logo{width:36px;height:36px}
+  html.android-app .brand-kicker{display:none}
+  html.android-app .brand-title{font-size:.86rem}
+  html.android-app .header-actions{max-width:42%;gap:8px}
+  html.android-app .header-unofficial{display:none}
+  html.android-app .group-switch{
+    min-height:40px;
+    max-width:100%;
+    padding:7px 9px;
+    border-radius:8px;
+    font-size:.74rem;
+  }
+
+  html.android-app .page{
+    min-height:calc(100dvh - 64px);
+    padding:16px 16px 92px;
+  }
+  html.android-app .day-page{padding-top:12px}
+  html.android-app .schedule-switcher{
+    margin-bottom:16px;
+  }
+  html.android-app .schedule-tab{
+    min-height:44px;
+    padding:9px 8px 11px;
+    font-size:.82rem;
+    text-align:center;
+    flex:1;
+  }
+
+  html.android-app .live-summary{
+    margin-bottom:12px;
+    padding:14px;
+    grid-template-columns:38px minmax(0,1fr) 16px;
+    gap:11px;
+    border-radius:11px;
+  }
+  html.android-app .live-symbol{width:38px;height:38px;border-radius:10px}
+  html.android-app .live-copy strong{font-size:15.5px}
+  html.android-app .live-place{font-size:13px}
+
+  html.android-app .day-controls{
+    margin-bottom:14px;
+    padding:10px;
+    border-radius:11px;
+  }
+  html.android-app .date-pager{grid-template-columns:40px minmax(0,1fr) 40px}
+  html.android-app .icon-button{width:40px;min-width:40px;height:40px}
+  html.android-app .date-title{min-height:48px}
+  html.android-app .date-title h1{font-size:1.24rem}
+  html.android-app .week{gap:2px;margin-top:9px}
+  html.android-app .day{min-height:56px;padding:6px 1px}
+  html.android-app .day-tools{margin-top:8px;padding-top:8px}
+
+  html.android-app .date-description{margin:16px 0 10px}
+  html.android-app .lesson{
+    grid-template-columns:42px minmax(0,1fr);
+    gap:11px;
+    padding:14px 13px;
+    border-radius:11px;
+  }
+  html.android-app .slot strong{font-size:1.05rem}
+  html.android-app .lesson-time{font-size:13px;gap:6px}
+  html.android-app .lesson h3{font-size:16px;line-height:1.34}
+  html.android-app .room,
+  html.android-app .teacher{font-size:13.5px}
+  html.android-app .together{font-size:12px}
+  html.android-app .subgroup-note{font-size:11.5px}
+
+  html.android-app .screen-heading{margin-bottom:16px}
+  html.android-app .screen-heading h1,
+  html.android-app .screen-heading h2{font-size:20px}
+  html.android-app .search{height:48px;font-size:16px}
+  html.android-app .group-row{min-height:58px;padding:11px 13px}
+  html.android-app .group-code{font-size:15.5px}
+  html.android-app .subject-row{min-height:52px;padding:13px 14px;font-size:14.5px}
+  html.android-app .profile-group{padding:20px}
+  html.android-app .settings{padding:0 14px}
+  html.android-app .install-block,
+  html.android-app .about-card{padding:18px}
+
+  html.android-app .bottom-nav{
+    padding:6px 8px 7px;
+    background:var(--white);
+    border-top:1px solid var(--line);
+    box-shadow:0 -5px 18px rgba(31,39,75,.10);
+  }
+  html[data-theme=dark].android-app .bottom-nav{
+    background:#10192b;
+    border-top-color:var(--line);
+    box-shadow:0 -6px 20px rgba(0,0,0,.28);
+  }
+  html.android-app .nav-link{
+    min-height:56px;
+    padding:5px 4px;
+    border-radius:10px;
+    color:var(--muted);
+    font-size:11.5px;
+    font-weight:600;
+  }
+  html.android-app .nav-link .ui-icon{width:20px;height:20px}
+  html.android-app .nav-link[aria-current=page]{
+    color:var(--secondary);
+    background:var(--accent);
+  }
+  html.android-app .nav-link[aria-current=page] .ui-icon{color:var(--secondary)}
+  html.android-app .toast{bottom:76px}
+
+  html.android-app .picker-hero{padding:30px 0 38px}
+  html.android-app .picker-hero-inner{width:calc(100% - 32px);gap:24px}
+  html.android-app .picker-hero h1{font-size:34px;letter-spacing:-.8px}
+  html.android-app .picker-lead{font-size:16px;margin-top:14px}
+  html.android-app .hero-actions{margin-top:22px}
+  html.android-app .hero-link{width:100%;min-height:48px}
+  html.android-app .hero-card{padding:18px;border-radius:12px;box-shadow:none}
+  html.android-app .picker-page{padding:26px 16px 36px}
 }
 
 @media(prefers-reduced-motion:reduce){
