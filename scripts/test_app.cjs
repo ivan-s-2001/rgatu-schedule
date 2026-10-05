@@ -67,6 +67,15 @@ const path=require('node:path');
   await screenClick('a[href="#profile"]','profile');assert.match(await page.locator('.about-card').innerText(),/Смирнов Иван · @falseheat/);assert.match(await page.locator('.about-card').innerText(),/Неофициальное/);
   assert.equal(await page.locator('a[href="https://t.me/falseheat"]').count(),1);
   await page.click('[data-action="theme"][data-value="dark"]');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  const contrastIssues=await page.evaluate(()=>{
+    const rgb=value=>{const m=value.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);return m?[+m[1],+m[2],+m[3]]:null;};
+    const lum=c=>{const a=c.map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*a[0]+.7152*a[1]+.0722*a[2];};
+    const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+    const bg=el=>{for(let n=el;n;n=n.parentElement){const v=getComputedStyle(n).backgroundColor;if(v&&!/rgba\\(0, 0, 0, 0\\)|transparent/.test(v))return rgb(v);}return [11,16,32];};
+    const selectors=['.lesson h3','.teacher','.live-copy strong','.live-place','.search','.schedule-tab[aria-selected="true"]','.group-row[aria-checked="true"]','.nav-link[aria-current="page"]','.unofficial-card p'];
+    return selectors.flatMap(sel=>{const el=document.querySelector(sel);if(!el)return [];const fg=rgb(getComputedStyle(el).color),back=bg(el);if(!fg||!back)return [sel+': unknown color'];const r=ratio(fg,back);return r<4.5?[sel+': '+r.toFixed(2)]:[];});
+  });
+  assert.deepEqual(contrastIssues,[],'dark theme text contrast');
   // Every screen stays within narrow, tablet and landscape widths, with 150% and 200% text.
   for(const size of [{width:320,height:740},{width:375,height:812},{width:812,height:375},{width:768,height:1024}]){
     await page.setViewportSize(size);
