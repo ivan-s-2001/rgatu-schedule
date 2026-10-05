@@ -4,7 +4,9 @@ on:
     branches: [main]
     paths:
       - public/**
+      - docs/**
       - scripts/test_app.cjs
+      - scripts/test_download_page.cjs
       - scripts/serve.py
       - .github/workflows/ui.yml
   workflow_dispatch:
@@ -28,6 +30,7 @@ jobs:
           node scripts/test_timetable.cjs
           python3 scripts/serve.py > /tmp/rgatu-preview.log 2>&1 &
           node scripts/test_app.cjs
+          node scripts/test_download_page.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
