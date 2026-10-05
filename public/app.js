@@ -189,17 +189,22 @@
     const tabs = scheduleTabs('teachers');
     const teachers = allTeachers();
     const selected = state.teacher && teachers.includes(state.teacher) ? state.teacher : '';
-    const query = state.teacherQuery.trim().toLowerCase();
-    const filtered = teachers.filter(name => !query || name.toLowerCase().includes(query) || normalized(name).includes(normalized(query)));
     let body = '';
     if (selected) {
       const lessons = teacherLessons(selected);
       const dates = [...new Set(lessons.map(lesson=>lesson.date))];
       body = `<section class="teacher-summary"><div><span class="eyebrow">Преподаватель</span><h1>${escape(selected)}</h1><p>${plural(lessons.length,['пара','пары','пар'])} · ${plural(dates.length,['день','дня','дней'])}</p></div><button class="secondary teacher-change" data-action="clear-teacher">Другой преподаватель</button></section>${dates.map(date=>`<section class="day-group teacher-day"><div class="day-group-heading"><div><strong>${escape(dateText(date))}</strong><span>${escape(dateText(date,{weekday:'long'}))}</span></div></div>${lessonCards(lessons.filter(lesson=>lesson.date===date),{teacherMode:true,focusLessons:lessons})}</section>`).join('')}`;
     } else {
-      body = `<div class="screen-heading schedule-heading"><span class="eyebrow">Установочная сессия ФЗО</span><h1>По преподавателю</h1><p>Выбери преподавателя — покажу его занятия, аудитории и группы.</p></div><label class="label" for="teacher-search">Преподаватель</label><div class="search-wrap">${icon('search')}<input id="teacher-search" class="search" type="search" placeholder="Фамилия или инициалы" autocomplete="off" value="${escape(state.teacherQuery)}" aria-controls="teacher-results"></div><div id="teacher-results"><p class="results-count" role="status">${plural(filtered.length,['преподаватель','преподавателя','преподавателей'])}</p><div class="subject-list">${filtered.map(name=>`<button class="subject-row" data-action="choose-teacher" data-value="${escape(name)}"><span>${escape(name)}</span>${icon('right')}</button>`).join('')}</div>${!filtered.length?'<div class="empty"><h2>Не нашли преподавателя</h2><p>Проверь фамилию или очисти поиск.</p><button class="secondary" data-action="clear-teacher-search">Очистить поиск</button></div>':''}</div>`;
+      body = `<div class="screen-heading schedule-heading"><span class="eyebrow">Установочная сессия ФЗО</span><h1>По преподавателю</h1><p>Выбери преподавателя — покажу его занятия, аудитории и группы.</p></div><label class="label" for="teacher-search">Преподаватель</label><div class="search-wrap">${icon('search')}<input id="teacher-search" class="search" type="search" placeholder="Фамилия или инициалы" autocomplete="off" value="${escape(state.teacherQuery)}" aria-controls="teacher-results"></div><div id="teacher-results"></div>`;
     }
     return `<main class="page teachers-page" id="content">${tabs}${body}</main>`;
+  }
+  function updateTeacherResults() {
+    const target = document.getElementById('teacher-results');
+    if (!target) return;
+    const query = state.teacherQuery.trim().toLowerCase();
+    const filtered = allTeachers().filter(name => !query || name.toLowerCase().includes(query) || normalized(name).includes(normalized(query)));
+    target.innerHTML = `<p class="results-count" role="status">${plural(filtered.length,['преподаватель','преподавателя','преподавателей'])}</p><div class="subject-list">${filtered.map(name=>`<button class="subject-row" data-action="choose-teacher" data-value="${escape(name)}"><span>${escape(name)}</span>${icon('right')}</button>`).join('')}</div>${!filtered.length?'<div class="empty"><h2>Не нашли преподавателя</h2><p>Проверь фамилию или очисти поиск.</p><button class="secondary" data-action="clear-teacher-search">Очистить поиск</button></div>':''}`;
   }
 
   function renderProfile() {
@@ -212,6 +217,7 @@
     const screens = {day:renderDay,calendar:renderCalendar,search:renderSearch,bells:renderBells,profile:renderProfile,teachers:renderTeachers};
     root.innerHTML = `<div class="shell">${header()}${screens[page]()}${nav(page)}</div>`;
     if (page === 'search') updateSearchResults();
+    if (page === 'teachers' && !state.teacher) updateTeacherResults();
   }
   function selectDate(date) {
     state.date = date;
@@ -258,7 +264,7 @@
   root.addEventListener('input', event => {
     if (event.target.id === 'group-search') {state.query=event.target.value;state.limit=18;updateGroupResults();}
     if (event.target.id === 'subject-search') {state.subject=event.target.value;updateSearchResults();}
-    if (event.target.id === 'teacher-search') {state.teacherQuery=event.target.value;render();setTimeout(()=>{const input=document.getElementById('teacher-search');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length);}},0);}
+    if (event.target.id === 'teacher-search') {state.teacherQuery=event.target.value;updateTeacherResults();}
   });
   root.addEventListener('keydown', event => {
     if (!event.target.matches('.group-row') || !['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'].includes(event.key)) return;
@@ -307,7 +313,7 @@
       case 'search-subject': state.subject=value;document.getElementById('subject-search').value=value;updateSearchResults();break;
       case 'choose-teacher': state.teacher=value;state.teacherQuery='';write('rgatu.teacher',value);render();window.scrollTo(0,0);break;
       case 'clear-teacher': state.teacher='';write('rgatu.teacher','');state.teacherQuery='';render();window.scrollTo(0,0);break;
-      case 'clear-teacher-search': state.teacherQuery='';render();break;
+      case 'clear-teacher-search': state.teacherQuery='';{const input=document.getElementById('teacher-search');if(input)input.value='';}updateTeacherResults();break;
       case 'reset-subject': state.subject='';document.getElementById('subject-search').value='';updateSearchResults();break;
       case 'theme': state.theme=value;write('rgatu.theme',state.theme);applyTheme();root.querySelectorAll('[data-action=theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.value===value)));break;
       case 'focus-lesson': {
