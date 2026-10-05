@@ -43,7 +43,7 @@ const path=require('node:path');
   assert.match(await page.locator('.lesson').last().innerText(),/13:45–15:20/);
   await page.click('.week [data-value="2026-10-11"]');assert.match(await page.locator('.empty').innerText(),/Пар нет/);
   await screenClick('.date-title','calendar');assert.equal(await page.locator('.month-day').count(),35);
-  await page.click('[data-action="next-month"]');assert.match(await page.locator('.month-pager').innerText(),/ноябрь/);
+  await page.click('[data-action="next-month"]');assert.match(await page.locator('.month-pager').innerText(),/ноябрь/i);
   await page.click('[data-action="prev-month"]');await screenClick('.month-grid [data-value="2026-10-14"]','day');
   assert.match(await page.locator('.date-title').innerText(),/14 октября/);
   await page.click('[data-action="today"]');assert.match(await page.locator('.date-title').innerText(),/5 октября/);
