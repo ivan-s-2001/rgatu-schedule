@@ -1228,7 +1228,7 @@ html[data-theme=dark] .bottom-nav{background:#0f1728}
   body{padding:0;background:var(--page-bg)}
   .shell:not(.picker-shell){
     display:grid;
-    grid-template-columns:230px minmax(0,1fr);
+    grid-template-columns:minmax(0,1fr) minmax(0,1280px) minmax(0,1fr);
     grid-template-rows:82px minmax(0,1fr);
     min-height:100dvh;
     background:var(--page-bg);
@@ -1252,7 +1252,7 @@ html[data-theme=dark] .bottom-nav{background:#0f1728}
   .bottom-nav{
     position:sticky;
     left:auto;bottom:auto;top:82px;
-    grid-column:1;
+    grid-column:2;
     grid-row:2;
     width:230px;
     max-width:none;
@@ -1308,10 +1308,10 @@ html[data-theme=dark] .bottom-nav{background:#0f1728}
   .page{
     grid-column:2;
     grid-row:2;
-    width:100%;
-    max-width:1180px;
+    width:calc(100% - 230px);
+    max-width:none;
     min-height:calc(100dvh - 82px);
-    margin:0;
+    margin:0 0 0 230px;
     padding:36px clamp(30px,4vw,58px) 64px;
   }
   .schedule-switcher{
