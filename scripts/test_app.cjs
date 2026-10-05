@@ -70,8 +70,9 @@ const path=require('node:path');
     await page.setViewportSize(size);
     for(const font of [16,24,32]){
       await page.addStyleTag({content:'html{font-size:'+font+'px!important}'});
-      for(const screen of ['day','calendar','bells','profile','search']){
-        if(screen==='calendar'){await screenClick('a[href="#day"]','day');await screenClick('.date-title','calendar');}
+      for(const screen of ['day','consultations','calendar','bells','profile','search']){
+        if(screen==='consultations'){await screenClick('a[href="#day"]','day');await screenClick('[data-action="consultations"]','consultations');}
+        else if(screen==='calendar'){await screenClick('a[href="#day"]','day');await screenClick('.date-title','calendar');}
         else if(screen==='search'){await screenClick('a[href="#day"]','day');await screenClick('[data-action="search"]','search');}
         else await screenClick('a[href="#'+screen+'"]',screen);
         await fits(screen+' '+size.width+' '+font);
@@ -90,12 +91,12 @@ const path=require('node:path');
   await page.setViewportSize({width:375,height:812});await page.addStyleTag({content:'html{font-size:16px!important}'});
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="light"]');
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
-  await page.screenshot({path:path.join(out,'day.png'),fullPage:false,animations:'disabled'});await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:false,animations:'disabled'});
+  await page.screenshot({path:path.join(out,'day.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="consultations"]','consultations');await page.screenshot({path:path.join(out,'consultations.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="session"]','day');await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:false,animations:'disabled'});
   await page.reload();assert.match(await page.locator('.group-switch').innerText(),/ЗВС-26/);
   await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await screenClick('a[href="#day"]','day');assert.ok(await page.locator('.lesson').count()>0);
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
   assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
   assert.deepEqual(errors,[]);
-  console.log('PASS: days, free days, month selection, search, exact bells, shared groups, author/contact, persistence, offline, every screen at 320/375/768/812px and 100/150/200% text, longest source title, no clipping or technical labels.');
+  console.log('PASS: session/consultation tabs, days, free days, month selection, search, exact bells, shared groups, author/contact, persistence, offline, every screen at 320/375/768/812px and 100/150/200% text, longest source title, no clipping or technical labels.');
   await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});
