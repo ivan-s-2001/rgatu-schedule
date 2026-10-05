@@ -29,7 +29,7 @@ public final class UpdateProvider extends ContentProvider {
             MatrixCursor cursor=new MatrixCursor(columns);
             Object[] values=new Object[columns.length];
             for (int index=0;index<columns.length;index++) {
-                if (OpenableColumns.DISPLAY_NAME.equals(columns[index])) values[index]="РГАТУ Пары.apk";
+                if (OpenableColumns.DISPLAY_NAME.equals(columns[index])) values[index]="Расписание ФЗО.apk";
                 if (OpenableColumns.SIZE.equals(columns[index])) values[index]=file.length();
             }
             cursor.addRow(values);
