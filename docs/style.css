@@ -17,3 +17,18 @@ h1{font-family:inherit;font-weight:800;color:#172052}
 a:focus-visible,summary:focus-visible{outline-color:#4b59dd}.author a{color:#2636ad}
 .changes{border-top-color:var(--line)}footer{border-top-color:var(--line)}
 @media(max-width:640px){.intro::after{top:24px;width:52px}}
+
+
+/* RSATU 2026 visual system */
+:root{--bg:#f5f7fb;--surface:#fff;--ink:#1f274b;--muted:#657083;--line:#d9e1ea;--accent:#eeeeff;--blue:#3333cc;--teal:#3f7480;--alert:#ff644e}
+body{font-family:"Roboto",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+h1,h2,.brand strong,.button,.badge,.eyebrow{font-family:"Montserrat","Segoe UI",Arial,sans-serif}
+.brand img{border-radius:9px;box-shadow:0 5px 14px #3333cc24}.brand strong{color:var(--ink);font-weight:700}
+.intro::after{background:linear-gradient(90deg,var(--blue) 0 74%,var(--teal) 74% 100%)}
+.unofficial{color:#994132;border-left-color:var(--alert);background:#fff7f4;border-radius:0 10px 10px 0}
+h1{color:var(--ink);font-weight:750;letter-spacing:-.045em}
+.platform{border-radius:12px;box-shadow:0 6px 20px #1f274b0b}.android{background:#eeeeff;border-color:#d7d7fb}
+.badge{background:#fff;color:#2c2ca3;border:1px solid #d1d1f6}
+.primary{background:var(--blue)}.primary:hover{background:#2929ad}.secondary{border-color:#9090d4;color:#292990}.secondary:hover{background:#f0f0ff}
+.platform-icon,.author a{color:var(--blue)}
+a:focus-visible,summary:focus-visible{outline-color:var(--teal)}
