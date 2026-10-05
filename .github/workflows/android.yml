@@ -24,8 +24,8 @@ jobs:
         run: |
           sdk_root="$RUNNER_TEMP/rgatu-sdk"
           mkdir -p "$sdk_root/platforms" "$sdk_root/build-tools"
-          curl --retry 3 -fsSL https://dl.google.com/android/repository/platform-35_r02.zip -o "$sdk_root/platform.zip"
-          curl --retry 3 -fsSL https://dl.google.com/android/repository/build-tools_r35.0.1_linux.zip -o "$sdk_root/buildtools.zip"
+          curl --http1.1 --retry 3 --retry-all-errors -fsSL https://dl.google.com/android/repository/platform-35_r02.zip -o "$sdk_root/platform.zip"
+          curl --http1.1 --retry 3 --retry-all-errors -fsSL https://dl.google.com/android/repository/build-tools_r35.0.1_linux.zip -o "$sdk_root/buildtools.zip"
           printf '%s  %s\n' '0bb560a90a7a2cbd0dd8348224d518b638fe7949' "$sdk_root/platform.zip" | sha1sum -c -
           printf '%s  %s\n' 'e009a9b188cfeb1d2b4c318ab5cb4f1ddc368861' "$sdk_root/buildtools.zip" | sha1sum -c -
           unzip -q "$sdk_root/platform.zip" -d "$sdk_root/platforms"

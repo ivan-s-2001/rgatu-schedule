@@ -102,3 +102,5 @@ html[data-theme=dark] .primary{background:#edeedc;color:#252824}html[data-theme=
 .nav-link span{max-width:100%;overflow-wrap:normal}.day-tools .text-button{flex-shrink:0}.back-row{flex-wrap:wrap}
 
 .day-page{touch-action:pan-y}
+
+.intro .picker-credit{font-size:.68rem;line-height:1.5;margin-top:12px}

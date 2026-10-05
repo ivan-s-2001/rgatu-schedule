@@ -30,8 +30,8 @@ const path=require('node:path');
   await page.goto(url);await page.waitForSelector('#group-search');
   await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
   await page.waitForSelector('#group-search');
-  assert.match(await page.locator('.onboard-footer').innerText(),/Самодел от студента 1 курса РГАТУ/);
-  await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
+  assert.match(await page.locator('.picker-credit').innerText(),/Самодел от студента 1 курса РГАТУ/);
+  await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');await page.waitForSelector('.date-title');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
   assert.equal(await page.locator('.nav-link').count(),3);assert.equal(await page.locator('a[href="#session"]').count(),0);
   assert.match(await page.locator('.lesson').first().innerText(),/08:30–11:50/);
@@ -65,8 +65,8 @@ const path=require('node:path');
     for(const font of [16,24,32]){
       await page.addStyleTag({content:'html{font-size:'+font+'px!important}'});
       for(const screen of ['day','calendar','bells','profile','search']){
-        if(screen==='calendar')await screenClick('a[href="#day"]','day').then(()=>page.click('.date-title'));
-        else if(screen==='search')await screenClick('a[href="#day"]','day').then(()=>page.click('[data-action="search"]'));
+        if(screen==='calendar'){await screenClick('a[href="#day"]','day');await screenClick('.date-title','calendar');}
+        else if(screen==='search'){await screenClick('a[href="#day"]','day');await screenClick('[data-action="search"]','search');}
         else await screenClick('a[href="#'+screen+'"]',screen);
         await fits(screen+' '+size.width+' '+font);
       }
@@ -77,12 +77,12 @@ const path=require('node:path');
   const longest=source.lessons.slice().sort((a,b)=>b.subject.length-a.subject.length)[0];
   const g=source.groups.find(g=>g.lessons.includes(longest.id));
   await page.setViewportSize({width:320,height:740});await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');
-  await page.fill('#group-search',g.id);await page.locator('.group-row').filter({hasText:g.id}).first().click();await page.click('#continue-group');
+  await page.fill('#group-search',g.id);await page.locator('.group-row').filter({hasText:g.id}).first().click();await page.click('#continue-group');await page.waitForSelector('.date-title');
   await fits('long-name group');await screenClick('[data-action="search"]','search');await page.fill('#subject-search',longest.subject);
   assert.ok(await page.locator('.lesson').count()>0);await fits('longest source subject at 200%');
   // Save reviewable phone screens at ordinary text size.
   await page.setViewportSize({width:375,height:812});await page.addStyleTag({content:'html{font-size:16px!important}'});
-  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
   await page.screenshot({path:path.join(out,'day.png'),fullPage:true});await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:true});
   await page.reload();assert.match(await page.locator('.group-switch').innerText(),/ЗВС-26/);
   await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await screenClick('a[href="#day"]','day');assert.ok(await page.locator('.lesson').count()>0);
