@@ -10,7 +10,7 @@ const path=require('node:path');
  assert.match(await page.locator('.author').innerText(),/Смирнов Иван · @falseheat/);
  assert.equal(await page.locator('.author a[href="https://t.me/falseheat"]').getAttribute('href'),'https://t.me/falseheat');
  assert.equal(await page.locator('.author a[href="https://www.rsatu.ru/zaochnoe/"]').count(),1);
- assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.2.0.apk');
+ assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.3.0.apk');
  fs.mkdirSync('build/screenshots',{recursive:true});
  await page.screenshot({path:'build/screenshots/download-page.png',fullPage:false,animations:'disabled'});
  const checked=[];
