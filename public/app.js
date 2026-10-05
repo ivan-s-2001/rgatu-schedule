@@ -282,8 +282,9 @@
     switch(button.dataset.action) {
       case 'picker-focus': {
         const form=document.getElementById('picker-form');
+        const input=document.getElementById('group-search');
+        if(input) input.focus({preventScroll:true});
         if(form) form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
-        setTimeout(()=>document.getElementById('group-search')?.focus(),0);
         break;
       }
       case 'choose-group': state.chosen=value;updateGroupResults(value);break;
