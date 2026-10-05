@@ -46,10 +46,20 @@ const path=require('node:path');
      if(!el.getClientRects().length)continue;
      if(el.scrollWidth>el.clientWidth+2)problems.push(el.textContent.slice(0,70));
     }
-    return {problems,noticeSize:parseFloat(getComputedStyle(document.querySelector('.unofficial')).fontSize)};
+    const notice=getComputedStyle(document.querySelector('.unofficial'));
+    return {
+      problems,
+      noticeSize:parseFloat(notice.fontSize),
+      noticeWeight:Number(notice.fontWeight),
+      noticeBackground:notice.backgroundColor,
+      noticeBorder:parseFloat(notice.borderTopWidth)
+    };
    });
    assert.deepEqual(result.problems,[],width+'px '+size+'px');
-   assert.ok(result.noticeSize>=20,'prominent notice');
+   assert.ok(result.noticeSize>=13,'unofficial badge readable');
+   assert.ok(result.noticeWeight>=600,'unofficial badge emphasized');
+   assert.notEqual(result.noticeBackground,'rgba(0, 0, 0, 0)','unofficial badge has accent background');
+   assert.ok(result.noticeBorder>=1,'unofficial badge has visible border');
    checked.push(width+'px/'+Math.round(size/16*100)+'%');
   }
  }
