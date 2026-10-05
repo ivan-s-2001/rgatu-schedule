@@ -39,6 +39,8 @@ assert.ok(zksSub1&&zksSub2&&zksWhole,'ZKS subgroup fixtures exist');
 assert.equal(zks.subgroups[String(zksSub1.id)],1);
 assert.equal(zks.subgroups[String(zksSub2.id)],2);
 assert.equal(zks.subgroups[String(zksWhole.id)],undefined);
+const pairA={id:0,date:'2026-10-10',slot:3,subject:'Физика',type:'Л',teacher:'Иванов',room:'1-101'};
+const pairB={...pairA,id:1,slot:4};
 assert.equal(t.bounds(pairA).start,'12:00');
 assert.equal(t.focus([pairA,pairB],Date.parse('2026-10-10T13:40:00+03:00')).current,false);
 console.log('PASS: bells, Moscow dates, separate lessons, 44 real groups, subgroup metadata and all 1,464 shared-group mappings.');
