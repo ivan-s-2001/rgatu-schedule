@@ -24,7 +24,7 @@ const request = async (key,mode) => {let result;events.fetch({request:{url:host+
   for(const key of ['/app.css','/app.js','/timetable.js','/schedule.js','/manifest.webmanifest','/icons/icon-192.png'])assert.deepEqual(await request(key,'same-origin'),content(key));
   assert.equal(await request('/api/schedule','same-origin'),undefined);
   assert.equal(await request('/download/android','same-origin'),undefined);
-  const apk = fs.readFileSync('dist/RgatuLite-1.3.2.apk');
+  const apk = fs.readFileSync('dist/RgatuLite-1.3.3.apk');
   assert.equal(apk.readUInt32LE(0),0x04034b50);
   console.log('PASS: install caches the entire shell and timetable; offline navigation and every required asset work; schedule updates and APK downloads bypass stale caches.');
 })().catch(error=>{console.error(error);process.exit(1);});
