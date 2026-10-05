@@ -14,6 +14,22 @@ def clean(value):
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
+def group_header(value):
+    raw = clean(value)
+    match = re.match(r"^(.*-\d{2})-(1|2)$", raw)
+    return (match.group(1), int(match.group(2))) if match else (raw, None)
+
+
+def subgroup_from_marks(marks):
+    """The workbook repeats a subgroup lesson in the base column plus its subgroup column."""
+    marks = set(marks)
+    if 1 in marks and 2 not in marks:
+        return 1
+    if 2 in marks and 1 not in marks:
+        return 2
+    return None
+
+
 def parse_lesson(raw, headers):
     text = clean(raw)
     # A shared class can begin with several group identifiers.
@@ -35,22 +51,28 @@ def parse_lesson(raw, headers):
 def import_schedule(path):
     workbook = load_workbook(path, data_only=True)
     sheets = [s for s in workbook if s.title.startswith("Расписание ФЗО")]
-    headers = sorted({clean(s.cell(1, c).value) for s in sheets for c in range(4, s.max_column + 1) if s.cell(1, c).value}, key=len, reverse=True)
-    groups = []
+    raw_headers = sorted({clean(s.cell(1, c).value) for s in sheets for c in range(4, s.max_column + 1) if s.cell(1, c).value}, key=len, reverse=True)
+    base_ids = sorted({group_header(header)[0] for header in raw_headers})
+    groups_by_id = {}
     lessons = []
     lookup = {}
+    audience_marks = {}
     occupied = 0
     unparsed = []
+
     for sheet in sheets:
         dates = sorted({sheet.cell(r, 1).value.date().isoformat() for r in range(2, sheet.max_row + 1) if isinstance(sheet.cell(r, 1).value, datetime)})
         for column in range(4, sheet.max_column + 1):
-            group_id = clean(sheet.cell(1, column).value)
-            if not group_id:
+            source_group = clean(sheet.cell(1, column).value)
+            if not source_group:
                 continue
+            group_id, subgroup = group_header(source_group)
             year = int(re.search(r"-(\d{2})", group_id).group(1))
             course = 2026 - (2000 + year) + 1
-            group = {"id": group_id, "course": course, "dates": dates, "lessons": []}
+            group = groups_by_id.setdefault(group_id, {"id": group_id, "course": course, "dates": [], "lessons": [], "subgroups": {}})
+            group["dates"] = sorted(set(group["dates"]) | set(dates))
             current_date = None
+
             for row in range(2, sheet.max_row + 1):
                 value = sheet.cell(row, 1).value
                 if isinstance(value, datetime):
@@ -63,41 +85,68 @@ def import_schedule(path):
                 if not current_date or not slot_match:
                     raise ValueError(f"Missing date or pair at {sheet.title}!{cell.coordinate}")
                 slot = int(slot_match.group())
-                # Multiple class entries are separated by line breaks in this format.
                 lines = [clean(line) for line in str(cell.value).splitlines() if clean(line)]
+
                 for raw in lines:
                     key = (current_date, slot, raw)
                     if key not in lookup:
-                        details = parse_lesson(raw, headers)
+                        details = parse_lesson(raw, raw_headers)
                         index = len(lessons)
                         lookup[key] = index
                         lessons.append({"id": index, "date": current_date, "slot": slot, **details, "groups": [], "sources": []})
+                        audience_marks[index] = {}
                         if not details["teacher"]:
                             unparsed.append({"sheet": sheet.title, "cell": cell.coordinate, "raw": raw})
                     index = lookup[key]
-                    if group_id not in lessons[index]["groups"]:
-                        lessons[index]["groups"].append(group_id)
-                    lessons[index]["sources"].append({"sheet": sheet.title, "cell": cell.coordinate})
+                    lesson = lessons[index]
+                    if group_id not in lesson["groups"]:
+                        lesson["groups"].append(group_id)
+                    lesson["sources"].append({"sheet": sheet.title, "cell": cell.coordinate, "groupColumn": source_group})
+                    audience_marks[index].setdefault(group_id, set()).add(subgroup or 0)
                     if index not in group["lessons"]:
                         group["lessons"].append(index)
-            groups.append(group)
+
+    groups = list(groups_by_id.values())
+    for group in groups:
+        for index in group["lessons"]:
+            subgroup = subgroup_from_marks(audience_marks[index].get(group["id"], set()))
+            if subgroup:
+                group["subgroups"][str(index)] = subgroup
+        if not group["subgroups"]:
+            group.pop("subgroups")
+
     groups.sort(key=lambda g: (g["course"], g["id"]))
+    for lesson in lessons:
+        lesson["groups"].sort(key=lambda g: g)
+    date_match = re.search(r"(\d{2})\.(\d{2})\.(\d{4})", path.name)
+    updated = f"{date_match.group(3)}-{date_match.group(2)}-{date_match.group(1)}" if date_match else "2026-10-05"
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
     data = {
         "schema": 1,
-        "version": "2026-10-01-" + hashlib.sha256(path.read_bytes()).hexdigest()[:12],
-        "updated": "2026-10-01",
+        "version": updated + "-" + digest[:12] + "-g44",
+        "updated": updated,
         "title": "Осенняя установочная сессия 2026/27",
         "timezone": "Europe/Moscow",
-        "source": {"file": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()},
+        "source": {"file": path.name, "sha256": digest},
         "groups": groups,
         "lessons": lessons,
     }
-    report = {"groups": len(groups), "uniqueLessons": len(lessons), "sourceCells": occupied, "courses": sorted({g["course"] for g in groups}), "unparsed": unparsed}
-    assert len(headers) == len(groups), "Group columns lost or duplicated"
+    subgroup_lessons = sum(len(group.get("subgroups", {})) for group in groups)
+    report = {
+        "groups": len(groups),
+        "sourceGroupColumns": len(raw_headers),
+        "subgroupFamilies": len([base for base in base_ids if base + "-1" in raw_headers or base + "-2" in raw_headers]),
+        "subgroupLessons": subgroup_lessons,
+        "uniqueLessons": len(lessons),
+        "sourceCells": occupied,
+        "courses": sorted({g["course"] for g in groups}),
+        "unparsed": unparsed,
+    }
+    assert {g["id"] for g in groups} == set(base_ids), "Base groups lost or duplicated"
+    assert not any(re.search(r"-[12]$", g["id"]) for g in groups), "Technical subgroup leaked into group selector"
     assert sum(len(l["sources"]) for l in lessons) >= occupied, "Source records lost"
     assert all(l["subject"] and 1 <= l["slot"] <= 7 for l in lessons)
     return data, report
-
 
 def main():
     parser = argparse.ArgumentParser()
