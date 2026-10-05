@@ -85,6 +85,15 @@ const path=require('node:path');
     return selectors.flatMap(sel=>{const el=document.querySelector(sel);if(!el)return [];const fg=rgb(getComputedStyle(el).color),back=bg(el);if(!fg||!back)return [sel+': unknown color'];const r=ratio(fg,back);return r<4.5?[sel+': '+r.toFixed(2)]:[];});
   });
   assert.deepEqual(contrastIssues,[],'dark theme text contrast');
+  const fzoTokens=await page.evaluate(()=>({
+    heroPadding:getComputedStyle(document.querySelector('.picker-hero')||document.body).paddingTop,
+    sidebar:matchMedia('(min-width: 992px)').matches?getComputedStyle(document.querySelector('.bottom-nav')).width:'',
+    lessonRadius:getComputedStyle(document.querySelector('.lesson')).borderRadius,
+    searchHeight:getComputedStyle(document.querySelector('.search')).height
+  }));
+  // FZO design tokens are enforced again at desktop below; mobile still keeps the same card/search geometry.
+  assert.equal(fzoTokens.lessonRadius,'12px','FZO card radius');
+  assert.equal(fzoTokens.searchHeight,'48px','FZO search height');
   // Every screen stays within narrow, tablet and landscape widths, with 150% and 200% text.
   for(const size of [{width:320,height:740},{width:375,height:812},{width:812,height:375},{width:768,height:1024}]){
     await page.setViewportSize(size);
@@ -117,9 +126,9 @@ const path=require('node:path');
     });
     assert.ok(Math.abs(desktopLayout.headerTop)<=1,'desktop header top');
     assert.ok(desktopLayout.headerLeft<=1&&desktopLayout.headerRight>=desktopLayout.viewport-1,'desktop header spans viewport');
-    const workspaceLeft=Math.max(0,(desktopLayout.viewport-1280)/2);
-    assert.ok(Math.abs(desktopLayout.navLeft-workspaceLeft)<=2&&desktopLayout.navRight-desktopLayout.navLeft>=228,'desktop navigation is inside centered RSATU workspace');
-    assert.ok(desktopLayout.mainLeft>=desktopLayout.navRight-2&&desktopLayout.mainWidth>700,'desktop content sits beside the sidebar');
+    const workspaceLeft=Math.max(0,(desktopLayout.viewport-1160)/2);
+    assert.ok(Math.abs(desktopLayout.navLeft-workspaceLeft)<=2&&Math.abs((desktopLayout.navRight-desktopLayout.navLeft)-264)<=2,'desktop navigation matches 264px FZO menu');
+    assert.ok(Math.abs((desktopLayout.mainLeft-desktopLayout.navRight)-44)<=2&&desktopLayout.mainWidth>700,'desktop content keeps the 44px FZO column gap');
     assert.ok(desktopLayout.sidebarRight+20<desktopLayout.dayMainLeft,'desktop day view has separate controls and lesson columns');
     await fits('desktop day '+size.width);
     await screenClick('[data-action="teachers"]','teachers');await fits('desktop teachers '+size.width);
