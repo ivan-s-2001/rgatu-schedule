@@ -171,8 +171,9 @@
     const nextLesson = next ? lessonsOn(next).slice().sort((a,b)=>a.slot-b.slot)[0] : null;
     const nextTime = nextLesson ? time.bounds(nextLesson).start : '';
     const nextPlace = nextLesson ? lessonPlace(nextLesson) : '';
+    const nextAudience = nextLesson?.subgroup ? nextLesson.subgroup + ' подгруппа' : '';
     const message = state.date > group.dates.at(-1) ? 'Установочная сессия закончилась. Расписание осталось в архиве.' : state.date < group.dates[0] ? 'Установочная сессия ещё не началась.' : 'Сегодня занятий нет.';
-    return `<div class="empty day-empty">${icon('book')}<h2>${escape(message)}</h2>${nextLesson?`<div class="next-preview"><span>Дальше</span><strong>${escape(dateText(next,{weekday:'short',day:'numeric',month:'short'}))} · ${escape(nextTime)} · ${escape(nextLesson.subject)}</strong>${nextPlace?`<small>${escape(nextPlace)}</small>`:''}</div><button class="secondary" data-action="date" data-value="${next}">Открыть следующий учебный день ${icon('arrow')}</button>`:`<p>${state.date > group.dates.at(-1) ? 'Прошедшие дни можно посмотреть в календаре.' : 'Дальше занятий в опубликованной сессии нет.'}</p><button class="secondary" data-action="calendar">Открыть календарь ${icon('calendar')}</button>`}</div>`;
+    return `<div class="empty day-empty">${icon('book')}<h2>${escape(message)}</h2>${nextLesson?`<div class="next-preview"><span>Дальше</span><strong>${escape(dateText(next,{weekday:'short',day:'numeric',month:'short'}))} · ${escape(nextTime)} · ${escape(nextLesson.subject)}${nextAudience?' · '+escape(nextAudience):''}</strong>${nextPlace?`<small>${escape(nextPlace)}</small>`:''}</div><button class="secondary" data-action="date" data-value="${next}">Открыть следующий учебный день ${icon('arrow')}</button>`:`<p>${state.date > group.dates.at(-1) ? 'Прошедшие дни можно посмотреть в календаре.' : 'Дальше занятий в опубликованной сессии нет.'}</p><button class="secondary" data-action="calendar">Открыть календарь ${icon('calendar')}</button>`}</div>`;
   }
   function renderDay() {
     const lessons = lessonsOn(state.date);
