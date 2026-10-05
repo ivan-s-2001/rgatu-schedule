@@ -30,7 +30,7 @@ const path=require('node:path');
   await page.goto(url);await page.waitForSelector('#group-search');
   await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
   await page.waitForSelector('#group-search');
-  assert.match(await page.locator('.picker-credit').innerText(),/Самодел от студента 1 курса РГАТУ/);
+  assert.match(await page.locator('.unofficial-card').innerText(),/Неофициальное[\s\S]*студентом 1 курса/);
   await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');await page.waitForSelector('.date-title');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
   assert.equal(await page.locator('.nav-link').count(),3);assert.equal(await page.locator('a[href="#session"]').count(),0);
@@ -56,7 +56,7 @@ const path=require('node:path');
   await screenClick('a[href="#bells"]','bells');assert.equal(await page.locator('.bells-list li').count(),7);
   assert.match(await page.locator('.bells-list li').nth(2).innerText(),/12:40–14:15/);
   await page.click('[data-action="bell-kind"][data-value="weekend"]');assert.match(await page.locator('.bells-list li').nth(2).innerText(),/12:00–13:35/);
-  await screenClick('a[href="#profile"]','profile');assert.match(await page.locator('.about-card').innerText(),/Смирнов Иван · @falseheat/);
+  await screenClick('a[href="#profile"]','profile');assert.match(await page.locator('.about-card').innerText(),/Смирнов Иван · @falseheat/);assert.match(await page.locator('.about-card').innerText(),/Неофициальное/);
   assert.equal(await page.locator('a[href="https://t.me/falseheat"]').count(),1);
   await page.click('[data-action="theme"][data-value="dark"]');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
   // Every screen stays within narrow, tablet and landscape widths, with 150% and 200% text.
