@@ -3,6 +3,9 @@
   const DOWNLOAD_URL = 'https://ivan-s-2001.github.io/rgatu-schedule/';
   const time = window.RGATU_TIME;
   const root = document.getElementById('app');
+  let consultations = null;
+  let consultationsLoading = false;
+  let consultationsFailed = false;
   const isAndroid = /RgatuLiteAndroid\//.test(navigator.userAgent);
   const read = (key, fallback = null) => { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, value); return true; } catch { return false; } };
@@ -64,13 +67,13 @@
   }
   applyTheme();
   darkPreference.addEventListener?.('change', applyTheme);
-  function route() { return group ? ['day','calendar','search','profile','group','bells'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
+  function route() { return group ? ['day','calendar','search','profile','group','bells','consultations'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
   function go(page) { if (location.hash === '#' + page) render(); else location.hash = page; }
   function header() {
     return `<header class="topbar"><div class="brand"><div class="brand-mark" aria-hidden="true"><span>ФЗО</span></div><div><strong class="brand-title">Расписание ФЗО</strong><div class="brand-sub"><span class="unofficial-chip">неофициальное</span><span>от студента</span></div></div></div><button class="group-switch" data-action="group" aria-label="Сменить группу, сейчас ${escape(group.id)}"><span>${escape(group.id)}</span>${icon('down')}</button></header>`;
   }
   function nav(page) {
-    return `<nav class="bottom-nav" aria-label="Главное меню">${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
+    return `<nav class="bottom-nav" aria-label="Главное меню">${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search'].includes(page) || id==='profile' && page==='consultations')?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
   }
   function renderPicker() {
     root.innerHTML = `<div class="shell"><main class="page picker-page" id="content">${group ? `<div class="back-row"><button class="back-button" data-action="cancel-group">${icon('left')}Назад</button><span class="small muted">Моя группа</span></div>` : ''}<div class="intro"><div class="intro-mark"><div class="brand-mark" aria-hidden="true"><span>ФЗО</span></div><div><strong>Расписание ФЗО</strong><div class="small muted">РГАТУ им. П. А. Соловьёва</div></div></div><h1>${group ? 'Выбери свою группу' : 'Привет.<br>Какая у тебя группа?'}</h1><p>${group ? 'Новое расписание появится сразу после выбора.' : 'Выбери один раз. Дальше приложение будет сразу открывать твои пары.'}</p><div class="unofficial-card"><span class="unofficial-chip large">Неофициальное</span><p>Студенческий проект для ФЗО РГАТУ. Сделан студентом 1 курса и не является официальным приложением университета.</p></div></div><label for="group-search" class="label">Группа</label><div class="search-wrap">${icon('search')}<input id="group-search" class="search" type="search" placeholder="ЗВС-26" autocomplete="off" spellcheck="false" value="${escape(state.query)}" aria-controls="group-list"></div><div class="filters" aria-label="Фильтр по курсу">${[['','Все курсы'],['1','1 курс'],['2','2 курс'],['3','3 курс'],['4','4–5 курс']].map(([id,label]) => `<button class="filter" data-action="course" data-value="${id}" aria-pressed="${state.course===id}">${label}</button>`).join('')}</div><div id="group-results"></div></main><footer class="onboard-footer"><button class="primary" id="continue-group" data-action="save-group"${state.chosen?'':' disabled'}>${state.chosen ? 'Продолжить' : 'Выбери группу'}${icon('arrow')}</button></footer></div>`;
@@ -156,14 +159,57 @@
     const dates = [...new Set(matching.map(l=>l.date))];
     target.innerHTML = matching.length ? `<p class="results-count" role="status">${plural(matching.length,['пара','пары','пар'])} · ${plural(dates.length,['день','дня','дней'])}</p>${dates.map(date => `<section class="day-group"><div class="day-group-heading"><button data-action="date" data-value="${date}"><strong>${escape(dateText(date))}</strong><span>${escape(dateText(date,{weekday:'long'}))}</span></button><button class="icon-button" data-action="date" data-value="${date}" aria-label="Открыть день ${escape(dateText(date))}">${icon('arrow')}</button></div>${lessonCards(matching.filter(l=>l.date===date))}</section>`).join('')}` : '<div class="empty"><h2>Ничего не нашлось</h2><p>Попробуй название покороче или фамилию.</p><button class="secondary" data-action="reset-subject">Очистить поиск</button></div>';
   }
+  function ensureConsultations() {
+    if (consultations || consultationsLoading || consultationsFailed || !window.RGATU_CONSULTATIONS_PROMISE) return;
+    consultationsLoading = true;
+    Promise.resolve(window.RGATU_CONSULTATIONS_PROMISE).then(value => {
+      if (!value || value.schema !== 1 || !Array.isArray(value.groups) || !Array.isArray(value.events)) throw new Error('invalid consultations');
+      consultations = value;
+      consultationsLoading = false;
+      if (route() === 'consultations') render();
+    }).catch(() => {
+      consultationsLoading = false;
+      consultationsFailed = true;
+      if (route() === 'consultations') render();
+    });
+  }
+  const consultationMinutes = value => {
+    const parts = String(value || '').split(':');
+    return Number(parts[0]) * 60 + Number(parts[1] || 0);
+  };
+  function renderConsultations() {
+    ensureConsultations();
+    const back = '<div class="back-row"><button class="back-button" data-action="profile">' + icon('left') + 'К группе</button></div>';
+    if (consultationsFailed || !window.RGATU_CONSULTATIONS_PROMISE) {
+      return '<main class="page" id="content">' + back + '<div class="screen-heading"><h1>Консультации</h1><p>Отдельный график ФЗО</p></div><div class="empty">' + icon('book') + '<h2>Не удалось открыть</h2><p>Основное расписание продолжает работать. Попробуй открыть консультации позже.</p></div></main>';
+    }
+    if (!consultations) {
+      return '<main class="page" id="content">' + back + '<div class="screen-heading"><h1>Консультации</h1><p>Загружаем отдельный график…</p></div><div class="day-done">Подготавливаем архив консультаций.</div></main>';
+    }
+    const sourceGroup = consultations.groups.find(item => item.id === group.id);
+    const events = sourceGroup ? sourceGroup.events.map(index => consultations.events[index]).filter(Boolean).sort((a,b) => a.date.localeCompare(b.date) || consultationMinutes(a.time) - consultationMinutes(b.time)) : [];
+    const archived = consultations.events.length && consultations.events.every(item => item.date < nowDate());
+    const intro = '<div class="screen-heading"><h1>Консультации</h1><p>' + escape(group.id) + ' · отдельный график ФЗО</p></div><p class="source-banner">' + (archived ? 'Архив · ' : '') + 'файл обновлён ' + escape(dateText(consultations.updated)) + '. Консультации не смешиваются с обычными парами.</p>';
+    if (!events.length) {
+      return '<main class="page" id="content">' + back + intro + '<div class="empty">' + icon('book') + '<h2>Для ' + escape(group.id) + ' данных нет</h2><p>В последнем загруженном файле консультаций эта группа отсутствует. Для групп нового набора это нормально.</p></div></main>';
+    }
+    const dates = [...new Set(events.map(item => item.date))];
+    const body = dates.map(date => {
+      const rows = events.filter(item => item.date === date);
+      const cards = rows.map(item => '<article class="consult-card"><div class="consult-time">' + escape(item.time) + '</div><div class="consult-body"><span class="kind">Консультация</span><h3>' + escape(item.subject) + '</h3><div class="lesson-details">' + (item.room ? '<p class="room">' + icon('room') + '<span>' + escape(item.room) + '</span></p>' : '') + (item.teacher ? '<p class="teacher">' + icon('user') + '<span>' + escape(item.teacher) + '</span></p>' : '') + '</div>' + (item.note ? '<p class="consult-note">' + escape(item.note) + '</p>' : '') + '</div></article>').join('');
+      return '<section class="consult-day"><div class="consult-day-head"><h2>' + escape(dateText(date,{day:'numeric',month:'long'})) + '</h2><span>' + escape(dateText(date,{weekday:'long'})) + '</span></div><div class="consult-list">' + cards + '</div></section>';
+    }).join('');
+    return '<main class="page" id="content">' + back + intro + body + '</main>';
+  }
+
   function renderProfile() {
     const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    return `<main class="page" id="content"><div class="screen-heading"><h1>Моя группа</h1></div><section class="profile-group"><div><h2>${escape(group.id)}</h2><p>${group.course} курс · заочное отделение</p></div><button class="secondary" data-action="group">Сменить ${icon('right')}</button></section><section class="profile-period"><span>Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><button class="text-button" data-action="calendar">Открыть календарь ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="theme-setting"><h2>Оформление</h2><div class="segments" aria-label="Оформление">${[['auto','Авто'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<button data-action="theme" data-value="${id}" aria-pressed="${state.theme===id}">${label}</button>`).join('')}</div></div><div class="settings-row"><div><h2>Расписание</h2><p>Обновлено ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div>${isAndroid?`<button class="link-row" data-action="app-update"><span>Проверить обновления приложения</span>${icon('refresh')}</button>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Пары на главном экране</h2><p>Открывай одним касанием.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<section class="about-card"><div class="about-head"><span class="unofficial-chip large">Неофициальное</span><h2>Студенческий проект ФЗО</h2></div><p>Сделано студентом 1 курса РГАТУ для удобного просмотра расписания. Это не официальный сервис университета.</p><a class="link-row" href="https://www.rsatu.ru/zaochnoe/"><span>Официальный раздел «Заочное обучение»<small>Сайт РГАТУ</small></span>${icon('arrow')}</a><a class="link-row" href="https://t.me/falseheat"><span>Смирнов Иван · @falseheat<small>Связь, идеи и ошибки в расписании</small></span>${icon('arrow')}</a></section></main>`;
+    return `<main class="page" id="content"><div class="screen-heading"><h1>Моя группа</h1></div><section class="profile-group"><div><h2>${escape(group.id)}</h2><p>${group.course} курс · заочное отделение</p></div><button class="secondary" data-action="group">Сменить ${icon('right')}</button></section><section class="profile-period"><span>Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><button class="text-button" data-action="calendar">Открыть календарь ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="theme-setting"><h2>Оформление</h2><div class="segments" aria-label="Оформление">${[['auto','Авто'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<button data-action="theme" data-value="${id}" aria-pressed="${state.theme===id}">${label}</button>`).join('')}</div></div><button class="link-row" data-action="consultations"><span>Консультации<small>Отдельный график ФЗО</small></span>${icon('right')}</button><div class="settings-row"><div><h2>Расписание</h2><p>Обновлено ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div>${isAndroid?`<button class="link-row" data-action="app-update"><span>Проверить обновления приложения</span>${icon('refresh')}</button>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Пары на главном экране</h2><p>Открывай одним касанием.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<section class="about-card"><div class="about-head"><span class="unofficial-chip large">Неофициальное</span><h2>Студенческий проект ФЗО</h2></div><p>Сделано студентом 1 курса РГАТУ для удобного просмотра расписания. Это не официальный сервис университета.</p><a class="link-row" href="https://www.rsatu.ru/zaochnoe/"><span>Официальный раздел «Заочное обучение»<small>Сайт РГАТУ</small></span>${icon('arrow')}</a><a class="link-row" href="https://t.me/falseheat"><span>Смирнов Иван · @falseheat<small>Связь, идеи и ошибки в расписании</small></span>${icon('arrow')}</a></section></main>`;
   }
   function render() {
     const page = route();
     if (page === 'group') {renderPicker(); return;}
-    const screens = {day:renderDay,calendar:renderCalendar,search:renderSearch,bells:renderBells,profile:renderProfile};
+    const screens = {day:renderDay,calendar:renderCalendar,search:renderSearch,bells:renderBells,profile:renderProfile,consultations:renderConsultations};
     root.innerHTML = `<div class="shell">${header()}${screens[page]()}${nav(page)}</div>`;
     if (page === 'search') updateSearchResults();
   }
@@ -251,6 +297,8 @@
       case 'prev-month': state.month=time.shiftMonth(state.month || state.date.slice(0,7),-1);render();break;
       case 'next-month': state.month=time.shiftMonth(state.month || state.date.slice(0,7),1);render();break;
       case 'back-day': go('day');break;
+      case 'profile': go('profile');window.scrollTo(0,0);break;
+      case 'consultations': go('consultations');window.scrollTo(0,0);break;
       case 'bells': go('bells');window.scrollTo(0,0);break;
       case 'bell-kind': state.bellKind=value;render();break;
       case 'search': state.subject='';go('search');window.scrollTo(0,0);break;
