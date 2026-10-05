@@ -53,19 +53,7 @@
     for (const ids of groups.values()) ids.sort((a,b)=>a.localeCompare(b,'ru'));
     return groups;
   }
-  function merge(lessons, groups) {
-    const merged = [];
-    for (const lesson of lessons) {
-      const peers = groups.get(lesson.id) || [];
-      const previous = merged.at(-1);
-      if (previous && previous.date===lesson.date && previous.subject===lesson.subject && previous.type===lesson.type && previous.teacher===lesson.teacher && previous.room===lesson.room && previous.slots.at(-1)+1===lesson.slot && previous.peers.join('|')===peers.join('|')) {
-        previous.slots.push(lesson.slot);
-        previous.ids.push(lesson.id);
-      } else merged.push({...lesson,slots:[lesson.slot],ids:[lesson.id],peers});
-    }
-    return merged;
-  }
-  const api = {weekday,weekend,bells,bounds,isWeekend,dateInMoscow,addDays,weekDates,monthDates,shiftMonth,focus,memberships,merge};
+  const api = {weekday,weekend,bells,bounds,isWeekend,dateInMoscow,addDays,weekDates,monthDates,shiftMonth,focus,memberships};
   if (typeof module === 'object' && module.exports) module.exports=api;
   else scope.RGATU_TIME=api;
 })(typeof window === 'object' ? window : globalThis);
