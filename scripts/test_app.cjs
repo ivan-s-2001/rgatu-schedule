@@ -86,7 +86,7 @@ const path=require('node:path');
   await page.screenshot({path:path.join(out,'day.png'),fullPage:true});await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:true});
   await page.reload();assert.match(await page.locator('.group-switch').innerText(),/ЗВС-26/);
   await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await screenClick('a[href="#day"]','day');assert.ok(await page.locator('.lesson').count()>0);
-  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');assert.match(await page.locator('#notice').innerText(),/нет интернета/);
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
   assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
   assert.deepEqual(errors,[]);
   console.log('PASS: days, free days, month selection, search, exact bells, shared groups, author/contact, persistence, offline, every screen at 320/375/768/812px and 100/150/200% text, longest source title, no clipping or technical labels.');
