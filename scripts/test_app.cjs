@@ -28,7 +28,8 @@ const path=require('node:path');
     assert.deepEqual(issues,[],label);
   }
   await page.goto(url);await page.waitForSelector('#group-search');
-  const firstHero=await page.locator('.picker-page .intro').boundingBox();assert.ok(firstHero&&Math.abs(firstHero.y)<=1,'first-run hero must start at viewport top');
+  const firstHero=await page.locator('.picker-hero').boundingBox();assert.ok(firstHero&&Math.abs(firstHero.y)<=1,'first-run hero must start at viewport top');
+  assert.ok(firstHero&&firstHero.width>=374,'first-run hero spans viewport');
   await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
   await page.waitForSelector('#group-search');
   assert.match(await page.locator('.unofficial-card').innerText(),/неофициальное[\s\S]*студентом 1 курса/i);
@@ -98,7 +99,11 @@ const path=require('node:path');
       }
     }
   }
-  // Desktop is a real two-column application shell, never a centered phone mockup.
+  await page.setViewportSize({width:812,height:812});await screenClick('a[href="#day"]','day');
+  const tabletWidth=await page.evaluate(()=>({shell:document.querySelector('.shell').getBoundingClientRect().width,viewport:innerWidth,headerTop:document.querySelector('.topbar').getBoundingClientRect().top}));
+  assert.ok(tabletWidth.shell>=tabletWidth.viewport-1,'tablet PWA must not render as a narrow phone column');
+  assert.ok(Math.abs(tabletWidth.headerTop)<=1,'tablet header starts at top edge');
+  // Desktop is a real wide application workspace, never a centered phone mockup.
   for(const size of [{width:1280,height:900},{width:1440,height:1000}]){
     await page.setViewportSize(size);await page.addStyleTag({content:'html{font-size:16px!important}'});
     await screenClick('a[href="#day"]','day');
@@ -106,19 +111,22 @@ const path=require('node:path');
       const header=document.querySelector('.topbar').getBoundingClientRect();
       const nav=document.querySelector('.bottom-nav').getBoundingClientRect();
       const main=document.querySelector('.page').getBoundingClientRect();
-      return {headerTop:header.top,headerLeft:header.left,headerRight:header.right,navLeft:nav.left,navRight:nav.right,navTop:nav.top,mainLeft:main.left,mainWidth:main.width,viewport:innerWidth};
+      const sidebar=document.querySelector('.day-sidebar').getBoundingClientRect();
+      const dayMain=document.querySelector('.day-main').getBoundingClientRect();
+      return {headerTop:header.top,headerLeft:header.left,headerRight:header.right,navLeft:nav.left,navRight:nav.right,navTop:nav.top,mainLeft:main.left,mainRight:main.right,mainWidth:main.width,sidebarRight:sidebar.right,dayMainLeft:dayMain.left,viewport:innerWidth};
     });
     assert.ok(Math.abs(desktopLayout.headerTop)<=1,'desktop header top');
     assert.ok(desktopLayout.headerLeft<=1&&desktopLayout.headerRight>=desktopLayout.viewport-1,'desktop header spans viewport');
-    assert.ok(desktopLayout.navLeft<=1&&desktopLayout.navRight>=190,'desktop navigation rail');
-    assert.ok(desktopLayout.mainLeft>=desktopLayout.navRight-2&&desktopLayout.mainWidth>700,'desktop content is wide and beside navigation');
+    assert.ok(desktopLayout.navLeft<=1&&desktopLayout.navRight>=desktopLayout.viewport-1,'desktop navigation spans viewport under header');
+    assert.ok(desktopLayout.mainWidth>1000&&desktopLayout.mainLeft>=0&&desktopLayout.mainRight<=desktopLayout.viewport+1,'desktop content uses a wide centered workspace');
+    assert.ok(desktopLayout.sidebarRight+20<desktopLayout.dayMainLeft,'desktop day view has separate controls and lesson columns');
     await fits('desktop day '+size.width);
     await screenClick('[data-action="teachers"]','teachers');await fits('desktop teachers '+size.width);
     await screenClick('a[href="#profile"]','profile');await fits('desktop profile '+size.width);
   }
   await page.setViewportSize({width:1280,height:900});await screenClick('a[href="#day"]','day');await page.screenshot({path:path.join(out,'desktop-day.png'),fullPage:false,animations:'disabled'});
-  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.waitForSelector('.picker-page .intro');
-  const changeHero=await page.locator('.picker-page .intro').boundingBox();assert.ok(changeHero&&Math.abs(changeHero.y)<=1,'group-change hero must start at viewport top');
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.waitForSelector('.picker-hero');
+  const changeHero=await page.locator('.picker-hero').boundingBox();assert.ok(changeHero&&Math.abs(changeHero.y)<=1,'group-change hero must start at viewport top');
   await page.click('[data-action="cancel-group"]');await page.waitForSelector('.date-title');
 
   // Exercise actual source titles with the longest wraps, rather than a synthetic short fixture.
