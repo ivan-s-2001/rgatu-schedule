@@ -63,7 +63,7 @@
   function applyTheme() {
     const dark = state.theme === 'dark' || state.theme === 'auto' && darkPreference.matches;
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    document.querySelector('meta[name=theme-color]').content = dark ? '#0b1020' : '#f5f7fb';
+    document.querySelector('meta[name=theme-color]').content = dark ? '#0b1020' : '#1f274b';
   }
   applyTheme();
   darkPreference.addEventListener?.('change', applyTheme);
