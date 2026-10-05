@@ -46,7 +46,7 @@
   const dateText = (date, options = {day:'numeric', month:'long'}) => new Intl.DateTimeFormat('ru-RU', {...options, timeZone:'Europe/Moscow'}).format(dateObject(date));
   const shiftDate = (date, amount) => { const d = new Date(date + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + amount); return d.toISOString().slice(0,10); };
   const plural = (n, forms) => `${n} ${forms[n % 100 >= 11 && n % 100 <= 14 ? 2 : n % 10 === 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 ? 1 : 2]}`;
-  const groupsById = new Map(data.groups.map(g => [g.id,g]));
+  let groupsById = new Map(data.groups.map(g => [g.id,g]));
   const groupById = id => groupsById.get(id);
   const canonicalGroupId = id => String(id || '').replace(/-(1|2)$/,'');
   const savedGroupId = canonicalGroupId(read('rgatu.group'));
@@ -284,6 +284,7 @@
         // Retain a usable selected schedule if a new publication omits that group.
         if (selectedId && !nextGroup) { if(userInitiated) toast('Нового расписания для твоей группы пока нет.'); return; }
         data = updated;
+        groupsById = new Map(data.groups.map(g => [g.id,g]));
         sharedGroups = time.memberships(data);
         write('rgatu.schedule',JSON.stringify(data));
         if (selectedId) group = nextGroup;
