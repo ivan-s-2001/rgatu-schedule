@@ -6,7 +6,7 @@ const path=require('node:path');
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  const page=await browser.newPage({viewport:{width:375,height:812},locale:'ru-RU'});
  await page.goto(process.env.RGATU_DOWNLOAD_URL||'file://'+path.resolve('docs/index.html'));
- assert.equal(await page.locator('.unofficial').innerText(),'Неофициальное приложение');
+ assert.equal(await page.locator('.unofficial').innerText(),'Неофициальный студенческий проект');
  assert.match(await page.locator('.author').innerText(),/Смирнов Иван · @falseheat/);
  assert.equal(await page.locator('.author a').getAttribute('href'),'https://t.me/falseheat');
  assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.2.0.apk');
