@@ -30,8 +30,8 @@ public final class MainActivity extends Activity {
         super.onCreate(savedState);
         int background = Color.parseColor("#eef1f4");\n        int header = Color.parseColor("#1f274b");
         getWindow().setStatusBarColor(header);
-        getWindow().setNavigationBarColor(background);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        getWindow().setNavigationBarColor(header);
+        getWindow().getDecorView().setSystemUiVisibility(0);
         FrameLayout container = new FrameLayout(this);
         container.setBackgroundColor(background);
         if (Build.VERSION.SDK_INT >= 30) {
