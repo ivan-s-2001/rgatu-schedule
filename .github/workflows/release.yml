@@ -23,5 +23,5 @@ jobs:
           if gh release view "$app_tag" > /dev/null 2>&1; then
             gh release upload "$app_tag" docs/download/RgatuLite.apk --clobber
           else
-            gh release create "$app_tag" docs/download/RgatuLite.apk --target "$GITHUB_SHA" --title "РГАТУ Пары $app_version" --notes-file RELEASE_NOTES.md
+            gh release create "$app_tag" docs/download/RgatuLite.apk --target "$GITHUB_SHA" --title "Расписание ФЗО $app_version" --notes-file RELEASE_NOTES.md
           fi
