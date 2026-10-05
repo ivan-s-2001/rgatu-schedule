@@ -67,7 +67,7 @@ svg{display:block;width:24px;height:24px}
   overflow:hidden;
   background:#1f274b;
   color:#fff;
-  padding:54px 0 64px;
+  padding:40px 0 52px;
 }
 .hero::before,.hero::after{
   content:"";
@@ -95,7 +95,7 @@ svg{display:block;width:24px;height:24px}
   width:min(1180px,calc(100% - 40px));
   margin:0 auto;
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(300px,390px);
+  grid-template-columns:minmax(0,1fr) 400px;
   gap:56px;
   align-items:center;
 }
@@ -215,7 +215,7 @@ svg{display:block;width:24px;height:24px}
   padding:18px;
   border:1px solid rgba(143,208,216,.28);
   border-top:4px solid #8fd0d8;
-  border-radius:12px;
+  border-radius:14px;
   background:rgba(255,255,255,.07);
 }
 .preview-label{
@@ -245,10 +245,10 @@ svg{display:block;width:24px;height:24px}
 .content{
   width:min(1180px,calc(100% - 40px));
   margin:0 auto;
-  padding:46px 0 60px;
+  padding:56px 0 64px;
 }
-.section{margin-bottom:48px}
-.section:last-of-type{margin-bottom:36px}
+.section{margin-bottom:56px}
+.section:last-of-type{margin-bottom:40px}
 .section-head{
   display:flex;
   align-items:stretch;
@@ -279,7 +279,7 @@ svg{display:block;width:24px;height:24px}
   min-width:0;
   padding:26px 28px;
   border:1px solid #e2e7ee;
-  border-radius:12px;
+  border-radius:14px;
   background:#fff;
 }
 .platform-accent{
@@ -376,7 +376,7 @@ details p{margin-top:10px!important;font-size:.8rem!important}
   min-width:0;
   padding:22px;
   border:1px solid #e2e7ee;
-  border-radius:12px;
+  border-radius:14px;
   background:#fff;
 }
 .feature-number{
@@ -397,7 +397,7 @@ details p{margin-top:10px!important;font-size:.8rem!important}
 .changes{
   padding:24px 28px;
   border:1px solid #e2e7ee;
-  border-radius:12px;
+  border-radius:14px;
   background:#fff;
 }
 .changes ul{
@@ -469,7 +469,7 @@ a:focus-visible,summary:focus-visible{
 @media(max-width:680px){
   .header-inner{width:min(100% - 32px,1180px);min-height:70px}
   .official-link{display:none}
-  .hero{padding:42px 0 48px}
+  .hero{padding:36px 0 44px}
   .hero-inner,.content{width:min(100% - 32px,1180px)}
   .hero h1{font-size:clamp(2.8rem,15vw,4rem)}
   .hero-actions{display:grid}
