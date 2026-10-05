@@ -182,10 +182,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{
   width:max-content;
   max-width:100%;
   padding:2px 7px;
-  border:1px solid color-mix(in srgb,var(--red) 42%,transparent);
+  border:1px solid rgba(229,35,33,.32);
   border-radius:999px;
-  background:color-mix(in srgb,var(--red) 13%,transparent);
-  color:color-mix(in srgb,var(--red) 72%,white);
+  background:rgba(229,35,33,.13);
+  color:#ffd1ca;
   font-size:.55rem;
   font-weight:800;
   line-height:1.45;
@@ -471,7 +471,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{
   box-shadow:var(--shadow-sm);
 }
 .lesson-current{
-  border-color:color-mix(in srgb,var(--aqua-strong) 45%,var(--border));
+  border-color:#b9d3d7;
   border-left:4px solid var(--aqua-strong);
   padding-left:11px;
 }
@@ -927,7 +927,7 @@ html[data-theme=dark] .kind.practice{background:#392d21;color:#f2d6aa}
 .about-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .about-head h2{color:var(--text-strong);font-size:.9rem}
 .about-card>p{margin:7px 0 4px;color:var(--text-muted);font-size:.74rem}
-.about-card .unofficial-chip{background:var(--red-soft);color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,var(--border))}
+.about-card .unofficial-chip{background:var(--red-soft);color:var(--red);border-color:#efc0bc}
 
 .consult-day{margin-top:20px}
 .consult-day:first-of-type{margin-top:0}
@@ -1017,7 +1017,7 @@ html[data-theme=dark] .kind.practice{background:#392d21;color:#f2d6aa}
   padding:11px 18px calc(11px + env(safe-area-inset-bottom));
   transform:translateX(-50%);
   border-top:1px solid var(--border);
-  background:color-mix(in srgb,var(--page-bg) 96%,transparent);
+  background:var(--page-bg);
   backdrop-filter:blur(16px);
 }
 .onboard-footer .small{margin-top:6px;text-align:center;font-size:.65rem}
