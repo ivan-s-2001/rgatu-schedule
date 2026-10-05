@@ -46,7 +46,6 @@ const path=require('node:path');
     return {h:[h.x,h.y,h.width,h.height],n:[n.x,n.y,n.width,n.height]};
   });
   for(const [selector,screen] of [['[data-action="teachers"]','teachers'],['a[href="#day"]','day'],['.date-title','calendar'],['a[href="#bells"]','bells'],['a[href="#profile"]','profile']]){
-    if(screen==='day'&&location.hash==='#day') continue;
     await screenClick(selector,screen);
     const chrome=await page.evaluate(()=>{
       const h=document.querySelector('.topbar').getBoundingClientRect();
