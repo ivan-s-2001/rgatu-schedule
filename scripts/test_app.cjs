@@ -56,6 +56,7 @@ const path=require('node:path');
     const n=document.querySelector('.bottom-nav').getBoundingClientRect();
     return {h:[h.x,h.y,h.width,h.height],n:[n.x,n.y,n.width,n.height]};
   });
+  await page.evaluate(()=>{window.__rgatuHeader=document.querySelector('.topbar');window.__rgatuNav=document.querySelector('.bottom-nav');});
   for(const [selector,screen] of [['[data-action="teachers"]','teachers'],['a[href="#day"]','day'],['.date-title','calendar'],['a[href="#bells"]','bells'],['a[href="#profile"]','profile']]){
     await screenClick(selector,screen);
     const chrome=await page.evaluate(()=>{
@@ -66,6 +67,8 @@ const path=require('node:path');
     for(let i=0;i<4;i++) assert.ok(Math.abs(chrome.h[i]-mobileChrome.h[i])<=1,'mobile header geometry is stable');
     for(let i=0;i<4;i++) assert.ok(Math.abs(chrome.n[i]-mobileChrome.n[i])<=1,'mobile navigation geometry is stable');
   }
+  const persistentChrome=await page.evaluate(()=>document.querySelector('.topbar')===window.__rgatuHeader&&document.querySelector('.bottom-nav')===window.__rgatuNav);
+  assert.equal(persistentChrome,true,'FZO header and navigation persist between app screens');
   await screenClick('a[href="#day"]','day');
   assert.equal(await page.locator('.schedule-tab').count(),2);
   assert.match(await page.locator('.schedule-switcher').innerText(),/По группе[\s\S]*По преподавателю/);
