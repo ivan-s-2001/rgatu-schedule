@@ -28,6 +28,9 @@ const path=require('node:path');
     assert.deepEqual(issues,[],label);
   }
   await page.goto(url);await page.waitForSelector('#group-search');
+  await page.click('[data-action="picker-focus"]');
+  assert.notEqual(new URL(page.url()).hash,'#picker-form','hero action must not enter router hash');
+  assert.equal(await page.locator('#group-search').evaluate(el=>document.activeElement===el),true,'hero action focuses group search');
   const firstHero=await page.locator('.picker-hero').boundingBox();assert.ok(firstHero&&Math.abs(firstHero.y)<=1,'first-run hero must start at viewport top');
   assert.ok(firstHero&&firstHero.width>=374,'first-run hero spans viewport');
   await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
@@ -37,6 +40,23 @@ const path=require('node:path');
   const headerBox=await page.locator('.topbar').boundingBox();assert.ok(headerBox&&Math.abs(headerBox.y)<=1,'app header must start at viewport top');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
   assert.equal(await page.locator('.nav-link').count(),3);assert.equal(await page.locator('a[href="#session"]').count(),0);
+  const mobileChrome=await page.evaluate(()=>{
+    const h=document.querySelector('.topbar').getBoundingClientRect();
+    const n=document.querySelector('.bottom-nav').getBoundingClientRect();
+    return {h:[h.x,h.y,h.width,h.height],n:[n.x,n.y,n.width,n.height]};
+  });
+  for(const [selector,screen] of [['[data-action="teachers"]','teachers'],['a[href="#day"]','day'],['.date-title','calendar'],['a[href="#bells"]','bells'],['a[href="#profile"]','profile']]){
+    if(screen==='day'&&location.hash==='#day') continue;
+    await screenClick(selector,screen);
+    const chrome=await page.evaluate(()=>{
+      const h=document.querySelector('.topbar').getBoundingClientRect();
+      const n=document.querySelector('.bottom-nav').getBoundingClientRect();
+      return {h:[h.x,h.y,h.width,h.height],n:[n.x,n.y,n.width,n.height]};
+    });
+    for(let i=0;i<4;i++) assert.ok(Math.abs(chrome.h[i]-mobileChrome.h[i])<=1,'mobile header geometry is stable');
+    for(let i=0;i<4;i++) assert.ok(Math.abs(chrome.n[i]-mobileChrome.n[i])<=1,'mobile navigation geometry is stable');
+  }
+  await screenClick('a[href="#day"]','day');
   assert.equal(await page.locator('.schedule-tab').count(),2);
   assert.match(await page.locator('.schedule-switcher').innerText(),/По группе[\s\S]*По преподавателю/);
   assert.match(await page.locator('.lesson').nth(0).innerText(),/1\s*пара[\s\S]*08:30–10:05/);
@@ -75,7 +95,22 @@ const path=require('node:path');
   await page.click('[data-action="bell-kind"][data-value="weekend"]');assert.match(await page.locator('.bells-list li').nth(2).innerText(),/12:00–13:35/);
   await screenClick('a[href="#profile"]','profile');assert.match(await page.locator('.about-card').innerText(),/Смирнов Иван · @falseheat/);assert.match(await page.locator('.about-card').innerText(),/неофициальное/i);
   assert.equal(await page.locator('a[href="https://t.me/falseheat"]').count(),1);
+  await screenClick('a[href="#day"]','day');
+  const lightGeometry=await page.evaluate(()=>{
+    const l=document.querySelector('.lesson').getBoundingClientRect();
+    const c=document.querySelector('.day-controls').getBoundingClientRect();
+    return {lesson:[l.width,l.height],controls:[c.width,c.height]};
+  });
+  await screenClick('a[href="#profile"]','profile');
   await page.click('[data-action="theme"][data-value="dark"]');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await screenClick('a[href="#day"]','day');
+  const darkGeometry=await page.evaluate(()=>{
+    const l=document.querySelector('.lesson').getBoundingClientRect();
+    const c=document.querySelector('.day-controls').getBoundingClientRect();
+    return {lesson:[l.width,l.height],controls:[c.width,c.height]};
+  });
+  for(const key of ['lesson','controls'])for(let i=0;i<2;i++)assert.ok(Math.abs(lightGeometry[key][i]-darkGeometry[key][i])<=1,'theme switch keeps geometry stable');
+  await screenClick('a[href="#profile"]','profile');
   const contrastIssues=await page.evaluate(()=>{
     const rgb=value=>{const m=value.match(/\d+(?:\.\d+)?/g);return m?m.slice(0,3).map(Number):null;};
     const lum=c=>{const a=c.map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*a[0]+.7152*a[1]+.0722*a[2];};
@@ -133,6 +168,10 @@ const path=require('node:path');
   await page.setViewportSize({width:1280,height:900});await screenClick('a[href="#day"]','day');await page.screenshot({path:path.join(out,'desktop-day.png'),fullPage:false,animations:'disabled'});
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.waitForSelector('.picker-hero');
   const changeHero=await page.locator('.picker-hero').boundingBox();assert.ok(changeHero&&Math.abs(changeHero.y)<=1,'group-change hero must start at viewport top');
+  const beforePickerHash=new URL(page.url()).hash;
+  await page.click('[data-action="picker-focus"]');
+  assert.equal(new URL(page.url()).hash,beforePickerHash,'group-change hero action keeps group route');
+  assert.equal(await page.locator('#group-search').evaluate(el=>document.activeElement===el),true,'group-change hero focuses search');
   await page.click('[data-action="cancel-group"]');await page.waitForSelector('.date-title');
 
   // Exercise actual source titles with the longest wraps, rather than a synthetic short fixture.
