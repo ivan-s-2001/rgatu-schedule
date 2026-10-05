@@ -11,7 +11,7 @@ def render(size):
     png = cairosvg.svg2png(bytestring=source, output_width=size, output_height=size)
     return Image.open(BytesIO(png)).convert('RGBA')
 
-def padded_icon(size, scale, background):
+def padded_icon(size, scale, background=(0,0,0,0)):
     canvas = Image.new('RGBA', (size, size), background)
     logo = render(size)
     target = round(size * scale)
@@ -23,9 +23,9 @@ icons = root / 'public/icons'
 icons.mkdir(parents=True, exist_ok=True)
 render(192).save(icons / 'icon-192.png', optimize=True)
 render(512).save(icons / 'icon-512.png', optimize=True)
-padded_icon(512, .76, '#1f274b').save(icons / 'maskable-512.png', optimize=True)
+padded_icon(512, .76).save(icons / 'maskable-512.png', optimize=True)
 
 android_icons = root / 'android/res/mipmap-xxxhdpi'
 android_icons.mkdir(parents=True, exist_ok=True)
-padded_icon(192, .80, '#1f274b').save(android_icons / 'ic_launcher.png', optimize=True)
+padded_icon(192, .82).save(android_icons / 'ic_launcher.png', optimize=True)
 print('RSATU FZO icons created from public/icons/icon.svg')
