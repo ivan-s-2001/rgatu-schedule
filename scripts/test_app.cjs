@@ -68,7 +68,7 @@ const path=require('node:path');
   assert.equal(await page.locator('a[href="https://t.me/falseheat"]').count(),1);
   await page.click('[data-action="theme"][data-value="dark"]');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
   const contrastIssues=await page.evaluate(()=>{
-    const rgb=value=>{const m=value.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);return m?[+m[1],+m[2],+m[3]]:null;};
+    const rgb=value=>{const m=value.match(/\d+(?:\.\d+)?/g);return m?m.slice(0,3).map(Number):null;};
     const lum=c=>{const a=c.map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*a[0]+.7152*a[1]+.0722*a[2];};
     const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
     const bg=el=>{for(let n=el;n;n=n.parentElement){const v=getComputedStyle(n).backgroundColor;if(v&&!/rgba\\(0, 0, 0, 0\\)|transparent/.test(v))return rgb(v);}return [11,16,32];};
