@@ -1,4 +1,4 @@
-const CACHE = 'rgatu-pairs-1.1.0';
+const CACHE = 'rgatu-pairs-1.2.0';
 const CORE = ['/', '/index.html', '/app.css', '/app.js', '/timetable.js', '/schedule.js', '/schedule.json', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png'];
 self.addEventListener('install', event => {event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)));});
 self.addEventListener('activate', event => {event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('rgatu-pairs-') && key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});

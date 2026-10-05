@@ -13,6 +13,29 @@
     const values = Object.fromEntries(parts.map(part => [part.type,part.value]));
     return values.year + '-' + values.month + '-' + values.day;
   };
+  const addDays = (date, amount) => {
+    const value = new Date(date+'T12:00:00Z');
+    value.setUTCDate(value.getUTCDate()+amount);
+    return value.toISOString().slice(0,10);
+  };
+  function weekDates(date) {
+    const weekday = (new Date(date+'T12:00:00Z').getUTCDay()+6)%7;
+    return Array.from({length:7},(_,index)=>addDays(date,index-weekday));
+  }
+  function monthDates(month) {
+    const first = month+'-01';
+    const next = shiftMonth(month,1)+'-01';
+    const last = addDays(next,-1);
+    const start = weekDates(first)[0];
+    const end = weekDates(last)[6];
+    const count = Math.round((Date.parse(end)-Date.parse(start))/86400000)+1;
+    return Array.from({length:count},(_,index)=>addDays(start,index));
+  }
+  function shiftMonth(month, amount) {
+    const value = new Date(month+'-01T12:00:00Z');
+    value.setUTCMonth(value.getUTCMonth()+amount);
+    return value.toISOString().slice(0,7);
+  }
   function focus(lessons, now = Date.now()) {
     const ordered = lessons.slice().sort((a,b) => a.date.localeCompare(b.date) || a.slot-b.slot);
     const current = ordered.find(lesson => {const time=bounds(lesson);return now>=time.startAt && now<time.endAt;});
@@ -42,7 +65,7 @@
     }
     return merged;
   }
-  const api = {weekday,weekend,bells,bounds,isWeekend,dateInMoscow,focus,memberships,merge};
+  const api = {weekday,weekend,bells,bounds,isWeekend,dateInMoscow,addDays,weekDates,monthDates,shiftMonth,focus,memberships,merge};
   if (typeof module === 'object' && module.exports) module.exports=api;
   else scope.RGATU_TIME=api;
 })(typeof window === 'object' ? window : globalThis);

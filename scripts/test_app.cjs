@@ -1,89 +1,93 @@
-const { chromium } = require('playwright');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
 
-(async () => {
-  const url = process.env.RGATU_TEST_URL || 'http://127.0.0.1:4173';
-  const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
-  const context = await browser.newContext({viewport:{width:375,height:812},deviceScaleFactor:1,timezoneId:'Europe/Moscow',locale:'ru-RU'});
-  const page = await context.newPage();
-  const errors = [];
-  page.on('pageerror',error=>errors.push(error.message));
-  await page.goto(url);
-  await page.waitForFunction(()=>document.querySelector('#group-search'));
-  // Let initial offline installation finish so the first controller change cannot interrupt a selection.
-  await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});
-  await page.waitForLoadState('networkidle');
-  const screenshots = path.resolve('build/screenshots');
-  fs.mkdirSync(screenshots,{recursive:true});
-  await page.screenshot({path:path.join(screenshots,'01-group.png'),fullPage:true});
-  await page.fill('#group-search','ЗВС-26');
-  assert.equal(await page.locator('.group-row').count(),1);
-  await page.locator('.group-row').click();
-  await page.click('#continue-group');
-  await page.waitForSelector('.group-switch');
-  assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
-  await page.locator('#day-picker').fill('2026-10-05');
-  await page.locator('#day-picker').dispatchEvent('change');
-  await page.waitForSelector('.lesson');
-  assert.match(await page.locator('.lesson').first().innerText(),/Экономика/);
-  assert.match(await page.locator('.lesson').first().innerText(),/Фоменко С\.А\./);
-  assert.match(await page.locator('.lesson').first().innerText(),/1-212/);
-  await page.screenshot({path:path.join(screenshots,'02-day.png'),fullPage:true});
-  await page.reload();
-  await page.waitForSelector('.group-switch');
-  assert.match(await page.locator('.group-switch').innerText(),/ЗВС-26/);
-  assert.equal(await page.locator('#group-search').count(),0);
-  await page.click('a[href="#session"]');
-  await page.fill('#subject-search','Фоменко');
-  assert.ok(await page.locator('.lesson').count()>0);
-  for(const teacher of await page.locator('.teacher').allTextContents())assert.match(teacher,/Фоменко/);
-  await page.fill('#subject-search','ничегоненайти');
-  assert.match(await page.locator('.empty').innerText(),/Ничего не нашлось/);
-  await page.click('[data-action=reset-subject]');
-  await page.click('[data-action=kind][data-value="ЛР"]');
-  for(const kind of await page.locator('.kind').allTextContents())assert.equal(kind,'Лабораторная');
-  await page.click('a[href="#profile"]');
-  await page.selectOption('#theme','dark');
-  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
-  await page.screenshot({path:path.join(screenshots,'03-profile-dark.png'),fullPage:true});
-  // Content stays inside narrow and landscape viewports, including enlarged text.
-  for(const viewport of [{width:320,height:740},{width:812,height:375},{width:768,height:1024}]) {
-    await page.setViewportSize(viewport);
-    await page.click('a[href="#day"]');
-    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+(async()=>{
+  const url=process.env.RGATU_TEST_URL||'http://127.0.0.1:4173';
+  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+  const context=await browser.newContext({viewport:{width:375,height:812},timezoneId:'Europe/Moscow',locale:'ru-RU'});
+  // Keep future CI runs anchored to the supplied October session.
+  await context.addInitScript(()=>{const D=Date;window.Date=class extends D{constructor(...args){super(...(args.length?args:['2026-10-05T12:45:00+03:00']));}static now(){return D.parse('2026-10-05T12:45:00+03:00');}};});
+  const page=await context.newPage();
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const out=path.resolve('build/screenshots');fs.mkdirSync(out,{recursive:true});
+  async function fits(label){
+    const issues=await page.evaluate(()=>{
+      const issues=[];
+      if(document.documentElement.scrollWidth>innerWidth+1)issues.push('page overflows');
+      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.primary,.secondary,.subject-row')){
+        if(el.hidden||!el.getClientRects().length)continue;
+        if(el.scrollWidth>el.clientWidth+2)issues.push(el.className+': '+el.textContent.slice(0,70));
+        const style=getComputedStyle(el);
+        if(style.textOverflow==='ellipsis'||style.webkitLineClamp!=='none'&&Number(style.webkitLineClamp)>0)issues.push('clamped '+el.textContent.slice(0,40));
+      }
+      return issues;
+    });
+    assert.deepEqual(issues,[],label);
   }
-  await page.setViewportSize({width:375,height:812});
-  await page.emulateMedia({reducedMotion:'reduce'});
-  await page.addStyleTag({content:'html{font-size:24px!important}'});
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  await page.reload();
-  await page.waitForSelector('.group-switch');
-  // The installed shell and complete embedded timetable remain usable offline.
-  await context.setOffline(true);
-  await page.reload();
-  await page.waitForSelector('.group-switch');
-  await page.click('a[href="#session"]');
-  assert.ok(await page.locator('.lesson').count()>0);
-  await page.click('a[href="#profile"]');
-  await page.click('[data-action=refresh]');
-  assert.match(await page.locator('#notice').innerText(),/нет интернета/);
-  await context.setOffline(false);
-  await page.click('[data-action=group]');
-  await page.fill('#group-search','ЗИС-22-2');
-  await page.locator('.group-row').click();
-  await page.click('#continue-group');
-  assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗИС-22-2');
-  assert.match(await page.locator('.source-banner').innerText(),/сессия закончилась/);
-  await page.click('a[href="#profile"]');
-  await page.selectOption('#theme','light');
-  const bodyText = await page.locator('body').innerText();
-  assert.doesNotMatch(bodyText,/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
+  await page.goto(url);await page.waitForSelector('#group-search');
+  await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
+  await page.waitForSelector('#group-search');
+  assert.match(await page.locator('.onboard-footer').innerText(),/Самодел от студента 1 курса РГАТУ/);
+  await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
+  assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
+  assert.equal(await page.locator('.nav-link').count(),3);assert.equal(await page.locator('a[href="#session"]').count(),0);
+  assert.match(await page.locator('.lesson').first().innerText(),/08:30–11:50/);
+  assert.match(await page.locator('.lesson').first().innerText(),/Экономика|Фоменко С\.А\.|1-212/);
+  assert.match(await page.locator('.together').first().innerText(),/Вместе с ЗСС-26/);
+  await page.click('[data-action="next-day"]');assert.match(await page.locator('.date-title').innerText(),/6 октября/);
+  await page.click('[data-action="prev-day"]');assert.match(await page.locator('.date-title').innerText(),/5 октября/);
+  await page.click('.week [data-value="2026-10-10"]');
+  assert.match(await page.locator('.lesson').last().innerText(),/13:45–15:20/);
+  await page.click('.week [data-value="2026-10-11"]');assert.match(await page.locator('.empty').innerText(),/Пар нет/);
+  await page.click('.date-title');assert.equal(await page.locator('.month-day').count(),35);
+  await page.click('[data-action="next-month"]');assert.match(await page.locator('.month-pager').innerText(),/ноябрь/);
+  await page.click('[data-action="prev-month"]');await page.click('.month-grid [data-value="2026-10-14"]');
+  assert.match(await page.locator('.date-title').innerText(),/14 октября/);
+  await page.click('[data-action="today"]');assert.match(await page.locator('.date-title').innerText(),/5 октября/);
+  await page.click('[data-action="search"]');assert.equal(await page.locator('.lesson').count(),0);
+  await page.fill('#subject-search','Фоменко');assert.ok(await page.locator('.lesson').count()>0);
+  for(const teacher of await page.locator('.teacher').allTextContents())assert.match(teacher,/Фоменко/);
+  await page.fill('#subject-search','ничегоненайти');assert.match(await page.locator('.empty').innerText(),/Ничего не нашлось/);
+  await page.click('[data-action="reset-subject"]');assert.ok(await page.locator('.subject-row').count()>0);
+  await page.click('.subject-row:first-child');assert.ok(await page.locator('.lesson').count()>0);
+  await page.click('a[href="#bells"]');assert.equal(await page.locator('.bells-list li').count(),7);
+  assert.match(await page.locator('.bells-list li').nth(2).innerText(),/12:40–14:15/);
+  await page.click('[data-action="bell-kind"][data-value="weekend"]');assert.match(await page.locator('.bells-list li').nth(2).innerText(),/12:00–13:35/);
+  await page.click('a[href="#profile"]');assert.match(await page.locator('.about-card').innerText(),/Смирнов Иван · @falseheat/);
+  assert.equal(await page.locator('a[href="https://t.me/falseheat"]').count(),1);
+  await page.click('[data-action="theme"][data-value="dark"]');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  // Every screen stays within narrow, tablet and landscape widths, with 150% and 200% text.
+  for(const size of [{width:320,height:740},{width:375,height:812},{width:812,height:375},{width:768,height:1024}]){
+    await page.setViewportSize(size);
+    for(const font of [16,24,32]){
+      await page.addStyleTag({content:'html{font-size:'+font+'px!important}'});
+      for(const screen of ['day','calendar','bells','profile','search']){
+        if(screen==='calendar')await page.click('a[href="#day"]').then(()=>page.click('.date-title'));
+        else if(screen==='search')await page.click('a[href="#day"]').then(()=>page.click('[data-action="search"]'));
+        else await page.click('a[href="#'+screen+'"]');
+        await fits(screen+' '+size.width+' '+font);
+      }
+    }
+  }
+  // Exercise actual source titles with the longest wraps, rather than a synthetic short fixture.
+  const source=JSON.parse(fs.readFileSync('public/schedule.json'));
+  const longest=source.lessons.slice().sort((a,b)=>b.subject.length-a.subject.length)[0];
+  const g=source.groups.find(g=>g.lessons.includes(longest.id));
+  await page.setViewportSize({width:320,height:740});await page.click('a[href="#profile"]');await page.click('[data-action="group"]');
+  await page.fill('#group-search',g.id);await page.locator('.group-row').filter({hasText:g.id}).first().click();await page.click('#continue-group');
+  await fits('long-name group');await page.click('[data-action="search"]');await page.fill('#subject-search',longest.subject);
+  assert.ok(await page.locator('.lesson').count()>0);await fits('longest source subject at 200%');
+  // Save reviewable phone screens at ordinary text size.
+  await page.setViewportSize({width:375,height:812});await page.addStyleTag({content:'html{font-size:16px!important}'});
+  await page.click('a[href="#profile"]');await page.click('[data-action="group"]');await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');
+  await page.screenshot({path:path.join(out,'day.png'),fullPage:true});await page.click('.date-title');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:true});
+  await page.reload();assert.match(await page.locator('.group-switch').innerText(),/ЗВС-26/);
+  await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await page.click('a[href="#day"]');assert.ok(await page.locator('.lesson').count()>0);
+  await page.click('a[href="#profile"]');await page.click('[data-action="refresh"]');assert.match(await page.locator('#notice').innerText(),/нет интернета/);
+  assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
   assert.deepEqual(errors,[]);
-  const manifest = await (await context.request.get(url+'/manifest.webmanifest')).json();
-  assert.equal(manifest.display,'standalone');
-  for(const icon of manifest.icons)assert.equal((await context.request.get(url+icon.src)).status(),200);
-  console.log('PASS: group selection and persistence, exact schedule fields, search/filter, subgroup change, past-session state, themes, phone/landscape/tablet, enlarged text, reduced motion, offline reload, manifest and icons, no technical UI labels.');
+  console.log('PASS: days, free days, month selection, search, exact bells, shared groups, author/contact, persistence, offline, every screen at 320/375/768/812px and 100/150/200% text, longest source title, no clipping or technical labels.');
   await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});

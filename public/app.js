@@ -1,6 +1,5 @@
 (() => {
   'use strict';
-  const APP_VERSION = '1.1.0';
   const DOWNLOAD_URL = 'https://ivan-s-2001.github.io/rgatu-schedule/';
   const time = window.RGATU_TIME;
   const root = document.getElementById('app');
@@ -47,7 +46,7 @@
     if (today > g.dates.at(-1)) return g.dates.at(-1);
     return today;
   };
-  const state = {date: group ? initialDate(group) : nowDate(), chosen: group?.id || '', course: '', query:'', limit:18, subject:'', kind:'', theme:read('rgatu.theme','auto'), refreshing:false};
+  const state = {date: group ? initialDate(group) : nowDate(), month:'', chosen: group?.id || '', course: '', query:'', limit:18, subject:'', theme:read('rgatu.theme','auto'), refreshing:false, bellKind:''};
   let installPrompt = null;
   let noticeTimer;
   function toast(message) {
@@ -65,16 +64,16 @@
   }
   applyTheme();
   darkPreference.addEventListener?.('change', applyTheme);
-  function route() { return group ? ['day','session','profile','group','bells'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
+  function route() { return group ? ['day','calendar','search','profile','group','bells'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
   function go(page) { if (location.hash === '#' + page) render(); else location.hash = page; }
   function header() {
-    return `<header class="topbar"><div class="brand"><div class="brand-mark" aria-hidden="true">Р</div><div>РГАТУ Пары<div class="brand-sub">от студента студентам</div></div></div><button class="group-switch" data-action="group" aria-label="Сменить группу, сейчас ${escape(group.id)}"><span>${escape(group.id)}</span>${icon('down')}</button></header>`;
+    return `<header class="topbar"><div class="brand"><div class="brand-mark" aria-hidden="true">Р</div><div>РГАТУ Пары<div class="brand-sub">от студента 1 курса</div></div></div><button class="group-switch" data-action="group" aria-label="Сменить группу, сейчас ${escape(group.id)}"><span>${escape(group.id)}</span>${icon('down')}</button></header>`;
   }
   function nav(page) {
-    return `<nav class="bottom-nav" aria-label="Главное меню">${[['day','calendar','Расписание'],['session','list','Сессия'],['profile','user','Моя группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${page===id?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
+    return `<nav class="bottom-nav" aria-label="Главное меню">${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Моя группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
   }
   function renderPicker() {
-    root.innerHTML = `<div class="shell"><main class="page" id="content">${group ? `<div class="back-row"><button class="back-button" data-action="cancel-group">${icon('left')}Назад</button><span class="small muted">Моя группа</span></div>` : ''}<div class="intro"><div class="intro-mark"><div class="brand-mark" aria-hidden="true">Р</div><div><strong>РГАТУ Пары</strong><div class="small muted">от студента студентам</div></div></div><h1>${group ? 'Выбери свою группу' : 'Привет.<br>Какая у тебя группа?'}</h1><p>${group ? 'Новое расписание появится сразу после выбора.' : 'Выбери один раз. Дальше приложение будет сразу открывать твои пары.'}</p></div><label for="group-search" class="label">Группа</label><div class="search-wrap">${icon('search')}<input id="group-search" class="search" type="search" placeholder="Например, ЗВС-26" autocomplete="off" spellcheck="false" value="${escape(state.query)}" aria-controls="group-list"></div><div class="filters" aria-label="Фильтр по курсу">${[['','Все курсы'],['1','1 курс'],['2','2 курс'],['3','3 курс'],['4','4–5 курс']].map(([id,label]) => `<button class="filter" data-action="course" data-value="${id}" aria-pressed="${state.course===id}">${label}</button>`).join('')}</div><div id="group-results"></div></main><footer class="onboard-footer"><button class="primary" id="continue-group" data-action="save-group"${state.chosen?'':' disabled'}>${state.chosen ? `Продолжить с ${escape(state.chosen)}` : 'Выбери группу'}${icon('arrow')}</button><p class="small muted">Неофициальное приложение. Сделано студентом.</p></footer></div>`;
+    root.innerHTML = `<div class="shell"><main class="page picker-page" id="content">${group ? `<div class="back-row"><button class="back-button" data-action="cancel-group">${icon('left')}Назад</button><span class="small muted">Моя группа</span></div>` : ''}<div class="intro"><div class="intro-mark"><div class="brand-mark" aria-hidden="true">Р</div><div><strong>РГАТУ Пары</strong><div class="small muted">от студента студентам</div></div></div><h1>${group ? 'Выбери свою группу' : 'Привет.<br>Какая у тебя группа?'}</h1><p>${group ? 'Новое расписание появится сразу после выбора.' : 'Выбери один раз. Дальше приложение будет сразу открывать твои пары.'}</p></div><label for="group-search" class="label">Группа</label><div class="search-wrap">${icon('search')}<input id="group-search" class="search" type="search" placeholder="ЗВС-26" autocomplete="off" spellcheck="false" value="${escape(state.query)}" aria-controls="group-list"></div><div class="filters" aria-label="Фильтр по курсу">${[['','Все курсы'],['1','1 курс'],['2','2 курс'],['3','3 курс'],['4','4–5 курс']].map(([id,label]) => `<button class="filter" data-action="course" data-value="${id}" aria-pressed="${state.course===id}">${label}</button>`).join('')}</div><div id="group-results"></div></main><footer class="onboard-footer"><button class="primary" id="continue-group" data-action="save-group"${state.chosen?'':' disabled'}>${state.chosen ? `Продолжить с ${escape(state.chosen)}` : 'Выбери группу'}${icon('arrow')}</button><p class="small muted">Самодел от студента 1 курса РГАТУ.<br>Неофициальное приложение.</p></footer></div>`;
     updateGroupResults();
   }
   const normalized = text => text.toUpperCase().replace(/Ё/g,'Е').replace(/[^А-ЯA-Z0-9]/g,'');
@@ -104,58 +103,78 @@
     const focus = time.focus(groupLessons());
     return `<div class="lessons">${mergeLessons(lessons).map(l => {
       const current = focus?.current && l.ids.includes(focus.lesson.id);
-      return `<article class="lesson${current?' lesson-current':''}" data-lesson-ids="${l.ids.join(',')}" aria-label="${l.slots.join(' и ')} ${l.slots.length===1?'пара':'пары'}, ${rangeText(l)}, ${escape(l.subject)}"><div class="slot"><strong>${l.slots.length===1?l.slots[0]:l.slots[0]+'–'+l.slots.at(-1)}</strong><span>${l.slots.length===1?'пара':'пары'}</span><span class="current-dot" aria-label="Идёт сейчас"${current?'':' hidden'}></span></div><div class="lesson-body"><div class="lesson-time">${icon('clock')}<span>${rangeText(l)}</span><span class="current-word"${current?'':' hidden'}>Сейчас</span></div><div class="lesson-top"><span class="kind ${l.type==='П'?'practice':l.type==='ЛР'?'lab':''}">${escape(typeLabel(l.type))}</span>${l.room?`<span class="room">${icon('room')}<span>${escape(l.room)}</span></span>`:''}</div><h3>${escape(l.subject)}</h3>${l.teacher?`<p class="teacher">${icon('user')}<span>${escape(l.teacher)}</span></p>`:''}${together(l.peers)}</div></article>`;
+      return `<article class="lesson${current?' lesson-current':''}" data-lesson-ids="${l.ids.join(',')}" aria-label="${l.slots.join(' и ')} ${l.slots.length===1?'пара':'пары'}, ${rangeText(l)}, ${escape(l.subject)}"><div class="slot"><strong>${l.slots.length===1?l.slots[0]:l.slots[0]+'–'+l.slots.at(-1)}</strong><span>${l.slots.length===1?'пара':'пары'}</span><span class="current-dot" aria-label="Идёт сейчас"${current?'':' hidden'}></span></div><div class="lesson-body"><div class="lesson-time"><span>${rangeText(l)}</span><span class="kind ${l.type==='П'?'practice':l.type==='ЛР'?'lab':''}">${escape(typeLabel(l.type))}</span><span class="current-word"${current?'':' hidden'}>Сейчас</span></div><h3>${escape(l.subject)}</h3><div class="lesson-details">${l.room?`<p class="room">${icon('room')}<span>${escape(l.room)}</span></p>`:''}${l.teacher?`<p class="teacher">${icon('user')}<span>${escape(l.teacher)}</span></p>`:''}</div>${together(l.peers)}</div></article>`;
     }).join('')}</div>`;
   }
   function renderFocus() {
     const today = nowDate();
     if (state.date!==today && !(today<group.dates[0] && state.date===group.dates[0])) return '';
     const focus = time.focus(groupLessons());
-    if (!focus) return today<=group.dates.at(-1) ? '<div class="day-done"><strong>На сегодня всё</strong><p>Все пары этой сессии позади.</p></div>' : '';
+    if (!focus) return today<=group.dates.at(-1) ? '<div class="day-done">На сегодня всё. Можно выдохнуть.</div>' : '';
     const {lesson,current,minutes} = focus;
     const sameDay = lesson.date===today;
-    const label = current ? 'Сейчас на паре' : sameDay ? 'Следующая пара' : lesson.date===shiftDate(today,1) ? 'Завтра' : dateText(lesson.date);
-    const countdown = current ? `До конца · ${minutes} мин` : sameDay ? `Через ${plural(minutes,['минуту','минуты','минут'])}` : 'Начало в '+focus.time.start;
-    return `<section class="focus-card${current?' is-current':''}" aria-label="${label}"><div class="focus-heading"><span class="focus-label">${current?'<span class="current-dot"></span>':icon('clock')}${escape(label)}</span><span class="focus-countdown" aria-live="off">${countdown}</span></div><div class="focus-meta">${lesson.slot} пара · ${focus.time.start}–${focus.time.end}</div><h2>${escape(lesson.subject)}</h2><div class="focus-details">${lesson.room?`<span>${icon('room')}Ауд. ${escape(lesson.room)}</span>`:''}${lesson.teacher?`<span>${escape(lesson.teacher)}</span>`:''}</div>${together(sharedGroups.get(lesson.id)||[])}${!sameDay?`<button class="focus-link" data-action="date" data-value="${lesson.date}">Открыть этот день ${icon('arrow')}</button>`:''}</section>`;
+    const label = current ? `Сейчас · ${lesson.slot} пара` : sameDay ? `Следующая · ${lesson.slot} пара` : lesson.date===shiftDate(today,1) ? 'Пары завтра' : 'Ближайшие · '+dateText(lesson.date);
+    const detail = current ? `До конца ${plural(minutes,['минута','минуты','минут'])}` : sameDay ? `В ${focus.time.start} · через ${plural(minutes,['минуту','минуты','минут'])}` : 'Начало в '+focus.time.start;
+    return `<button class="live-summary${current?' is-current':''}" data-action="focus-lesson" data-value="${lesson.date}" data-lesson-id="${lesson.id}"><span class="live-symbol">${current?'<span class="current-dot"></span>':icon('clock')}</span><span class="live-copy"><strong>${escape(label)}</strong><span>${escape(detail)}</span></span>${icon('arrow')}</button>`;
   }
   function renderBells() {
-    const selected = time.isWeekend(state.date);
-    return `<main class="page" id="content"><div class="back-row"><button class="back-button" data-action="back-bells">${icon('left')}Назад</button></div><p class="eyebrow">Время каждой пары</p><h1 style="margin-top:8px">Расписание звонков</h1><p class="small muted" style="margin-top:8px">Московское время</p>${[[time.weekday,'По будням','Понедельник — пятница',!selected],[time.weekend,'По выходным','Суббота и воскресенье',selected]].map(([rows,title,hint,active])=>`<section class="bells-section"><div class="bells-heading"><div><h2>${title}</h2><p class="small muted">${hint}</p></div>${active?'<span class="kind practice">Для выбранного дня</span>':''}</div><ol class="bells-list">${rows.map(([start,end],i)=>`<li><span><strong>${i+1}</strong> пара</span><time>${start}–${end}</time></li>`).join('')}</ol></section>`).join('')}</main>`;
+    const weekend = (state.bellKind || (time.isWeekend(state.date)?'weekend':'weekday'))==='weekend';
+    const rows = weekend ? time.weekend : time.weekday;
+    return `<main class="page" id="content"><div class="screen-heading"><h1>Звонки</h1><p>Московское время</p></div><div class="segments" aria-label="Дни звонков">${[['weekday','Будни'],['weekend','Выходные']].map(([id,label])=>`<button data-action="bell-kind" data-value="${id}" aria-pressed="${weekend === (id==='weekend')}">${label}</button>`).join('')}</div><section class="bells-section"><h2>${weekend?'Суббота и воскресенье':'Понедельник — пятница'}</h2><ol class="bells-list">${rows.map(([start,end],i)=>`<li><span><strong>${i+1}</strong> пара</span><time>${start}–${end}</time></li>`).join('')}</ol></section><p class="section-note">${weekend?'В выходные третья пара начинается в 12:00.':'Большой перерыв после второй пары — 50 минут.'}</p></main>`;
   }
   function emptyDay() {
     const next = group.dates.find(date => date > state.date && lessonsOn(date).length);
-    return `<div class="empty">${icon('book')}<h2>На этот день пар нет</h2><p>${state.date > group.dates.at(-1) ? 'Эта сессия уже закончилась. Её расписание осталось во вкладке «Сессия».' : state.date < group.dates[0] ? 'Сессия ещё не началась.' : 'Можно выдохнуть. Или посмотреть следующий учебный день.'}</p>${next?`<button class="secondary" data-action="date" data-value="${next}">К ${escape(dateText(next))} ${icon('arrow')}</button>`:`<button class="secondary" data-action="session">Посмотреть сессию ${icon('arrow')}</button>`}</div>`;
+    return `<div class="empty">${icon('book')}<h2>Пар нет</h2><p>${state.date > group.dates.at(-1) ? 'Сессия закончилась. Прошедшие дни доступны в календаре.' : state.date < group.dates[0] ? 'Сессия ещё не началась.' : 'Этот день свободен.'}</p>${next?`<button class="secondary" data-action="date" data-value="${next}">Ближайшие пары · ${escape(dateText(next,{day:'numeric',month:'short'}))} ${icon('arrow')}</button>`:`<button class="secondary" data-action="calendar">Открыть календарь ${icon('calendar')}</button>`}</div>`;
   }
   function renderDay() {
     const lessons = lessonsOn(state.date);
     const today = nowDate();
-    const weekday = (dateObject(state.date).getUTCDay() + 6) % 7;
-    const monday = shiftDate(state.date,-weekday);
+    const week = time.weekDates(state.date);
     const past = today > group.dates.at(-1);
     const future = today < group.dates[0];
-    return `<main class="page" id="content"><div class="page-head"><div><p class="eyebrow">${state.date===today?'Сегодня':escape(dateText(state.date,{weekday:'long'}))}</p><h1 style="margin-top:8px">${escape(dateText(state.date))}</h1><p class="small muted">${group.course} курс · установочная сессия</p></div><button class="today-button" data-action="today">Сегодня</button></div>${past?'<div class="source-banner">Эта сессия закончилась. Здесь можно посмотреть прошедшие занятия.</div>':future?`<div class="source-banner">Сессия начнётся ${escape(dateText(group.dates[0]))}.</div>`:''}<div class="date-nav"><button class="icon-button" data-action="prev-day" aria-label="Предыдущий день">${icon('left')}</button><label class="visually-hidden" for="day-picker">Дата расписания</label><input class="date-field" id="day-picker" type="date" value="${state.date}"><button class="icon-button" data-action="next-day" aria-label="Следующий день">${icon('right')}</button></div><div class="week" aria-label="Дни недели">${Array.from({length:7},(_,i)=>shiftDate(monday,i)).map(date=>`<button class="day" data-action="date" data-value="${date}"${date===state.date?' aria-current="date"':''} aria-label="${escape(dateText(date,{weekday:'long',day:'numeric',month:'long'}))}${lessonsOn(date).length?', есть занятия':', без занятий'}"><span class="day-name">${escape(dateText(date,{weekday:'short'}))}</span><span class="day-number">${Number(date.slice(-2))}</span><span class="day-dot ${lessonsOn(date).length?'':'no-lessons'}"></span></button>`).join('')}</div><div id="live-focus">${renderFocus()}</div><div class="date-description"><h2>Твои пары</h2><span class="small muted">${plural(lessons.length,['пара','пары','пар'])}</span></div><button class="bells-shortcut" data-action="bells">${icon('clock')}<span>Звонки · ${time.isWeekend(state.date)?'выходные':'будни'}</span>${icon('right')}</button>${lessons.length?lessonCards(lessons):emptyDay()}<p class="time-note">Московское время</p><p class="section-note">Расписание от ${escape(dateText(data.updated))}</p></main>`;
+    const relative = state.date===today ? 'Сегодня' : state.date===shiftDate(today,1) ? 'Завтра' : state.date===shiftDate(today,-1) ? 'Вчера' : '';
+    const dayTime = lessons.length ? time.bounds(lessons[0]).start+'–'+time.bounds(lessons.at(-1)).end : 'Свободный день';
+    return `<main class="page day-page" id="content"><section class="day-controls" aria-label="Выбор дня"><div class="date-pager"><button class="icon-button" data-action="prev-day" aria-label="Предыдущий день">${icon('left')}</button><button class="date-title" data-action="calendar" aria-label="Открыть календарь, ${escape(dateText(state.date))}"><span class="day-caption">${relative?relative+' · ':''}${escape(dateText(state.date,{weekday:'long'}))}</span><h1>${escape(dateText(state.date))}${icon('down')}</h1></button><button class="icon-button" data-action="next-day" aria-label="Следующий день">${icon('right')}</button></div><div class="week" aria-label="Дни недели">${week.map(date=>`<button class="day${date===today?' is-today':''}" data-action="date" data-value="${date}"${date===state.date?' aria-current="date"':''} aria-label="${escape(dateText(date,{weekday:'long',day:'numeric',month:'long'}))}, ${plural(lessonsOn(date).length,['пара','пары','пар'])}"><span class="day-name">${escape(dateText(date,{weekday:'short'}))}</span><span class="day-number">${Number(date.slice(-2))}</span><span class="day-dot ${lessonsOn(date).length?'':'no-lessons'}"></span></button>`).join('')}</div><div class="day-tools"><button class="text-button" data-action="calendar">${icon('calendar')}Календарь</button><button class="text-button" data-action="today"${state.date===today?' disabled':''}>Сегодня</button><button class="icon-button search-button" data-action="search" aria-label="Найти предмет, преподавателя или аудиторию">${icon('search')}</button></div></section>${past?'<p class="source-banner">Прошедшая сессия · расписание сохранено</p>':future?`<p class="source-banner">Сессия с ${escape(dateText(group.dates[0]))}</p>`:''}<div id="live-focus">${renderFocus()}</div><div class="date-description"><h2>${lessons.length?plural(lessons.length,['пара','пары','пар']):'Твой день'}</h2><span>${dayTime}</span></div>${lessons.length?lessonCards(lessons):emptyDay()}<p class="time-note">Московское время</p></main>`;
   }
-  function renderSession() {
-    const dates = group.dates;
-    const lessons = groupLessons();
-    return `<main class="page" id="content"><p class="eyebrow">Осень 2026</p><h1 style="margin-top:8px">Установочная сессия</h1><p class="small muted" style="margin-top:8px">${escape(dateText(dates[0]))} — ${escape(dateText(dates.at(-1)))} · московское время</p><div class="stat-line"><div><strong>${lessons.length}</strong><span>пар за сессию</span></div><div><strong>${dates.filter(d=>lessonsOn(d).length).length}</strong><span>учебных дней</span></div></div><div class="session-search"><label class="label" for="subject-search">Найти предмет или преподавателя</label><div class="search-wrap">${icon('search')}<input id="subject-search" class="search" type="search" placeholder="Что ищем?" value="${escape(state.subject)}" aria-controls="session-results"></div></div><div class="filters" aria-label="Вид занятия">${[['','Все пары'],['Л','Лекции'],['П','Практики'],['ЛР','Лабораторные']].map(([id,label])=>`<button class="filter" data-action="kind" data-value="${id}" aria-pressed="${state.kind===id}">${label}</button>`).join('')}</div><div id="session-results"></div></main>`;
+  function renderCalendar() {
+    const month = state.month || state.date.slice(0,7);
+    const today = nowDate();
+    return `<main class="page" id="content"><div class="back-row"><button class="back-button" data-action="back-day">${icon('left')}К расписанию</button><button class="text-button" data-action="calendar-today">Этот месяц</button></div><div class="month-pager"><button class="icon-button" data-action="prev-month" aria-label="Предыдущий месяц">${icon('left')}</button><h1>${escape(dateText(month+'-01',{month:'long',year:'numeric'}))}</h1><button class="icon-button" data-action="next-month" aria-label="Следующий месяц">${icon('right')}</button></div><div class="month-weekdays" aria-hidden="true">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(day=>`<span>${day}</span>`).join('')}</div><div class="month-grid" aria-label="Календарь ${escape(dateText(month+'-01',{month:'long',year:'numeric'}))}">${time.monthDates(month).map(date=>`<button class="month-day${date.slice(0,7)!==month?' outside-month':''}${date===today?' is-today':''}" data-action="date" data-value="${date}"${date===state.date?' aria-current="date"':''} aria-label="${escape(dateText(date,{weekday:'long',day:'numeric',month:'long'}))}, ${plural(lessonsOn(date).length,['пара','пары','пар'])}"><span>${Number(date.slice(-2))}</span><span class="day-dot ${lessonsOn(date).length?'':'no-lessons'}"></span></button>`).join('')}</div><p class="calendar-legend"><span class="day-dot"></span>Дни с парами</p><button class="period-card" data-action="date" data-value="${group.dates[0]}"><span>${icon('book')}Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><span>${group.course} курс · ${escape(group.id)} ${icon('arrow')}</span></button></main>`;
   }
-  function updateSessionResults() {
-    const matching = groupLessons().filter(l => (!state.kind || l.type===state.kind) && (!state.subject || (l.subject+' '+l.teacher+' '+l.room).toLowerCase().includes(state.subject.toLowerCase().trim())));
+  function renderSearch() {
+    return `<main class="page" id="content"><div class="back-row"><button class="back-button" data-action="back-day">${icon('left')}К расписанию</button></div><div class="screen-heading"><h1>Найти пару</h1><p>В расписании твоей группы</p></div><label class="label" for="subject-search">Предмет, преподаватель или аудитория</label><div class="search-wrap">${icon('search')}<input id="subject-search" class="search" type="search" placeholder="Что ищем?" value="${escape(state.subject)}" aria-controls="search-results" autocomplete="off"></div><div id="search-results"></div></main>`;
+  }
+  function updateSearchResults() {
+    const query = state.subject.trim().toLowerCase();
+    const target = document.getElementById('search-results');
+    if (!query) {
+      const subjects = [...new Set(groupLessons().map(lesson=>lesson.subject))];
+      target.innerHTML = `<h2 class="subjects-heading">Твои предметы</h2><div class="subject-list">${subjects.map(subject=>`<button class="subject-row" data-action="search-subject" data-value="${escape(subject)}"><span>${escape(subject)}</span>${icon('right')}</button>`).join('')}</div>`;
+      return;
+    }
+    const matching = groupLessons().filter(l => (l.subject+' '+l.teacher+' '+l.room).toLowerCase().includes(query));
     const dates = [...new Set(matching.map(l=>l.date))];
-    document.getElementById('session-results').innerHTML = matching.length ? dates.map(date => `<section class="day-group"><div class="day-group-heading"><button data-action="date" data-value="${date}"><h2>${escape(dateText(date))}</h2><span class="small muted">${escape(dateText(date,{weekday:'long'}))}</span></button><span class="small muted">${plural(matching.filter(l=>l.date===date).length,['пара','пары','пар'])}</span></div>${lessonCards(matching.filter(l=>l.date===date))}</section>`).join('') : '<div class="empty"><h2>Ничего не нашлось</h2><p>Попробуй другое название или убери фильтр.</p><button class="secondary" data-action="reset-subject">Показать все пары</button></div>';
-    root.querySelectorAll('[data-action=kind]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.value===state.kind)));
+    target.innerHTML = matching.length ? `<p class="results-count" role="status">${plural(matching.length,['пара','пары','пар'])} · ${plural(dates.length,['день','дня','дней'])}</p>${dates.map(date => `<section class="day-group"><div class="day-group-heading"><button data-action="date" data-value="${date}"><strong>${escape(dateText(date))}</strong><span>${escape(dateText(date,{weekday:'long'}))}</span></button><button class="icon-button" data-action="date" data-value="${date}" aria-label="Открыть день ${escape(dateText(date))}">${icon('arrow')}</button></div>${lessonCards(matching.filter(l=>l.date===date))}</section>`).join('')}` : '<div class="empty"><h2>Ничего не нашлось</h2><p>Попробуй название покороче или фамилию.</p><button class="secondary" data-action="reset-subject">Очистить поиск</button></div>';
   }
   function renderProfile() {
     const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    return `<main class="page" id="content"><p class="eyebrow">Всё под рукой</p><h1 style="margin-top:8px">Моя группа</h1><section class="profile-group"><p class="eyebrow">Твоя группа</p><h2>${escape(group.id)}</h2><p class="small">${group.course} курс · заочное отделение</p><button class="secondary" data-action="group">Сменить группу ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="settings-row"><div><label for="theme" class="label" style="margin:0">Оформление</label><p>Как тебе удобнее</p></div><select id="theme">${[['auto','Как на телефоне'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<option value="${id}"${state.theme===id?' selected':''}>${label}</option>`).join('')}</select></div><div class="settings-row"><div><h2 style="font-size:1rem">Расписание</h2><p>От ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div><a class="link-row" href="#session"><span>Все занятия сессии</span>${icon('right')}</a><button class="link-row" data-action="bells"><span>Расписание звонков</span>${icon('right')}</button>${isAndroid?`<a class="link-row" href="${DOWNLOAD_URL}"><span>Обновить приложение</span>${icon('right')}</a>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Пары на главном экране</h2><p>Открывай одним касанием, как обычное приложение.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<div class="profile-info"><p>Привет! Это приложение от студента для студентов РГАТУ. Чтобы искать свои пары было чуть проще.</p><p>Здесь расписание установочной сессии, время пар и аудитории. Если занятие общее, под ним указаны соседние группы.</p></div><p class="section-note">РГАТУ Пары</p></main>`;
+    return `<main class="page" id="content"><div class="screen-heading"><h1>Моя группа</h1></div><section class="profile-group"><div><h2>${escape(group.id)}</h2><p>${group.course} курс · заочное отделение</p></div><button class="secondary" data-action="group">Сменить ${icon('right')}</button></section><section class="profile-period"><span>Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><button class="text-button" data-action="calendar">Открыть календарь ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="theme-setting"><h2>Оформление</h2><div class="segments" aria-label="Оформление">${[['auto','Авто'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<button data-action="theme" data-value="${id}" aria-pressed="${state.theme===id}">${label}</button>`).join('')}</div></div><div class="settings-row"><div><h2>Расписание</h2><p>Обновлено ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div>${isAndroid?`<button class="link-row" data-action="app-update"><span>Проверить обновления приложения</span>${icon('refresh')}</button>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Пары на главном экране</h2><p>Открывай одним касанием.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<section class="about-card"><h2>От студента студентам</h2><p>Самодел от студента 1 курса РГАТУ.<br>Неофициальное приложение.</p><a class="link-row" href="https://t.me/falseheat"><span>Смирнов Иван · @falseheat<small>Связь, идеи и ошибки в расписании</small></span>${icon('arrow')}</a></section></main>`;
   }
   function render() {
     const page = route();
     if (page === 'group') {renderPicker(); return;}
-    root.innerHTML = `<div class="shell">${header()}${page==='day'?renderDay():page==='session'?renderSession():page==='bells'?renderBells():renderProfile()}${nav(page)}</div>`;
-    if (page === 'session') updateSessionResults();
+    const screens = {day:renderDay,calendar:renderCalendar,search:renderSearch,bells:renderBells,profile:renderProfile};
+    root.innerHTML = `<div class="shell">${header()}${screens[page]()}${nav(page)}</div>`;
+    if (page === 'search') updateSearchResults();
   }
+  function selectDate(date) {
+    state.date = date;
+    state.month = date.slice(0,7);
+    state.bellKind = '';
+    go('day');
+    window.scrollTo(0,0);
+  }
+  function openCalendar() { state.month=state.date.slice(0,7);go('calendar');window.scrollTo(0,0); }
   async function refreshSchedule(userInitiated = false) {
     if (state.refreshing) return;
     if (!navigator.onLine) { if(userInitiated) toast('Сейчас нет интернета. Сохранённое расписание уже доступно.'); return; }
@@ -192,11 +211,7 @@
   }
   root.addEventListener('input', event => {
     if (event.target.id === 'group-search') {state.query=event.target.value;state.limit=18;updateGroupResults();}
-    if (event.target.id === 'subject-search') {state.subject=event.target.value;updateSessionResults();}
-  });
-  root.addEventListener('change', event => {
-    if(event.target.id === 'day-picker' && /^\d{4}-\d{2}-\d{2}$/.test(event.target.value)) {state.date=event.target.value;render();}
-    if(event.target.id === 'theme') {state.theme=event.target.value;write('rgatu.theme',state.theme);applyTheme();}
+    if (event.target.id === 'subject-search') {state.subject=event.target.value;updateSearchResults();}
   });
   root.addEventListener('keydown', event => {
     if (!event.target.matches('.group-row') || !['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'].includes(event.key)) return;
@@ -216,7 +231,7 @@
       case 'save-group': {
         const chosen = groupById(state.chosen);
         if(!chosen) return;
-        group = chosen;state.date=initialDate(group);state.subject='';state.kind='';
+        group = chosen;state.date=initialDate(group);state.month='';state.subject='';state.bellKind='';
         const saved = write('rgatu.group',group.id);
         go('day');window.scrollTo(0,0);
         if(!saved) toast('Группу не удалось запомнить на этом устройстве.');
@@ -227,15 +242,28 @@
       case 'course': state.course=value;state.limit=18;updateGroupResults();break;
       case 'more-groups': state.limit+=18;updateGroupResults();break;
       case 'reset-groups': state.course='';state.query='';state.limit=18;document.getElementById('group-search').value='';updateGroupResults();break;
-      case 'today': state.date=nowDate();render();break;
-      case 'date': state.date=value;go('day');window.scrollTo(0,0);break;
-      case 'prev-day': state.date=shiftDate(state.date,-1);render();break;
-      case 'next-day': state.date=shiftDate(state.date,1);render();break;
-      case 'session': go('session');window.scrollTo(0,0);break;
-      case 'bells': state.bellsBack=route();go('bells');window.scrollTo(0,0);break;
-      case 'back-bells': go(state.bellsBack||'day');break;
-      case 'kind': state.kind=value;updateSessionResults();break;
-      case 'reset-subject': state.subject='';state.kind='';document.getElementById('subject-search').value='';updateSessionResults();break;
+      case 'today': selectDate(nowDate());break;
+      case 'date': selectDate(value);break;
+      case 'prev-day': selectDate(shiftDate(state.date,-1));break;
+      case 'next-day': selectDate(shiftDate(state.date,1));break;
+      case 'calendar': openCalendar();break;
+      case 'calendar-today': state.month=nowDate().slice(0,7);render();break;
+      case 'prev-month': state.month=time.shiftMonth(state.month || state.date.slice(0,7),-1);render();break;
+      case 'next-month': state.month=time.shiftMonth(state.month || state.date.slice(0,7),1);render();break;
+      case 'back-day': go('day');break;
+      case 'bells': go('bells');window.scrollTo(0,0);break;
+      case 'bell-kind': state.bellKind=value;render();break;
+      case 'search': state.subject='';go('search');window.scrollTo(0,0);break;
+      case 'search-subject': state.subject=value;document.getElementById('subject-search').value=value;updateSearchResults();break;
+      case 'reset-subject': state.subject='';document.getElementById('subject-search').value='';updateSearchResults();break;
+      case 'theme': state.theme=value;write('rgatu.theme',state.theme);applyTheme();root.querySelectorAll('[data-action=theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.value===value)));break;
+      case 'focus-lesson': {
+        selectDate(value);
+        // A hash navigation renders on the next event-loop turn.
+        setTimeout(()=>[...root.querySelectorAll('[data-lesson-ids]')].find(card=>card.dataset.lessonIds.split(',').includes(button.dataset.lessonId))?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}),0);
+        break;
+      }
+      case 'app-update': if(window.RgatuApp?.checkUpdates) window.RgatuApp.checkUpdates();else location.href=DOWNLOAD_URL;break;
       case 'refresh': await refreshSchedule(true);break;
       case 'install':
         if(installPrompt) {await installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;}
@@ -243,6 +271,18 @@
         break;
     }
   });
+  let swipeStart = null;
+  root.addEventListener('touchstart',event=>{
+    if (route()!=='day' || event.touches.length!==1 || event.target.closest('button,a,input,.week')) {swipeStart=null;return;}
+    swipeStart={x:event.touches[0].clientX,y:event.touches[0].clientY};
+  },{passive:true});
+  root.addEventListener('touchend',event=>{
+    if (!swipeStart || route()!=='day' || !event.changedTouches.length) return;
+    const dx=event.changedTouches[0].clientX-swipeStart.x, dy=event.changedTouches[0].clientY-swipeStart.y;
+    swipeStart=null;
+    if (Math.abs(dx)>72 && Math.abs(dx)>Math.abs(dy)*1.8) selectDate(shiftDate(state.date,dx<0?1:-1));
+  },{passive:true});
+  root.addEventListener('touchcancel',()=>{swipeStart=null;},{passive:true});
   window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);});
   window.addEventListener('beforeinstallprompt', event => {event.preventDefault();installPrompt=event;});
   window.addEventListener('appinstalled',()=>{toast('Теперь пары на главном экране.');if(route()==='profile')render();});

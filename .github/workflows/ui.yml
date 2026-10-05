@@ -1,0 +1,36 @@
+name: Screen checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - public/**
+      - scripts/test_app.cjs
+      - scripts/serve.py
+      - .github/workflows/ui.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test runner
+        run: |
+          npm install --no-save --package-lock=false playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Check schedule and mobile screens
+        run: |
+          node scripts/test_timetable.cjs
+          python3 scripts/serve.py > /tmp/rgatu-preview.log 2>&1 &
+          node scripts/test_app.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phone-screens
+          path: build/screenshots
+          retention-days: 7

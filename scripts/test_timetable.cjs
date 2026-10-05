@@ -36,3 +36,18 @@ assert.equal(t.merge([pairA,pairB],new Map([[0,['А','Б']],[1,['А','В']]])).l
 assert.equal(t.bounds(pairA).start,'12:00');
 assert.equal(t.focus([pairA,pairB],Date.parse('2026-10-10T13:40:00+03:00')).current,false);
 console.log('PASS: supplied weekday/weekend bells, Moscow dates, lesson and break boundaries, next-day transitions, all 1,464 shared-group mappings and safe merging.');
+assert.deepEqual(t.weekDates('2026-10-11'),['2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09','2026-10-10','2026-10-11']);
+assert.equal(t.weekDates('2027-01-01')[0],'2026-12-28');
+assert.equal(t.shiftMonth('2026-12',1),'2027-01');
+assert.equal(t.shiftMonth('2026-01',-1),'2025-12');
+assert.equal(t.monthDates('2026-10')[0],'2026-09-28');
+assert.equal(t.monthDates('2026-10').at(-1),'2026-11-01');
+assert.equal(t.monthDates('2024-02').filter(d=>d.startsWith('2024-02')).length,29);
+assert.equal(t.monthDates('2026-02').filter(d=>d.startsWith('2026-02')).length,28);
+for(let month=1;month<=12;month++) {
+  const grid=t.monthDates('2026-'+String(month).padStart(2,'0'));
+  assert.equal(grid.length%7,0);
+  assert.equal(new Date(grid[0]+'T12:00:00Z').getUTCDay(),1);
+  assert.equal(new Date(grid.at(-1)+'T12:00:00Z').getUTCDay(),0);
+}
+console.log('PASS: day/week/month navigation, year changes and leap day; every month starts Monday and ends Sunday without missing dates.');

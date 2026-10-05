@@ -24,6 +24,7 @@ import java.util.Map;
 public final class MainActivity extends Activity {
     private static final String APP_URL = "https://rgatu-lite.ivan-s-2001.workers.dev/";
     private WebView web;
+    private AppUpdater updater;
 
     @Override public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
@@ -52,7 +53,9 @@ public final class MainActivity extends Activity {
         settings.setSupportZoom(true);
         settings.setBuiltInZoomControls(true);
         settings.setDisplayZoomControls(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " RgatuLiteAndroid/1.1.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " RgatuLiteAndroid/1.2.0");
+        updater = new AppUpdater(this);
+        web.addJavascriptInterface(updater,"RgatuApp");
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
@@ -74,7 +77,7 @@ public final class MainActivity extends Activity {
                 Uri uri = request.getUrl();
                 String scheme = uri.getScheme();
                 if (!"https".equals(scheme) && !"http".equals(scheme)) return true;
-                if (Uri.parse(APP_URL).getHost().equals(uri.getHost()) && !uri.getPath().startsWith("/download/")) return false;
+                if (Uri.parse(APP_URL).getHost().equals(uri.getHost()) && ("/".equals(uri.getPath()) || "/index.html".equals(uri.getPath()))) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW,uri)); }
                 catch (Exception exception) { Toast.makeText(MainActivity.this,"Не удалось открыть ссылку",Toast.LENGTH_SHORT).show(); }
                 return true;
@@ -93,12 +96,13 @@ public final class MainActivity extends Activity {
     }
 
     private void handleBack() {
-        web.evaluateJavascript("(() => {if (location.hash==='#bells') {history.back();return true;}if (['#group','#session','#profile'].includes(location.hash)) {location.hash='#day';return true;}return false;})()", result -> {
+        web.evaluateJavascript("(() => {if (['#calendar','#search','#group','#bells','#session','#profile'].includes(location.hash)) {location.hash='#day';return true;}return false;})()", result -> {
             if (!"true".equals(result)) finish();
         });
     }
 
     @Override public void onBackPressed() { handleBack(); }
     @Override protected void onSaveInstanceState(Bundle state) { web.saveState(state);super.onSaveInstanceState(state); }
-    @Override protected void onDestroy() { if (web != null) {web.stopLoading();web.destroy();}super.onDestroy(); }
+    @Override protected void onResume() {super.onResume();if(updater!=null)updater.onResume();}
+    @Override protected void onDestroy() { if(updater!=null)updater.close(); if (web != null) {web.stopLoading();web.destroy();}super.onDestroy(); }
 }
