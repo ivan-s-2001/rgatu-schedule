@@ -8,7 +8,7 @@ const path=require('node:path');
  await page.goto(process.env.RGATU_DOWNLOAD_URL||'file://'+path.resolve('docs/index.html'));
  assert.equal(await page.locator('.unofficial').innerText(),'Неофициальный студенческий проект');
  assert.match(await page.locator('.author').innerText(),/Смирнов Иван · @falseheat/);
- assert.equal(await page.locator('.author a').getAttribute('href'),'https://t.me/falseheat');
+ assert.equal(await page.locator('.author a[href="https://t.me/falseheat"]').getAttribute('href'),'https://t.me/falseheat');\n assert.equal(await page.locator('.author a[href="https://www.rsatu.ru/zaochnoe/"]').count(),1);
  assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.2.0.apk');
  fs.mkdirSync('build/screenshots',{recursive:true});
  await page.screenshot({path:'build/screenshots/download-page.png',fullPage:false,animations:'disabled'});
