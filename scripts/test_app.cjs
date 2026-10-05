@@ -52,7 +52,7 @@ const path=require('node:path');
   await screenClick('[data-action="group-schedule"]','day');
   assert.match(await page.locator('.lesson').first().innerText(),/Экономика|Фоменко С\.А\.|1-212/);
   assert.match(await page.locator('.lesson').first().innerText(),/1 корпус[\s\S]*2 этаж/);
-  assert.match(await page.locator('.live-summary').innerText(),/Экономика|1-212/);
+  assert.match(await page.locator('.live-summary').innerText(),/Культурология|3-215/);
   assert.match(await page.locator('.together').first().innerText(),/Вместе с ЗСС-26/);
   await page.click('[data-action="next-day"]');assert.match(await page.locator('.date-title').innerText(),/6 октября/);
   await page.click('[data-action="prev-day"]');assert.match(await page.locator('.date-title').innerText(),/5 октября/);
