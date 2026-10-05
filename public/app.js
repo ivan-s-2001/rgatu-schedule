@@ -67,7 +67,7 @@
   function route() { return group ? ['day','calendar','search','profile','group','bells','teachers'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
   function go(page) { if (location.hash === '#' + page) render(); else location.hash = page; }
   function header() {
-    return `<header class="topbar"><div class="brand"><div class="brand-mark" aria-hidden="true"><span>ФЗО</span></div><div><strong class="brand-title">Расписание ФЗО</strong><div class="brand-sub"><span class="unofficial-chip">неофициальное</span><span>от студента</span></div></div></div><button class="group-switch" data-action="group" aria-label="Сменить группу, сейчас ${escape(group.id)}"><span>${escape(group.id)}</span>${icon('down')}</button></header>`;
+    return `<header class="topbar"><div class="brand"><img class="brand-logo" src="./icons/icon.svg" alt="" aria-hidden="true"><div><strong class="brand-title">Расписание ФЗО</strong><div class="brand-sub"><span class="unofficial-chip">неофициальное</span><span>от студента</span></div></div></div><button class="group-switch" data-action="group" aria-label="Сменить группу, сейчас ${escape(group.id)}"><span>${escape(group.id)}</span>${icon('down')}</button></header>`;
   }
   function nav(page) {
     return `<nav class="bottom-nav" aria-label="Главное меню">${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search','teachers'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
