@@ -995,6 +995,13 @@ html[data-theme=dark] .kind.practice{background:#392d21;color:#f2d6aa}
   background:var(--aqua);
 }
 .picker-page .intro>*{position:relative;z-index:1}
+.hero-back-row{
+  margin:0 0 22px;
+  color:#fff;
+}
+.hero-back-row .back-button{color:#fff;padding-left:0}
+.hero-back-row .back-button:hover{color:var(--aqua)}
+.hero-back-row .small{color:#c4d4e1}
 .intro-mark{display:flex;align-items:center;gap:10px}
 .intro-mark>div:last-child{min-width:0}
 .intro-mark .brand-mark,.intro-mark .brand-logo{width:44px;height:44px}
@@ -1269,7 +1276,6 @@ html[data-theme=dark] .bottom-nav{background:#0f1728}
     align-items:start;
     background:var(--surface);
   }
-  .picker-page .back-row{grid-column:1/-1;margin:0;padding:20px max(36px,calc((100vw - 1280px)/2)) 0;background:var(--header)}
   .picker-page .intro{
     grid-column:1;
     grid-row:1/3;
