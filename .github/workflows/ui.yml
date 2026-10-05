@@ -12,6 +12,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: ui-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   screens:
     runs-on: ubuntu-latest
