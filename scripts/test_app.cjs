@@ -28,10 +28,12 @@ const path=require('node:path');
     assert.deepEqual(issues,[],label);
   }
   await page.goto(url);await page.waitForSelector('#group-search');
+  const firstHero=await page.locator('.picker-page .intro').boundingBox();assert.ok(firstHero&&Math.abs(firstHero.y)<=1,'first-run hero must start at viewport top');
   await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
   await page.waitForSelector('#group-search');
   assert.match(await page.locator('.unofficial-card').innerText(),/неофициальное[\s\S]*студентом 1 курса/i);
   await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');await page.waitForSelector('.date-title');
+  const headerBox=await page.locator('.topbar').boundingBox();assert.ok(headerBox&&Math.abs(headerBox.y)<=1,'app header must start at viewport top');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
   assert.equal(await page.locator('.nav-link').count(),3);assert.equal(await page.locator('a[href="#session"]').count(),0);
   assert.equal(await page.locator('.schedule-tab').count(),2);
@@ -96,6 +98,29 @@ const path=require('node:path');
       }
     }
   }
+  // Desktop is a real two-column application shell, never a centered phone mockup.
+  for(const size of [{width:1280,height:900},{width:1440,height:1000}]){
+    await page.setViewportSize(size);await page.addStyleTag({content:'html{font-size:16px!important}'});
+    await screenClick('a[href="#day"]','day');
+    const desktopLayout=await page.evaluate(()=>{
+      const header=document.querySelector('.topbar').getBoundingClientRect();
+      const nav=document.querySelector('.bottom-nav').getBoundingClientRect();
+      const main=document.querySelector('.page').getBoundingClientRect();
+      return {headerTop:header.top,headerLeft:header.left,headerRight:header.right,navLeft:nav.left,navRight:nav.right,navTop:nav.top,mainLeft:main.left,mainWidth:main.width,viewport:innerWidth};
+    });
+    assert.ok(Math.abs(desktopLayout.headerTop)<=1,'desktop header top');
+    assert.ok(desktopLayout.headerLeft<=1&&desktopLayout.headerRight>=desktopLayout.viewport-1,'desktop header spans viewport');
+    assert.ok(desktopLayout.navLeft<=1&&desktopLayout.navRight>=190,'desktop navigation rail');
+    assert.ok(desktopLayout.mainLeft>=desktopLayout.navRight-2&&desktopLayout.mainWidth>700,'desktop content is wide and beside navigation');
+    await fits('desktop day '+size.width);
+    await screenClick('[data-action="teachers"]','teachers');await fits('desktop teachers '+size.width);
+    await screenClick('a[href="#profile"]','profile');await fits('desktop profile '+size.width);
+  }
+  await page.setViewportSize({width:1280,height:900});await screenClick('a[href="#day"]','day');await page.screenshot({path:path.join(out,'desktop-day.png'),fullPage:false,animations:'disabled'});
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.waitForSelector('.picker-page .intro');
+  const changeHero=await page.locator('.picker-page .intro').boundingBox();assert.ok(changeHero&&Math.abs(changeHero.y)<=1,'group-change hero must start at viewport top');
+  await page.click('[data-action="cancel-group"]');await page.waitForSelector('.date-title');
+
   // Exercise actual source titles with the longest wraps, rather than a synthetic short fixture.
   const source=JSON.parse(fs.readFileSync('public/schedule.json'));
   const longest=source.lessons.slice().sort((a,b)=>b.subject.length-a.subject.length)[0];
@@ -114,6 +139,6 @@ const path=require('node:path');
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
   assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
   assert.deepEqual(errors,[]);
-  console.log('PASS: separate lesson cards, group/teacher schedule tabs, next-class dashboard, room building/floor hints, free-day continuation, month selection, search, exact bells, shared groups, author/contact, persistence, offline and no clipping at 100/150/200% text.');
+  console.log('PASS: top-edge hero/header, real desktop shell, separate lesson cards, group/teacher schedule tabs, next-class dashboard, room building/floor hints, free-day continuation, month selection, search, exact bells, shared groups, author/contact, persistence, offline and no clipping.');
   await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});
