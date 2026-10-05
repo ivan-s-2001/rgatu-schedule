@@ -10,14 +10,14 @@ const path=require('node:path');
   // Keep future CI runs anchored to the supplied October session.
   await context.addInitScript(()=>{const D=Date;window.Date=class extends D{constructor(...args){super(...(args.length?args:['2026-10-05T12:45:00+03:00']));}static now(){return D.parse('2026-10-05T12:45:00+03:00');}};});
   const page=await context.newPage();
-  async function screenClick(selector,screen){await page.click(selector);await page.waitForSelector({day:'.date-title',calendar:'.month-grid',search:'#subject-search',bells:'.bells-list',profile:'.about-card'}[screen]);}
+  async function screenClick(selector,screen){await page.click(selector);await page.waitForSelector({day:'.date-title',calendar:'.month-grid',search:'#subject-search',bells:'.bells-list',profile:'.about-card',consultations:'.consultations-page'}[screen]);}
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const out=path.resolve('build/screenshots');fs.mkdirSync(out,{recursive:true});
   async function fits(label){
     const issues=await page.evaluate(()=>{
       const issues=[];
       if(document.documentElement.scrollWidth>innerWidth+1)issues.push('page overflows');
-      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.primary,.secondary,.subject-row')){
+      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.schedule-tab,.unofficial-chip,.primary,.secondary,.subject-row,.consult-card')){
         if(el.hidden||!el.getClientRects().length)continue;
         if(el.scrollWidth>el.clientWidth+2)issues.push(el.className+': '+el.textContent.slice(0,70));
         const style=getComputedStyle(el);
