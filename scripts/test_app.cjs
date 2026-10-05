@@ -17,7 +17,7 @@ const path=require('node:path');
     const issues=await page.evaluate(()=>{
       const issues=[];
       if(document.documentElement.scrollWidth>innerWidth+1)issues.push('page overflows');
-      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.schedule-tab,.unofficial-chip,.primary,.secondary,.subject-row,.live-summary,.live-place,.next-preview,.room-strong')){
+      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.schedule-tab,.unofficial-chip,.primary,.secondary,.subject-row,.live-summary,.live-place,.next-preview,.room-strong,.subgroup-note')){
         if(el.hidden||!el.getClientRects().length)continue;
         if(el.scrollWidth>el.clientWidth+2)issues.push(el.className+': '+el.textContent.slice(0,70));
         const style=getComputedStyle(el);
@@ -36,6 +36,7 @@ const path=require('node:path');
   await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
   await page.waitForSelector('#group-search');
   assert.match(await page.locator('.unofficial-card').innerText(),/неофициальное[\s\S]*студентом 1 курса/i);
+  assert.equal(await page.locator('.group-row').filter({hasText:/-(1|2)\\s/}).count(),0,'technical subgroup rows are hidden from group picker');
   await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');await page.waitForSelector('.date-title');
   const headerBox=await page.locator('.topbar').boundingBox();assert.ok(headerBox&&Math.abs(headerBox.y)<=1,'app header must start at viewport top');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
@@ -83,6 +84,14 @@ const path=require('node:path');
   assert.match(await page.locator('.teacher-day .together').first().innerText(),/Группы:/);
   assert.equal(await page.locator('.nav-link[href="#day"]').getAttribute('aria-current'),'page');
   await screenClick('[data-action="group-schedule"]','day');
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.fill('#group-search','ЗКС-26');
+  assert.equal(await page.locator('.group-row').count(),1,'ZKS base group is a single choice');
+  assert.doesNotMatch(await page.locator('.group-row').innerText(),/подгруппа/i);
+  await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
+  assert.equal(await page.locator('.subgroup-note').count(),0,'whole-group lessons do not show subgroup labels');
+  await page.click('.week [data-value="2026-10-08"]');
+  assert.match(await page.locator('.subgroup-note').first().innerText(),/1 подгруппа/);
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
   assert.match(await page.locator('.lesson').first().innerText(),/Экономика|Фоменко С\.А\.|1-212/);
   assert.match(await page.locator('.lesson').first().innerText(),/1 корпус[\s\S]*2 этаж/);
   assert.match(await page.locator('.live-summary').innerText(),/Культурология|3-215/);
