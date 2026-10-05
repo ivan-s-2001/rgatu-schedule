@@ -34,7 +34,7 @@ public final class MainActivity extends Activity {
         getWindow().setNavigationBarColor(header);
         getWindow().getDecorView().setSystemUiVisibility(0);
         FrameLayout container = new FrameLayout(this);
-        container.setBackgroundColor(background);
+        container.setBackgroundColor(header);
         if (Build.VERSION.SDK_INT >= 30) {
             getWindow().setDecorFitsSystemWindows(false);
             container.setOnApplyWindowInsetsListener((view,insets) -> {
@@ -44,7 +44,7 @@ public final class MainActivity extends Activity {
             });
         }
         web = new WebView(this);
-        web.setBackgroundColor(background);
+        web.setBackgroundColor(header);
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
