@@ -10,7 +10,11 @@ const path=require('node:path');
  assert.match(await page.locator('.author').innerText(),/Смирнов Иван · @falseheat/);
  assert.equal(await page.locator('.author a[href="https://t.me/falseheat"]').getAttribute('href'),'https://t.me/falseheat');
  assert.equal(await page.locator('.author a[href="https://www.rsatu.ru/zaochnoe/"]').count(),1);
- assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.3.2.apk');
+ const pageIcons=await page.evaluate(()=>({bi:document.querySelectorAll('svg.bi').length,other:document.querySelectorAll('svg:not(.bi)').length,main:document.querySelectorAll('.brand img').length}));
+ assert.ok(pageIcons.bi>=5,'Bootstrap Icons on install page');
+ assert.equal(pageIcons.other,0,'no custom inline SVG icons on install page');
+ assert.equal(pageIcons.main,1,'main FZO mark remains separate');
+ assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.3.3.apk');
  await page.setViewportSize({width:1280,height:900});
  const fzo=await page.evaluate(()=>{
    const header=document.querySelector('.header-inner').getBoundingClientRect();
