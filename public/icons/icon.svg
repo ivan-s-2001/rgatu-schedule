@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <path fill="#2f43dc" d="M164 68c-33 0-55 20-61 52L72 303h112l40-235h-60Z"/>
-  <path fill="#ff1010" d="M242 68h220l-31 183-95 69 21-124H225l17-128Z"/>
-  <path fill="#111827" d="M335 300l96-68-5 28-91 66z" opacity=".95"/>
-  <path fill="#dceaf4" d="M82 300h255l91-65-20 125c-5 31-23 49-54 49H24l58-109Z"/>
-  <path fill="#2f43dc" d="M115 409h103l-111 74 8-74Z"/>
-  <text x="113" y="378" fill="#101827" font-family="Arial Black,DejaVu Sans,sans-serif" font-size="86" font-style="italic" font-weight="900" letter-spacing="-7">ФЗО</text>
-</svg>
