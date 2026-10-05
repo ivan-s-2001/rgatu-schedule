@@ -28,7 +28,8 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
-        int background = Color.parseColor("#eef1f4");\n        int header = Color.parseColor("#1f274b");
+        int background = Color.parseColor("#eef1f4");
+        int header = Color.parseColor("#1f274b");
         getWindow().setStatusBarColor(header);
         getWindow().setNavigationBarColor(header);
         getWindow().getDecorView().setSystemUiVisibility(0);
@@ -64,7 +65,7 @@ public final class MainActivity extends Activity {
                 String path = uri.getPath();
                 if (path == null || path.equals("/")) path = "/index.html";
                 if (path.contains("..") || path.startsWith("/api/") || path.startsWith("/download/")) return null;
-                if (!path.matches("/(index\\.html|app\\.css|app\\.js|timetable\\.js|schedule\\.(js|json)|consultations\\.js|manifest\\.webmanifest|icons/[a-z0-9.-]+)")) return null;
+                if (!path.matches("/(index\\.html|app\\.css|app\\.js|timetable\\.js|schedule\\.(js|json)|manifest\\.webmanifest|icons/[a-z0-9.-]+)")) return null;
                 try {
                     String mime = path.endsWith(".html") ? "text/html" : path.endsWith(".css") ? "text/css" : path.endsWith(".js") ? "application/javascript" : path.endsWith(".json") ? "application/json" : path.endsWith(".webmanifest") ? "application/manifest+json" : path.endsWith(".svg") ? "image/svg+xml" : "image/png";
                     Map<String,String> headers = new HashMap<>();
@@ -96,7 +97,7 @@ public final class MainActivity extends Activity {
     }
 
     private void handleBack() {
-        web.evaluateJavascript("(() => {if (['#calendar','#search','#group','#bells','#session','#consultations','#profile'].includes(location.hash)) {location.hash='#day';return true;}return false;})()", result -> {
+        web.evaluateJavascript("(() => {if (['#calendar','#search','#group','#bells','#teachers','#profile'].includes(location.hash)) {location.hash='#day';return true;}return false;})()", result -> {
             if (!"true".equals(result)) finish();
         });
     }
