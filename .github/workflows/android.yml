@@ -34,6 +34,8 @@ jobs:
           printf 'ANDROID_SDK_ROOT=%s\n' "$sdk_root" >> "$GITHUB_ENV"
       - name: Verify and build unsigned APK
         run: |
+          python3 -m pip install --disable-pip-version-check pillow
+          python3 scripts/generate_assets.py
           node scripts/test_timetable.cjs
           python3 scripts/build_android.py --unsigned
       - uses: actions/upload-artifact@v4
