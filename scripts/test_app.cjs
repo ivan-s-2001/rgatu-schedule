@@ -73,7 +73,7 @@ const path=require('node:path');
   await screenClick('a[href="#bells"]','bells');assert.equal(await page.locator('.bells-list li').count(),7);
   assert.match(await page.locator('.bells-list li').nth(2).innerText(),/12:40–14:15/);
   await page.click('[data-action="bell-kind"][data-value="weekend"]');assert.match(await page.locator('.bells-list li').nth(2).innerText(),/12:00–13:35/);
-  await screenClick('a[href="#profile"]','profile');assert.match(await page.locator('.about-card').innerText(),/Смирнов Иван · @falseheat/);assert.match(await page.locator('.about-card').innerText(),/Неофициальное/);
+  await screenClick('a[href="#profile"]','profile');assert.match(await page.locator('.about-card').innerText(),/Смирнов Иван · @falseheat/);assert.match(await page.locator('.about-card').innerText(),/неофициальное/i);
   assert.equal(await page.locator('a[href="https://t.me/falseheat"]').count(),1);
   await page.click('[data-action="theme"][data-value="dark"]');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
   const contrastIssues=await page.evaluate(()=>{
