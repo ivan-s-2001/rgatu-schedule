@@ -546,3 +546,286 @@ html[data-theme=dark] .next-preview small{color:#adb7c9}
   .live-symbol{width:30px;height:30px}
   .live-copy strong{font-size:.9rem}
 }
+
+
+/* Dark theme rebuild — single authoritative contrast layer. */
+html[data-theme=dark]{
+  color-scheme:dark;
+  --bg:#0b1020;
+  --surface:#151c2e;
+  --ink:#f7f9ff;
+  --muted:#aab4c8;
+  --line:#33405c;
+  --soft:#202a40;
+  --accent:#292d59;
+  --accent-ink:#e7e8ff;
+  --blue:#292d59;
+  --blue-ink:#e7e8ff;
+  --green:#18383d;
+  --green-ink:#d4f0f2;
+  --nav:rgba(11,16,32,.97);
+  --ring:#9a9cff;
+  --rgatu-blue:#9a9cff;
+  --rgatu-blue-deep:#c8c9ff;
+  --rgatu-navy:#f7f9ff;
+  --rgatu-teal:#82c1cb;
+  --rgatu-info:#c8d1df;
+  --rgatu-light:#506079;
+  --rgatu-alert:#ff8c7c;
+}
+html[data-theme=dark] body{background:#0b1020;color:#f7f9ff}
+html[data-theme=dark] .shell{background:#0b1020}
+html[data-theme=dark] .topbar{
+  background:rgba(11,16,32,.97);
+  border-bottom-color:#2b3852;
+  box-shadow:0 1px 0 #26324a;
+}
+html[data-theme=dark] .brand-title{color:#f7f9ff}
+html[data-theme=dark] .brand-sub{color:#aab4c8}
+html[data-theme=dark] .brand-mark{background:#6668df;box-shadow:0 5px 16px rgba(102,104,223,.22)}
+html[data-theme=dark] .brand-mark::after{background:#5ba6b2}
+html[data-theme=dark] .group-switch,
+html[data-theme=dark] .icon-button{
+  background:#151c2e;
+  border-color:#35435f;
+  color:#e9edf8;
+  box-shadow:none;
+}
+html[data-theme=dark] .group-switch:hover,
+html[data-theme=dark] .icon-button:hover{background:#1b2438;border-color:#465673}
+html[data-theme=dark] .schedule-switcher{
+  background:#101728;
+  border-color:#2e3a55;
+}
+html[data-theme=dark] .schedule-tab{color:#aab4c8}
+html[data-theme=dark] .schedule-tab[aria-selected=true]{
+  background:#242c45;
+  color:#f5f7ff;
+  box-shadow:0 2px 10px rgba(0,0,0,.18);
+}
+html[data-theme=dark] .schedule-tab[aria-selected=true]::after{background:#82c1cb}
+html[data-theme=dark] .day-controls,
+html[data-theme=dark] .lesson,
+html[data-theme=dark] .settings,
+html[data-theme=dark] .subject-list,
+html[data-theme=dark] .bells-list,
+html[data-theme=dark] .period-card,
+html[data-theme=dark] .empty,
+html[data-theme=dark] .about-card,
+html[data-theme=dark] .consult-card{
+  background:#151c2e;
+  border-color:#33405c;
+  color:#f7f9ff;
+  box-shadow:0 4px 18px rgba(0,0,0,.13);
+}
+html[data-theme=dark] .lesson-current{
+  background:#191f39;
+  border-color:#7779eb;
+  box-shadow:inset 3px 0 0 #9a9cff,0 4px 18px rgba(0,0,0,.16);
+}
+html[data-theme=dark] .lesson h3,
+html[data-theme=dark] .consult-body h3,
+html[data-theme=dark] .room-strong,
+html[data-theme=dark] .date-title h1,
+html[data-theme=dark] .screen-heading h1,
+html[data-theme=dark] .date-description h2,
+html[data-theme=dark] .month-pager h1,
+html[data-theme=dark] .settings h2,
+html[data-theme=dark] .about-head h2{
+  color:#f7f9ff;
+}
+html[data-theme=dark] .teacher,
+html[data-theme=dark] .time-note,
+html[data-theme=dark] .section-note,
+html[data-theme=dark] .screen-heading p,
+html[data-theme=dark] .date-description>span,
+html[data-theme=dark] .profile-period>span,
+html[data-theme=dark] .profile-period p,
+html[data-theme=dark] .consult-day-head span,
+html[data-theme=dark] .consult-note,
+html[data-theme=dark] .results-count,
+html[data-theme=dark] .group-hint{
+  color:#aab4c8;
+}
+html[data-theme=dark] .room-strong small,
+html[data-theme=dark] .schedule-heading .eyebrow{color:#82c1cb}
+html[data-theme=dark] .lesson-time{color:#e4e9f4}
+html[data-theme=dark] .kind{background:#292d59;color:#ececff}
+html[data-theme=dark] .kind.practice{background:#40242d;color:#ffd1ca}
+html[data-theme=dark] .kind.lab,
+html[data-theme=dark] .consult-card .kind{background:#18383d;color:#d4f0f2}
+html[data-theme=dark] .together{
+  border-top-color:#33405c;
+  color:#aab4c8;
+}
+html[data-theme=dark] .day,
+html[data-theme=dark] .month-day{color:#dbe1ee}
+html[data-theme=dark] .day-name{color:#95a2b8}
+html[data-theme=dark] .day.is-today,
+html[data-theme=dark] .month-day.is-today{border-color:#82c1cb}
+html[data-theme=dark] .day[aria-current=date],
+html[data-theme=dark] .month-day[aria-current=date]{
+  background:#9092ef;
+  border-color:#a4a6ff;
+  color:#0b1020;
+}
+html[data-theme=dark] .day[aria-current=date] .day-name{color:#202745}
+html[data-theme=dark] .day[aria-current=date] .day-dot:not(.no-lessons),
+html[data-theme=dark] .month-day[aria-current=date] .day-dot:not(.no-lessons){background:#0b1020}
+html[data-theme=dark] .outside-month:not([aria-current]){
+  background:#101728;
+  color:#78869e;
+}
+html[data-theme=dark] .day-controls .day-tools{
+  border-top-color:#33405c;
+}
+html[data-theme=dark] .day-controls .day-tools .text-button,
+html[data-theme=dark] .text-button{color:#c9d1df}
+html[data-theme=dark] .text-button:hover{background:#202a40}
+html[data-theme=dark] .live-summary{
+  background:#162032;
+  border-color:#384963;
+  border-left-color:#82c1cb;
+  color:#f7f9ff;
+  box-shadow:0 5px 20px rgba(0,0,0,.14);
+}
+html[data-theme=dark] .live-summary.is-current{
+  background:#1c2140;
+  border-color:#444f79;
+  border-left-color:#9a9cff;
+}
+html[data-theme=dark] .live-copy strong{color:#f7f9ff}
+html[data-theme=dark] .live-copy .live-kicker{color:#82c1cb}
+html[data-theme=dark] .live-summary.is-current .live-kicker{color:#b9baff}
+html[data-theme=dark] .live-copy .live-place{color:#bdc6d7}
+html[data-theme=dark] .live-symbol{background:#18383d;color:#a8dce3}
+html[data-theme=dark] .live-summary.is-current .live-symbol{background:#292d59;color:#d7d8ff}
+html[data-theme=dark] .live-summary.is-current .live-symbol .current-dot{background:#c7c8ff}
+html[data-theme=dark] .source-banner{
+  background:#123139;
+  border-left-color:#82c1cb;
+  color:#d2edf0;
+}
+html[data-theme=dark] .day-done{
+  background:#163238;
+  border-left-color:#82c1cb;
+  color:#d8f2f4;
+}
+html[data-theme=dark] .day-done span{color:#a8cbd0}
+html[data-theme=dark] .next-preview{
+  background:#121f2b;
+  border-left-color:#82c1cb;
+}
+html[data-theme=dark] .next-preview>span{color:#82c1cb}
+html[data-theme=dark] .next-preview strong{color:#f7f9ff}
+html[data-theme=dark] .next-preview small{color:#aab4c8}
+html[data-theme=dark] .search{
+  background:#111827;
+  border-color:#3b4965;
+  color:#f7f9ff;
+}
+html[data-theme=dark] .search::placeholder{color:#8190a9}
+html[data-theme=dark] .search:hover{border-color:#53627f}
+html[data-theme=dark] .search:focus,
+html[data-theme=dark] .search:focus-visible{
+  border-color:#82c1cb;
+  background:#141d2d;
+  box-shadow:0 0 0 3px rgba(130,193,203,.20);
+}
+html[data-theme=dark] .search-wrap>svg{color:#9aa9bd}
+html[data-theme=dark] .label{color:#9ba8ba}
+html[data-theme=dark] .filter{
+  background:#151c2e;
+  border-color:#3b4965;
+  color:#cbd3df;
+}
+html[data-theme=dark] .filter:hover{background:#1b2438;border-color:#5b6d87}
+html[data-theme=dark] .filter[aria-pressed=true]{
+  background:#18383d;
+  border-color:#82c1cb;
+  color:#e0f5f7;
+  box-shadow:none;
+}
+html[data-theme=dark] .group-row{
+  background:#151c2e;
+  border-color:#3b4965;
+  color:#f2f5fb;
+}
+html[data-theme=dark] .group-row:hover{background:#1a2235;border-color:#53627f}
+html[data-theme=dark] .group-row[aria-checked=true]{
+  background:#193238;
+  border-color:#82c1cb;
+  color:#f4fbfc;
+  box-shadow:0 0 0 3px rgba(130,193,203,.12);
+}
+html[data-theme=dark] .group-row[aria-checked=true] .choice-dot{
+  background:#82c1cb;
+  border-color:#82c1cb;
+  color:#0b1020;
+}
+html[data-theme=dark] .choice-dot{border-color:#718099}
+html[data-theme=dark] .segments{border-bottom-color:#3b4965}
+html[data-theme=dark] .segments button{color:#9ba8bc}
+html[data-theme=dark] .segments button:hover{background:#192236}
+html[data-theme=dark] .segments button[aria-pressed=true]{color:#f7f9ff}
+html[data-theme=dark] .segments button[aria-pressed=true]::after{background:#82c1cb}
+html[data-theme=dark] .primary{
+  background:#8f91ee;
+  border-color:#a1a3ff;
+  color:#0b1020;
+  box-shadow:none;
+}
+html[data-theme=dark] .primary:hover:not(:disabled){background:#a4a6ff;border-color:#b5b7ff}
+html[data-theme=dark] .primary:active:not(:disabled){background:#7f82df}
+html[data-theme=dark] .secondary{
+  background:#151c2e;
+  border-color:#82c1cb;
+  color:#d7f1f4;
+}
+html[data-theme=dark] .secondary:hover:not(:disabled){background:#183238}
+html[data-theme=dark] .unofficial-chip{
+  background:#3a2028;
+  border-color:#70434b;
+  color:#ffd0c9;
+}
+html[data-theme=dark] .unofficial-card{
+  background:#2a1b22;
+  border-color:#5f3941;
+  border-left-color:#ff8c7c;
+}
+html[data-theme=dark] .intro .unofficial-card p,
+html[data-theme=dark] .unofficial-card p{color:#f1c1ba}
+html[data-theme=dark] .profile-group{
+  background:linear-gradient(145deg,#242d5c,#343778 60%,#5759b8);
+  color:#fff;
+  box-shadow:0 10px 28px rgba(0,0,0,.20);
+}
+html[data-theme=dark] .profile-group::after{background:#5ba6b2}
+html[data-theme=dark] .profile-group p{color:#dce2f4}
+html[data-theme=dark] .profile-group .secondary{
+  background:rgba(11,16,32,.22);
+  border-color:#a9cbd1;
+  color:#f7fbff;
+}
+html[data-theme=dark] .install-block{
+  background:#20264b;
+  border-color:#414a78;
+  color:#eef0ff;
+}
+html[data-theme=dark] .settings-row{border-top-color:#33405c}
+html[data-theme=dark] .about-card .link-row,
+html[data-theme=dark] .settings .link-row{border-top-color:#33405c}
+html[data-theme=dark] .link-row{color:#ecf0f7}
+html[data-theme=dark] .link-row small{color:#9eaabd}
+html[data-theme=dark] .consult-time{color:#c4c5ff}
+html[data-theme=dark] .bottom-nav{
+  background:rgba(11,16,32,.97);
+  border-top-color:#2f3c57;
+}
+html[data-theme=dark] .nav-link{color:#9eaabd}
+html[data-theme=dark] .nav-link[aria-current=page]{
+  background:#252a4d;
+  color:#ececff;
+}
+html[data-theme=dark] .nav-link[aria-current=page] svg{color:#b8b9ff}
+html[data-theme=dark] .toast{background:#f5f7ff;color:#11182b}
