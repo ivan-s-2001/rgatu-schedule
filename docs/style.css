@@ -98,8 +98,9 @@ h1,h2,h3,.brand strong,.button,.hero-button,.hero-ghost,.badge{
   border-radius:6px;
   background:rgba(229,35,33,.14);
   color:#ffd5cf;
-  font-size:13px;
-  font-weight:600;
+  font-size:20px;
+  font-weight:700;
+  line-height:1.3;
 }
 .hero h1{
   max-width:22ch;
