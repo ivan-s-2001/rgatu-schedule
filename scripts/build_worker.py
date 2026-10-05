@@ -9,9 +9,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 assets = {}
-for path in sorted((ROOT/'public').rglob('*')):
+paths = [(path,'/'+str(path.relative_to(ROOT/'public'))) for path in sorted((ROOT/'public').rglob('*'))]
+paths += [(path,'/install/'+str(path.relative_to(ROOT/'docs'))) for path in sorted((ROOT/'docs').rglob('*')) if path.name!='.nojekyll' and 'download' not in path.relative_to(ROOT/'docs').parts]
+for path, relative in paths:
     if not path.is_file(): continue
-    relative = '/' + str(path.relative_to(ROOT/'public'))
     mime = {'js':'application/javascript; charset=utf-8','json':'application/json; charset=utf-8','webmanifest':'application/manifest+json; charset=utf-8','svg':'image/svg+xml','html':'text/html; charset=utf-8','css':'text/css; charset=utf-8'}.get(path.suffix[1:],mimetypes.guess_type(str(path))[0] or 'application/octet-stream')
     content = path.read_bytes()
     assets[relative] = {'mime':mime,'body':base64.b64encode(gzip.compress(content,mtime=0)).decode(),'hash':hashlib.sha256(content).hexdigest()[:20]}
@@ -44,6 +45,8 @@ export default {
     if (path === '/health') return Response.json({ok:true,app:'rgatu-pairs',version:'1.1.0'},{headers:{'Cache-Control':'no-store',...COMMON}});
     if (!['GET','HEAD'].includes(request.method)) return new Response('Method not allowed',{status:405,headers:{'Allow':'GET, HEAD',...COMMON}});
     if (path === '/') path = '/index.html';
+    if (path === '/install' || path === '/install/') path = '/install/index.html';
+    if (path === '/install/download/RgatuLite.apk') path = '/download/android';
     if (path === '/api/schedule') path = '/schedule.json';
     const asset = ASSETS[path];
     if (!asset) return new Response('Страница не найдена',{status:404,headers:{'Content-Type':'text/plain; charset=utf-8',...COMMON}});
