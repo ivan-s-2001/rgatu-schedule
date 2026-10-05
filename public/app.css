@@ -217,7 +217,7 @@ h1,h2,h3,.brand-title,.group-code,.date-title h1,.month-pager h1,.profile-group 
 .intro .unofficial-card p,.unofficial-card p{color:#6f4038}
 .schedule-switcher{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px;margin:2px 0 18px;padding:4px;background:#e9edf3;border:1px solid #d9e1ea;border-radius:12px}
 .schedule-tab{display:flex;align-items:center;justify-content:center;gap:.22em;min-width:0;min-height:48px;padding:9px 10px;border:0;border-radius:9px;background:transparent;color:#596477;font-family:"Montserrat","Segoe UI",Arial,sans-serif;font-size:.76rem;font-weight:650;line-height:1.1;text-align:center;overflow-wrap:anywhere}
-.schedule-tab:first-child{flex-wrap:wrap}.schedule-tab:first-child span{white-space:nowrap}
+.schedule-tab span{min-width:0;overflow-wrap:anywhere;hyphens:auto}
 .schedule-tab[aria-selected=true]{background:#fff;color:var(--rgatu-blue);box-shadow:0 2px 9px #1f274b18}
 .schedule-tab[aria-selected=true]::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--rgatu-teal);margin-left:2px;flex:none}
 .schedule-heading{margin-top:4px}.schedule-heading .eyebrow{display:block;margin-bottom:5px;color:var(--rgatu-teal);font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
