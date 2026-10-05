@@ -40,6 +40,17 @@ const path=require('node:path');
   const headerBox=await page.locator('.topbar').boundingBox();assert.ok(headerBox&&Math.abs(headerBox.y)<=1,'app header must start at viewport top');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
   assert.equal(await page.locator('.nav-link').count(),3);assert.equal(await page.locator('a[href="#session"]').count(),0);
+  assert.equal(await page.locator('.brand-logo').evaluate(el=>el.tagName),'IMG','main FZO mark stays separate from Bootstrap UI icons');
+  const iconAudit=await page.evaluate(()=>({
+    count:document.querySelectorAll('svg.ui-icon.bi').length,
+    badView:[...document.querySelectorAll('svg.ui-icon')].filter(el=>el.getAttribute('viewBox')!=='0 0 16 16').length,
+    old24:document.querySelectorAll('svg[viewBox="0 0 24 24"]').length,
+    missingBi:[...document.querySelectorAll('svg.ui-icon')].filter(el=>![...el.classList].some(c=>c.startsWith('bi-'))).length
+  }));
+  assert.ok(iconAudit.count>=8,'Bootstrap Icons render across the app');
+  assert.equal(iconAudit.badView,0,'all UI icons use Bootstrap 16x16 viewBox');
+  assert.equal(iconAudit.old24,0,'legacy 24x24 custom icons are gone');
+  assert.equal(iconAudit.missingBi,0,'all internal SVG icons identify their Bootstrap icon');
   const mobileChrome=await page.evaluate(()=>{
     const h=document.querySelector('.topbar').getBoundingClientRect();
     const n=document.querySelector('.bottom-nav').getBoundingClientRect();
@@ -191,6 +202,6 @@ const path=require('node:path');
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
   assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
   assert.deepEqual(errors,[]);
-  console.log('PASS: top-edge hero/header, real desktop shell, separate lesson cards, group/teacher schedule tabs, next-class dashboard, room building/floor hints, free-day continuation, month selection, search, exact bells, shared groups, author/contact, persistence, offline and no clipping.');
+  console.log('PASS: Bootstrap Icons, top-edge hero/header, real desktop shell, separate lesson cards, group/teacher schedule tabs, next-class dashboard, room building/floor hints, free-day continuation, month selection, search, exact bells, shared groups, author/contact, persistence, offline and no clipping.');
   await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});
