@@ -17,7 +17,7 @@ const path=require('node:path');
     const issues=await page.evaluate(()=>{
       const issues=[];
       if(document.documentElement.scrollWidth>innerWidth+1)issues.push('page overflows');
-      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.schedule-tab,.unofficial-chip,.primary,.secondary,.subject-row,.consult-card')){
+      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.schedule-tab,.unofficial-chip,.primary,.secondary,.subject-row,.consult-card,.live-summary,.live-place,.next-preview,.room-strong')){
         if(el.hidden||!el.getClientRects().length)continue;
         if(el.scrollWidth>el.clientWidth+2)issues.push(el.className+': '+el.textContent.slice(0,70));
         const style=getComputedStyle(el);
@@ -42,12 +42,14 @@ const path=require('node:path');
   await screenClick('[data-action="session"]','day');
   assert.match(await page.locator('.lesson').first().innerText(),/08:30–11:50/);
   assert.match(await page.locator('.lesson').first().innerText(),/Экономика|Фоменко С\.А\.|1-212/);
+  assert.match(await page.locator('.lesson').first().innerText(),/1 корпус[\s\S]*2 этаж/);
+  assert.match(await page.locator('.live-summary').innerText(),/Экономика|1-212/);
   assert.match(await page.locator('.together').first().innerText(),/Вместе с ЗСС-26/);
   await page.click('[data-action="next-day"]');assert.match(await page.locator('.date-title').innerText(),/6 октября/);
   await page.click('[data-action="prev-day"]');assert.match(await page.locator('.date-title').innerText(),/5 октября/);
   await page.click('.week [data-value="2026-10-10"]');
   assert.match(await page.locator('.lesson').last().innerText(),/13:45–15:20/);
-  await page.click('.week [data-value="2026-10-11"]');assert.match(await page.locator('.empty').innerText(),/Пар нет/);
+  await page.click('.week [data-value="2026-10-11"]');assert.match(await page.locator('.empty').innerText(),/Сегодня занятий нет|сессия/i);assert.ok(await page.locator('.empty .secondary').count()>0);
   await screenClick('.date-title','calendar');assert.equal(await page.locator('.month-day').count(),35);
   await page.click('[data-action="next-month"]');assert.match(await page.locator('.month-pager').innerText(),/ноябрь/i);
   await page.click('[data-action="prev-month"]');await screenClick('.month-grid [data-value="2026-10-14"]','day');
@@ -97,6 +99,6 @@ const path=require('node:path');
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
   assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
   assert.deepEqual(errors,[]);
-  console.log('PASS: session/consultation tabs, days, free days, month selection, search, exact bells, shared groups, author/contact, persistence, offline, every screen at 320/375/768/812px and 100/150/200% text, longest source title, no clipping or technical labels.');
+  console.log('PASS: next-class dashboard, room building/floor hints, session/consultation tabs, free-day continuation, month selection, search, exact bells, shared groups, author/contact, persistence, offline and no clipping at 100/150/200% text.');
   await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});
