@@ -1,12 +1,6 @@
-.gradle/
-.idea/
-local.properties
-**/build/
+android/signing/
+build/
 dist/
-*.keystore
-*.jks
-*.apk
-*.idsig
-signing/
 node_modules/
 __pycache__/
+*.pyc

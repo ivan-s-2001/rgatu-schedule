@@ -1,0 +1,27 @@
+name: Android release
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/download/RgatuLite.apk
+      - docs/version.json
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Publish signed Android release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          app_version=$(python3 -c 'import json; print(json.load(open("docs/version.json"))["version"])')
+          app_tag="v$app_version"
+          if gh release view "$app_tag" > /dev/null 2>&1; then
+            gh release upload "$app_tag" docs/download/RgatuLite.apk --clobber
+          else
+            gh release create "$app_tag" docs/download/RgatuLite.apk --target "$GITHUB_SHA" --title "РГАТУ Пары $app_version" --notes-file RELEASE_NOTES.md
+          fi
