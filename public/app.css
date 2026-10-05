@@ -179,3 +179,64 @@ html[data-theme=dark] .toast{background:#f2f5ff;color:#10162a}
 .consult-note{margin-top:8px;font-size:.72rem;color:var(--muted)}
 html[data-theme=dark] .consult-time{color:#b8c0ff}
 @media(max-width:359px){.consult-card{grid-template-columns:3.25rem minmax(0,1fr);gap:9px;padding:12px}.consult-time{font-size:.92rem}}
+
+
+/* RSATU 2026 UI refresh */
+:root{
+  --rgatu-blue:#3333cc;--rgatu-navy:#1f274b;--rgatu-teal:#3f7480;--rgatu-info:#3f495f;--rgatu-light:#c4d4e1;--rgatu-alert:#ff644e;
+  --bg:#f5f7fb;--surface:#fff;--ink:#1f274b;--muted:#657083;--line:#d9e1ea;--soft:#edf2f6;
+  --accent:#eeeeff;--accent-ink:#2b2b9d;--blue:#eeeeff;--blue-ink:#2b2b9d;--green:#e9f2f3;--green-ink:#315f68;
+  --nav:rgba(245,247,251,.96);--ring:#3333cc;--radius:12px;
+}
+body{font-family:"Roboto",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--ink)}
+h1,h2,h3,.brand-title,.group-code,.date-title h1,.month-pager h1,.profile-group h2,.intro h1{font-family:"Montserrat","Segoe UI",Arial,sans-serif}
+.topbar{background:var(--nav);box-shadow:0 1px 0 var(--line);border-bottom:0}
+.topbar::after{height:3px;background:linear-gradient(90deg,var(--rgatu-blue) 0 74%,var(--rgatu-teal) 74% 100%)}
+.brand-mark{border-radius:8px;background:var(--rgatu-blue);box-shadow:0 5px 14px #3333cc2a}
+.brand-mark::after{width:18px;height:18px;right:-8px;top:-8px;background:var(--rgatu-teal)}
+.brand-title{font-weight:700;letter-spacing:-.02em;color:var(--rgatu-navy)}
+.brand-sub{color:#737c8b}
+.unofficial-chip{border-color:#ffd0c8;background:#fff4f1;color:#a43a2d}
+.primary{background:var(--rgatu-blue);border-radius:10px;box-shadow:none}.primary:active:not(:disabled){background:#2626a8}
+.secondary,.icon-button,.group-switch,.text-button{border-radius:10px}
+.lesson,.settings,.subject-list,.bells-list,.period-card,.empty,.group-row,.about-card,.consult-card{border-color:var(--line);border-radius:12px;box-shadow:0 4px 16px #1f274b0b}
+.lesson-current{border-color:#7d7de6;box-shadow:inset 3px 0 0 var(--rgatu-blue),0 4px 16px #1f274b0b}
+.current-dot{background:var(--rgatu-alert)}
+.kind.practice{background:#fff1ee;color:#a23b2c}.kind.lab{background:#e8f2f3;color:#315f68}
+.day[aria-current=date],.month-day[aria-current=date]{background:var(--rgatu-blue);border-color:var(--rgatu-blue)}
+.day.is-today,.month-day.is-today{border-color:var(--rgatu-teal)}
+.day-dot{background:var(--rgatu-teal)}
+.live-summary,.install-block{background:#f0f0ff;color:var(--rgatu-navy);border-color:#d9d9ff}
+.profile-group{background:linear-gradient(145deg,var(--rgatu-navy),#303074 58%,var(--rgatu-blue));box-shadow:0 10px 28px #1f274b24}
+.profile-group::after{background:var(--rgatu-teal);opacity:.98}
+.filter[aria-pressed=true],.group-row[aria-checked=true] .choice-dot{background:var(--rgatu-blue);border-color:var(--rgatu-blue)}
+.group-row[aria-checked=true]{border-color:#8585df;background:#f1f1ff}
+.nav-link[aria-current=page]{color:var(--rgatu-blue);background:#ececff}.nav-link[aria-current=page] svg{color:var(--rgatu-blue)}
+.source-banner{border-left:3px solid var(--rgatu-teal);background:#edf4f5;color:#355b63}
+.unofficial-card{border-color:#ffd8d1;border-left-color:var(--rgatu-alert);background:#fff8f6}
+.intro .unofficial-card p,.unofficial-card p{color:#6f4038}
+.schedule-switcher{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px;margin:2px 0 18px;padding:4px;background:#e9edf3;border:1px solid #d9e1ea;border-radius:12px}
+.schedule-tab{display:flex;align-items:center;justify-content:center;gap:.22em;min-width:0;min-height:48px;padding:9px 10px;border:0;border-radius:9px;background:transparent;color:#596477;font-family:"Montserrat","Segoe UI",Arial,sans-serif;font-size:.76rem;font-weight:650;line-height:1.1;text-align:center;overflow-wrap:anywhere}
+.schedule-tab:first-child{flex-wrap:wrap}.schedule-tab:first-child span{white-space:nowrap}
+.schedule-tab[aria-selected=true]{background:#fff;color:var(--rgatu-blue);box-shadow:0 2px 9px #1f274b18}
+.schedule-tab[aria-selected=true]::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--rgatu-teal);margin-left:2px;flex:none}
+.schedule-heading{margin-top:4px}.schedule-heading .eyebrow{display:block;margin-bottom:5px;color:var(--rgatu-teal);font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.consult-time{color:var(--rgatu-blue)}
+.consult-card .kind{background:#edf4f5;color:#315f68}
+html[data-theme=dark]{
+  --rgatu-blue:#8b8cff;--rgatu-navy:#eef0ff;--rgatu-teal:#7db0ba;--rgatu-alert:#ff806d;
+  --bg:#111526;--surface:#191f33;--ink:#f2f4ff;--muted:#adb7c9;--line:#2d3650;--soft:#232b42;
+  --accent:#252552;--accent-ink:#e1e2ff;--blue:#252552;--blue-ink:#e1e2ff;--green:#1b383e;--green-ink:#c1e1e5;
+  --nav:rgba(17,21,38,.97);--ring:#9b9cff;
+}
+html[data-theme=dark] .brand-title{color:#f2f4ff}
+html[data-theme=dark] .schedule-switcher{background:#171d2f;border-color:#303b58}
+html[data-theme=dark] .schedule-tab{color:#aeb8ca}
+html[data-theme=dark] .schedule-tab[aria-selected=true]{background:#272e49;color:#f1f2ff;box-shadow:none}
+html[data-theme=dark] .source-banner{background:#1a3036;color:#c5dde1;border-left-color:var(--rgatu-teal)}
+html[data-theme=dark] .unofficial-card{background:#2b1e22;border-color:#604039}
+html[data-theme=dark] .consult-time{color:#bdbdff}
+@media(max-width:359px){
+  .schedule-switcher{margin-bottom:14px}
+  .schedule-tab{min-height:46px;padding:8px 7px;font-size:.7rem}
+}
