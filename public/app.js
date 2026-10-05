@@ -215,11 +215,30 @@
     const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
     return `<main class="page profile-page" id="content"><div class="screen-heading"><h1>Моя группа</h1></div><section class="profile-group"><div><h2>${escape(group.id)}</h2><p>${group.course} курс · заочное отделение</p></div><button class="secondary" data-action="group">Сменить ${icon('right')}</button></section><section class="profile-period"><span>Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><p>${plural([...new Set(groupLessons().map(item=>item.date))].length,['учебный день','учебных дня','учебных дней'])} · ${plural(groupLessons().length,['занятие','занятия','занятий'])}</p><button class="text-button" data-action="calendar">Открыть календарь ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="theme-setting"><h2>Оформление</h2><div class="segments" aria-label="Оформление">${[['auto','Авто'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<button data-action="theme" data-value="${id}" aria-pressed="${state.theme===id}">${label}</button>`).join('')}</div></div><div class="settings-row"><div><h2>Расписание</h2><p>Обновлено ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div>${isAndroid?`<button class="link-row" data-action="app-update"><span>Проверить обновления приложения</span>${icon('refresh')}</button>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Расписание на главном экране</h2><p>Открывай одним касанием.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<section class="about-card"><div class="about-head"><span class="unofficial-chip large">Неофициальное</span><h2>Студенческий проект ФЗО</h2></div><p>Сделано студентом 1 курса РГАТУ для удобного просмотра расписания. Это не официальный сервис университета.</p><a class="link-row" href="https://www.rsatu.ru/zaochnoe/"><span>Официальный раздел «Заочное обучение»<small>Сайт РГАТУ</small></span>${icon('arrow')}</a><a class="link-row" href="https://t.me/falseheat"><span>Смирнов Иван · @falseheat<small>Связь, идеи и ошибки в расписании</small></span>${icon('arrow')}</a></section></main>`;
   }
+  function syncNav(page) {
+    const navigation = root.querySelector('.bottom-nav');
+    if (!navigation) return;
+    navigation.querySelectorAll('.nav-link').forEach(link => {
+      const id = link.getAttribute('href').slice(1);
+      const current = page === id || id === 'day' && ['calendar','search','teachers'].includes(page);
+      if (current) link.setAttribute('aria-current','page');
+      else link.removeAttribute('aria-current');
+    });
+  }
   function render() {
     const page = route();
     if (page === 'group') {renderPicker(); return;}
     const screens = {day:renderDay,calendar:renderCalendar,search:renderSearch,bells:renderBells,profile:renderProfile,teachers:renderTeachers};
-    root.innerHTML = `<div class="shell">${header()}${screens[page]()}${nav(page)}</div>`;
+    const screen = screens[page]();
+    const shell = root.querySelector('.app-shell');
+    if (!shell) {
+      root.innerHTML = `<div class="shell app-shell">${header()}${screen}${nav(page)}</div>`;
+    } else {
+      const current = shell.querySelector('.page');
+      if (current) current.outerHTML = screen;
+      else shell.insertAdjacentHTML('beforeend',screen);
+      syncNav(page);
+    }
     if (page === 'search') updateSearchResults();
     if (page === 'teachers' && !state.teacher) updateTeacherResults();
   }
