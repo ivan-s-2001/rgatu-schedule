@@ -11,6 +11,14 @@ const memberships = t.memberships(data);
 assert.equal(data.groups.length,44);
 assert.equal(data.groups.some(g=>/-[12]$/.test(g.id)),false,'technical subgroup ids must not appear as groups');
 assert.equal(data.lessons.length,1464);
+assert.equal(data.groups.reduce((n,g)=>n+Object.keys(g.subgroups||{}).length,0),290,'all split lessons are preserved as subgroup metadata');
+for(const g of data.groups){
+  assert.equal(new Set(g.lessons).size,g.lessons.length,'no duplicate lesson ids in '+g.id);
+  for(const [lessonId,subgroup] of Object.entries(g.subgroups||{})){
+    assert.ok(g.lessons.includes(Number(lessonId)),'subgroup lesson belongs to '+g.id);
+    assert.ok(subgroup===1||subgroup===2,'subgroup is 1 or 2 for '+g.id);
+  }
+}
 for(const lesson of source.lessons) assert.deepEqual(memberships.get(lesson.id),lesson.groups.slice().sort((a,b)=>a.localeCompare(b,'ru')),`Shared groups for lesson ${lesson.id}`);
 const group = data.groups.find(g=>g.id==='ЗВС-26');
 const lessons=group.lessons.map(i=>data.lessons[i]);
