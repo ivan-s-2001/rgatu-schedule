@@ -190,3 +190,28 @@ html[data-theme=dark] body { background:#0b0e12; }
 html[data-theme=dark] .live-summary { background:linear-gradient(135deg,#3a2118,#2c1c16); border-color:#613728; color:#ffd0bf; }
 html[data-theme=dark] .group-row[aria-checked=true] { background:#30221c; border-color:#75402e; }
 html[data-theme=dark] .primary { color:#fff; }
+
+/* RGATU visual identity: green university palette with restrained yellow accents */
+:root {
+  --bg:#f3f6f1; --surface:#fff; --ink:#183522; --muted:#66756a; --line:#dce5dc; --soft:#edf3ed;
+  --accent:#2f6b3b; --accent-ink:#1f4c29; --gold:#d8ad32; --gold-soft:#fff7dc;
+  --nav:rgba(243,246,241,.95); --ring:#2f6b3b;
+}
+.brand-mark { background:var(--accent); box-shadow:0 5px 16px rgba(47,107,59,.22); }
+.primary { background:var(--accent); box-shadow:0 7px 18px rgba(47,107,59,.18); }
+.primary:active:not(:disabled) { background:#255a30; }
+.day[aria-current=date] { background:var(--accent); }
+.day.is-today { border-color:var(--gold); }
+.live-summary { background:linear-gradient(135deg,#edf7ee,#e0efe2); color:var(--accent-ink); border-color:#c7ddca; box-shadow:0 8px 22px rgba(47,107,59,.10); }
+.live-summary.is-current { background:linear-gradient(135deg,#eef8ee,#d9ebdc); }
+.live-summary .current-dot { background:var(--gold); }
+.lesson-current { border-color:#b9d2bd; box-shadow:inset 4px 0 0 var(--accent),0 5px 18px rgba(47,107,59,.08); }
+.nav-link[aria-current=page] { background:var(--accent); color:#fff; }
+.nav-link[aria-current=page] svg { color:#f1d46c; }
+.filter[aria-pressed=true] { background:var(--accent); }
+.group-row[aria-checked=true] { border-color:#b9d2bd; background:#f1f7f1; }
+.group-row[aria-checked=true] .choice-dot { background:var(--accent); border-color:var(--accent); }
+html[data-theme=dark] { --bg:#101712; --surface:#182019; --ink:#edf5ee; --muted:#9eada0; --line:#2a382c; --soft:#202b21; --accent:#6da875; --accent-ink:#c8e6cc; --gold:#e3c354; --gold-soft:#332d19; --nav:rgba(16,23,18,.95); --ring:#6da875; }
+html[data-theme=dark] .live-summary { background:linear-gradient(135deg,#1e3022,#1a2920); border-color:#36543b; color:#c8e6cc; }
+html[data-theme=dark] .group-row[aria-checked=true] { background:#203023; border-color:#3b5a40; }
+html[data-theme=dark] .nav-link[aria-current=page] { background:#6da875; color:#102014; }
