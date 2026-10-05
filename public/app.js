@@ -30,7 +30,7 @@
     const item = iconPaths[name] || iconPaths.calendar;
     return `<svg class="ui-icon bi bi-${item.bi}" viewBox="0 0 16 16" fill="currentColor" focusable="false" aria-hidden="true">${item.body}</svg>`;
   };
-  const validData = data => data && data.schema === 1 && typeof data.version === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.updated) && Array.isArray(data.groups) && data.groups.length > 0 && Array.isArray(data.lessons) && data.groups.every(g => typeof g.id === 'string' && Array.isArray(g.dates) && g.dates.length && Array.isArray(g.lessons) && g.lessons.every(i => Number.isInteger(i) && i >= 0 && i < data.lessons.length)) && data.lessons.every(l => /^\d{4}-\d{2}-\d{2}$/.test(l.date) && l.slot >= 1 && l.slot <= 7 && typeof l.subject === 'string');
+  const validData = data => data && data.schema === 1 && typeof data.version === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.updated) && Array.isArray(data.groups) && data.groups.length > 0 && Array.isArray(data.lessons) && data.groups.every(g => typeof g.id === 'string' && !/-[12]$/.test(g.id) && Array.isArray(g.dates) && g.dates.length && Array.isArray(g.lessons) && g.lessons.every(i => Number.isInteger(i) && i >= 0 && i < data.lessons.length) && Object.entries(g.subgroups || {}).every(([i,subgroup]) => g.lessons.includes(Number(i)) && (subgroup === 1 || subgroup === 2))) && data.lessons.every(l => /^\d{4}-\d{2}-\d{2}$/.test(l.date) && l.slot >= 1 && l.slot <= 7 && typeof l.subject === 'string');
   let data = window.RGATU_DATA;
   try {
     const cached = JSON.parse(read('rgatu.schedule', 'null'));
