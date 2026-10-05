@@ -21,7 +21,7 @@ const request = async (key,mode) => {let result;events.fetch({request:{url:host+
   await lifecycle('install');await lifecycle('activate');assert.equal(claimed,true);
   network = false;
   assert.deepEqual(await request('/','navigate'),content('/'));
-  for(const key of ['/app.css','/app.js','/timetable.js','/schedule.js','/manifest.webmanifest','/icons/icon-192.png'])assert.deepEqual(await request(key,'same-origin'),content(key));
+  for(const key of ['/app.css','/app.js','/timetable.js','/schedule.js','/manifest.webmanifest','/icons/icon.svg'])assert.deepEqual(await request(key,'same-origin'),content(key));
   assert.equal(await request('/api/schedule','same-origin'),undefined);
   assert.equal(await request('/download/android','same-origin'),undefined);
   const apk = fs.readFileSync('dist/RgatuLite-1.3.3.apk');
