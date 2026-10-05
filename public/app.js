@@ -3,9 +3,6 @@
   const DOWNLOAD_URL = 'https://ivan-s-2001.github.io/rgatu-schedule/';
   const time = window.RGATU_TIME;
   const root = document.getElementById('app');
-  let consultations = null;
-  let consultationsLoading = false;
-  let consultationsFailed = false;
   const isAndroid = /RgatuLiteAndroid\//.test(navigator.userAgent);
   const read = (key, fallback = null) => { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, value); return true; } catch { return false; } };
@@ -49,7 +46,7 @@
     if (today > g.dates.at(-1)) return g.dates.at(-1);
     return today;
   };
-  const state = {date: group ? initialDate(group) : nowDate(), month:'', chosen: group?.id || '', course: '', query:'', limit:18, subject:'', theme:read('rgatu.theme','auto'), refreshing:false, bellKind:''};
+  const state = {date: group ? initialDate(group) : nowDate(), month:'', chosen: group?.id || '', course: '', query:'', limit:18, subject:'', teacherQuery:'', teacher:read('rgatu.teacher',''), theme:read('rgatu.theme','auto'), refreshing:false, bellKind:''};
   let installPrompt = null;
   let noticeTimer;
   function toast(message) {
@@ -67,16 +64,16 @@
   }
   applyTheme();
   darkPreference.addEventListener?.('change', applyTheme);
-  function route() { return group ? ['day','calendar','search','profile','group','bells','consultations'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
+  function route() { return group ? ['day','calendar','search','profile','group','bells','teachers'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
   function go(page) { if (location.hash === '#' + page) render(); else location.hash = page; }
   function header() {
     return `<header class="topbar"><div class="brand"><div class="brand-mark" aria-hidden="true"><span>ФЗО</span></div><div><strong class="brand-title">Расписание ФЗО</strong><div class="brand-sub"><span class="unofficial-chip">неофициальное</span><span>от студента</span></div></div></div><button class="group-switch" data-action="group" aria-label="Сменить группу, сейчас ${escape(group.id)}"><span>${escape(group.id)}</span>${icon('down')}</button></header>`;
   }
   function nav(page) {
-    return `<nav class="bottom-nav" aria-label="Главное меню">${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search','consultations'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
+    return `<nav class="bottom-nav" aria-label="Главное меню">${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search','teachers'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
   }
   function scheduleTabs(active) {
-    return `<div class="schedule-switcher" role="tablist" aria-label="Раздел расписания"><button class="schedule-tab" role="tab" data-action="session" aria-selected="${active==='session'}" aria-controls="content"><span>Установочная сессия</span></button><button class="schedule-tab" role="tab" data-action="consultations" aria-selected="${active==='consultations'}" aria-controls="content"><span>Консультации</span></button></div>`;
+    return `<div class="schedule-switcher" role="tablist" aria-label="Вид расписания"><button class="schedule-tab" role="tab" data-action="group-schedule" aria-selected="${active==='group'}" aria-controls="content"><span>По группе</span></button><button class="schedule-tab" role="tab" data-action="teachers" aria-selected="${active==='teachers'}" aria-controls="content"><span>По преподавателю</span></button></div>`;
   }
   function renderPicker() {
     root.innerHTML = `<div class="shell"><main class="page picker-page" id="content">${group ? `<div class="back-row"><button class="back-button" data-action="cancel-group">${icon('left')}Назад</button><span class="small muted">Моя группа</span></div>` : ''}<div class="intro"><div class="intro-mark"><div class="brand-mark" aria-hidden="true"><span>ФЗО</span></div><div><strong>Расписание ФЗО</strong><div class="small muted">РГАТУ им. П. А. Соловьёва</div></div></div><h1>${group ? 'Выбери свою группу' : 'Привет.<br>Какая у тебя группа?'}</h1><p>${group ? 'Сразу покажу ближайший учебный день этой группы.' : 'Выбери группу один раз — дальше сразу увидишь ближайшее занятие, аудиторию и время.'}</p><div class="unofficial-card"><span class="unofficial-chip large">Неофициальное</span><p>Студенческий проект для ФЗО РГАТУ. Сделан студентом 1 курса и не является официальным приложением университета.</p></div></div><label for="group-search" class="label">Группа</label><div class="search-wrap">${icon('search')}<input id="group-search" class="search" type="search" placeholder="Например, ЗВС-26" autocomplete="off" spellcheck="false" value="${escape(state.query)}" aria-controls="group-list"></div><div class="filters" aria-label="Фильтр по курсу">${[['','Все курсы'],['1','1 курс'],['2','2 курс'],['3','3 курс'],['4','4–5 курс']].map(([id,label]) => `<button class="filter" data-action="course" data-value="${id}" aria-pressed="${state.course===id}">${label}</button>`).join('')}</div><div id="group-results"></div></main><footer class="onboard-footer"><button class="primary" id="continue-group" data-action="save-group"${state.chosen?'':' disabled'}>${state.chosen ? 'Продолжить' : 'Выбери группу'}${icon('arrow')}</button></footer></div>`;
@@ -98,13 +95,20 @@
   }
   const groupLessons = () => group.lessons.map(i => data.lessons[i]).sort((a,b) => a.date.localeCompare(b.date) || a.slot-b.slot);
   const lessonsOn = date => groupLessons().filter(l => l.date === date);
-  const mergeLessons = lessons => time.merge(lessons,sharedGroups);
-  const typeLabel = type => ({'Л':'Лекция','П':'Практика','ЛР':'Лабораторная','К':'Консультация'})[type] || type || 'Занятие';
+  const allTeachers = () => [...new Set(data.lessons.map(lesson => String(lesson.teacher || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));
+  const teacherLessons = teacher => data.lessons.filter(lesson => lesson.teacher === teacher).sort((a,b)=>a.date.localeCompare(b.date) || a.slot-b.slot);
+  const typeLabel = type => ({'Л':'Лекция','П':'Практика','ЛР':'Лабораторная','К':'Занятие'})[type] || type || 'Занятие';
+  const lessonView = lesson => ({...lesson,slots:[lesson.slot],ids:[lesson.id],peers:sharedGroups.get(lesson.id) || []});
   function together(peers) {
     const others = peers.filter(id=>id!==group.id);
     return others.length ? `<p class="together">${icon('people')}<span>Вместе с ${others.map(escape).join(', ')}</span></p>` : '';
   }
-  const rangeText = lesson => time.bells(lesson.date)[lesson.slots[0]-1][0]+'–'+time.bells(lesson.date)[lesson.slots.at(-1)-1][1];
+  const teacherGroups = peers => peers.length ? `<p class="together">${icon('people')}<span>Группы: ${peers.map(escape).join(', ')}</span></p>` : '';
+  const rangeText = lesson => {
+    const slot = lesson.slots ? lesson.slots[0] : lesson.slot;
+    const bell = time.bells(lesson.date)[slot-1];
+    return bell[0]+'–'+bell[1];
+  };
   const roomMeta = value => {
     const text = String(value || '').trim();
     const match = text.match(/^([Гг]|\d+)\s*[-–]\s*(\d{3,4}[А-ЯA-Z]?)/);
@@ -118,11 +122,12 @@
     const meta = roomMeta(lesson.room);
     return meta ? lesson.room + ' · ' + meta : lesson.room;
   };
-  function lessonCards(lessons) {
-    const focus = time.focus(groupLessons());
-    return `<div class="lessons">${mergeLessons(lessons).map(l => {
+  function lessonCards(lessons,{teacherMode=false,focusLessons=null}={}) {
+    const focus = time.focus(focusLessons || groupLessons());
+    const cards = lessons.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.slot-b.slot).map(lessonView);
+    return `<div class="lessons">${cards.map(l => {
       const current = focus?.current && l.ids.includes(focus.lesson.id);
-      return `<article class="lesson${current?' lesson-current':''}" data-lesson-ids="${l.ids.join(',')}" aria-label="${l.slots.join(' и ')} ${l.slots.length===1?'пара':'пары'}, ${rangeText(l)}, ${escape(l.subject)}"><div class="slot"><strong>${l.slots.length===1?l.slots[0]:l.slots[0]+'–'+l.slots.at(-1)}</strong><span>${l.slots.length===1?'пара':'пары'}</span><span class="current-dot" aria-label="Идёт сейчас"${current?'':' hidden'}></span></div><div class="lesson-body"><div class="lesson-time"><span>${rangeText(l)}</span><span class="kind ${l.type==='П'?'practice':l.type==='ЛР'?'lab':''}">${escape(typeLabel(l.type))}</span><span class="current-word"${current?'':' hidden'}>Сейчас</span></div><h3>${escape(l.subject)}</h3><div class="lesson-details">${l.room?`<p class="room room-strong">${icon('room')}<span><strong>${escape(l.room)}</strong>${roomMeta(l.room)?`<small>${escape(roomMeta(l.room))}</small>`:''}</span></p>`:''}${l.teacher?`<p class="teacher">${icon('user')}<span>${escape(l.teacher)}</span></p>`:''}</div>${together(l.peers)}</div></article>`;
+      return `<article class="lesson${current?' lesson-current':''}" data-lesson-ids="${l.ids.join(',')}" aria-label="${l.slot} пара, ${rangeText(l)}, ${escape(l.subject)}"><div class="slot"><strong>${l.slot}</strong><span>пара</span><span class="current-dot" aria-label="Идёт сейчас"${current?'':' hidden'}></span></div><div class="lesson-body"><div class="lesson-time"><span>${rangeText(l)}</span><span class="kind ${l.type==='П'?'practice':l.type==='ЛР'?'lab':''}">${escape(typeLabel(l.type))}</span><span class="current-word"${current?'':' hidden'}>Сейчас</span></div><h3>${escape(l.subject)}</h3><div class="lesson-details">${l.room?`<p class="room room-strong">${icon('room')}<span><strong>${escape(l.room)}</strong>${roomMeta(l.room)?`<small>${escape(roomMeta(l.room))}</small>`:''}</span></p>`:''}${!teacherMode&&l.teacher?`<p class="teacher">${icon('user')}<span>${escape(l.teacher)}</span></p>`:''}</div>${teacherMode?teacherGroups(l.peers):together(l.peers)}</div></article>`;
     }).join('')}</div>`;
   }
   function renderFocus() {
@@ -158,7 +163,7 @@
     const future = today < group.dates[0];
     const relative = state.date===today ? 'Сегодня' : state.date===shiftDate(today,1) ? 'Завтра' : state.date===shiftDate(today,-1) ? 'Вчера' : '';
     const dayTime = lessons.length ? time.bounds(lessons[0]).start+'–'+time.bounds(lessons.at(-1)).end : 'Свободный день';
-    return `<main class="page day-page" id="content">${scheduleTabs('session')}<div id="live-focus">${renderFocus()}</div><section class="day-controls" aria-label="Выбор дня"><div class="date-pager"><button class="icon-button" data-action="prev-day" aria-label="Предыдущий день">${icon('left')}</button><button class="date-title" data-action="calendar" aria-label="Открыть календарь, ${escape(dateText(state.date))}"><span class="day-caption">${relative?relative+' · ':''}${escape(dateText(state.date,{weekday:'long'}))}</span><h1>${escape(dateText(state.date))}${icon('down')}</h1></button><button class="icon-button" data-action="next-day" aria-label="Следующий день">${icon('right')}</button></div><div class="week" aria-label="Дни недели">${week.map(date=>`<button class="day${date===today?' is-today':''}" data-action="date" data-value="${date}"${date===state.date?' aria-current="date"':''} aria-label="${escape(dateText(date,{weekday:'long',day:'numeric',month:'long'}))}, ${plural(lessonsOn(date).length,['пара','пары','пар'])}"><span class="day-name">${escape(dateText(date,{weekday:'short'}))}</span><span class="day-number">${Number(date.slice(-2))}</span><span class="day-dot ${lessonsOn(date).length?'':'no-lessons'}"></span></button>`).join('')}</div><div class="day-tools"><button class="text-button" data-action="calendar">${icon('calendar')}Календарь</button><button class="text-button" data-action="today"${state.date===today?' disabled':''}>Сегодня</button><button class="icon-button search-button" data-action="search" aria-label="Найти предмет, преподавателя или аудиторию">${icon('search')}</button></div></section>${past?'<p class="source-banner">Прошедшая сессия · расписание сохранено</p>':future?`<p class="source-banner">Сессия с ${escape(dateText(group.dates[0]))}</p>`:''}<div class="date-description"><h2>${lessons.length?plural(lessons.length,['пара','пары','пар']):'Твой день'}</h2><span>${dayTime}</span></div>${lessons.length?lessonCards(lessons):emptyDay()}<p class="time-note">Московское время</p></main>`;
+    return `<main class="page day-page" id="content">${scheduleTabs('group')}<div id="live-focus">${renderFocus()}</div><section class="day-controls" aria-label="Выбор дня"><div class="date-pager"><button class="icon-button" data-action="prev-day" aria-label="Предыдущий день">${icon('left')}</button><button class="date-title" data-action="calendar" aria-label="Открыть календарь, ${escape(dateText(state.date))}"><span class="day-caption">${relative?relative+' · ':''}${escape(dateText(state.date,{weekday:'long'}))}</span><h1>${escape(dateText(state.date))}${icon('down')}</h1></button><button class="icon-button" data-action="next-day" aria-label="Следующий день">${icon('right')}</button></div><div class="week" aria-label="Дни недели">${week.map(date=>`<button class="day${date===today?' is-today':''}" data-action="date" data-value="${date}"${date===state.date?' aria-current="date"':''} aria-label="${escape(dateText(date,{weekday:'long',day:'numeric',month:'long'}))}, ${plural(lessonsOn(date).length,['пара','пары','пар'])}"><span class="day-name">${escape(dateText(date,{weekday:'short'}))}</span><span class="day-number">${Number(date.slice(-2))}</span><span class="day-dot ${lessonsOn(date).length?'':'no-lessons'}"></span></button>`).join('')}</div><div class="day-tools"><button class="text-button" data-action="calendar">${icon('calendar')}Календарь</button><button class="text-button" data-action="today"${state.date===today?' disabled':''}>Сегодня</button><button class="icon-button search-button" data-action="search" aria-label="Найти предмет, преподавателя или аудиторию">${icon('search')}</button></div></section>${past?'<p class="source-banner">Прошедшая сессия · расписание сохранено</p>':future?`<p class="source-banner">Сессия с ${escape(dateText(group.dates[0]))}</p>`:''}<div class="date-description"><h2>${lessons.length?plural(lessons.length,['пара','пары','пар']):'Твой день'}</h2><span>${dayTime}</span></div>${lessons.length?lessonCards(lessons):emptyDay()}<p class="time-note">Московское время</p></main>`;
   }
   function renderCalendar() {
     const month = state.month || state.date.slice(0,7);
@@ -180,57 +185,31 @@
     const dates = [...new Set(matching.map(l=>l.date))];
     target.innerHTML = matching.length ? `<p class="results-count" role="status">${plural(matching.length,['пара','пары','пар'])} · ${plural(dates.length,['день','дня','дней'])}</p>${dates.map(date => `<section class="day-group"><div class="day-group-heading"><button data-action="date" data-value="${date}"><strong>${escape(dateText(date))}</strong><span>${escape(dateText(date,{weekday:'long'}))}</span></button><button class="icon-button" data-action="date" data-value="${date}" aria-label="Открыть день ${escape(dateText(date))}">${icon('arrow')}</button></div>${lessonCards(matching.filter(l=>l.date===date))}</section>`).join('')}` : '<div class="empty"><h2>Ничего не нашлось</h2><p>Попробуй название покороче или фамилию.</p><button class="secondary" data-action="reset-subject">Очистить поиск</button></div>';
   }
-  function ensureConsultations() {
-    if (consultations || consultationsLoading || consultationsFailed || !window.RGATU_CONSULTATIONS_PROMISE) return;
-    consultationsLoading = true;
-    Promise.resolve(window.RGATU_CONSULTATIONS_PROMISE).then(value => {
-      if (!value || value.schema !== 1 || !Array.isArray(value.groups) || !Array.isArray(value.events)) throw new Error('invalid consultations');
-      consultations = value;
-      consultationsLoading = false;
-      if (route() === 'consultations') render();
-    }).catch(() => {
-      consultationsLoading = false;
-      consultationsFailed = true;
-      if (route() === 'consultations') render();
-    });
-  }
-  const consultationMinutes = value => {
-    const parts = String(value || '').split(':');
-    return Number(parts[0]) * 60 + Number(parts[1] || 0);
-  };
-  function renderConsultations() {
-    ensureConsultations();
-    const tabs = scheduleTabs('consultations');
-    if (consultationsFailed || !window.RGATU_CONSULTATIONS_PROMISE) {
-      return '<main class="page consultations-page" id="content">' + tabs + '<div class="screen-heading"><h1>Консультации</h1><p>Отдельный график ФЗО</p></div><div class="empty">' + icon('book') + '<h2>Не удалось открыть</h2><p>Установочная сессия продолжает работать. Попробуй открыть консультации позже.</p></div></main>';
+  function renderTeachers() {
+    const tabs = scheduleTabs('teachers');
+    const teachers = allTeachers();
+    const selected = state.teacher && teachers.includes(state.teacher) ? state.teacher : '';
+    const query = state.teacherQuery.trim().toLowerCase();
+    const filtered = teachers.filter(name => !query || name.toLowerCase().includes(query) || normalized(name).includes(normalized(query)));
+    let body = '';
+    if (selected) {
+      const lessons = teacherLessons(selected);
+      const dates = [...new Set(lessons.map(lesson=>lesson.date))];
+      body = `<section class="teacher-summary"><div><span class="eyebrow">Преподаватель</span><h1>${escape(selected)}</h1><p>${plural(lessons.length,['пара','пары','пар'])} · ${plural(dates.length,['день','дня','дней'])}</p></div><button class="secondary teacher-change" data-action="clear-teacher">Другой преподаватель</button></section>${dates.map(date=>`<section class="day-group teacher-day"><div class="day-group-heading"><div><strong>${escape(dateText(date))}</strong><span>${escape(dateText(date,{weekday:'long'}))}</span></div></div>${lessonCards(lessons.filter(lesson=>lesson.date===date),{teacherMode:true,focusLessons:lessons})}</section>`).join('')}`;
+    } else {
+      body = `<div class="screen-heading schedule-heading"><span class="eyebrow">Установочная сессия ФЗО</span><h1>По преподавателю</h1><p>Выбери преподавателя — покажу его занятия, аудитории и группы.</p></div><label class="label" for="teacher-search">Преподаватель</label><div class="search-wrap">${icon('search')}<input id="teacher-search" class="search" type="search" placeholder="Фамилия или инициалы" autocomplete="off" value="${escape(state.teacherQuery)}" aria-controls="teacher-results"></div><div id="teacher-results"><p class="results-count" role="status">${plural(filtered.length,['преподаватель','преподавателя','преподавателей'])}</p><div class="subject-list">${filtered.map(name=>`<button class="subject-row" data-action="choose-teacher" data-value="${escape(name)}"><span>${escape(name)}</span>${icon('right')}</button>`).join('')}</div>${!filtered.length?'<div class="empty"><h2>Не нашли преподавателя</h2><p>Проверь фамилию или очисти поиск.</p><button class="secondary" data-action="clear-teacher-search">Очистить поиск</button></div>':''}</div>`;
     }
-    if (!consultations) {
-      return '<main class="page consultations-page" id="content">' + tabs + '<div class="screen-heading"><h1>Консультации</h1><p>Загружаем отдельный график…</p></div><div class="day-done">Подготавливаем архив консультаций.</div></main>';
-    }
-    const sourceGroup = consultations.groups.find(item => item.id === group.id);
-    const events = sourceGroup ? sourceGroup.events.map(index => consultations.events[index]).filter(Boolean).sort((a,b) => a.date.localeCompare(b.date) || consultationMinutes(a.time) - consultationMinutes(b.time)) : [];
-    const archived = consultations.events.length && consultations.events.every(item => item.date < nowDate());
-    const intro = '<div class="screen-heading schedule-heading"><div><span class="eyebrow">Расписание ФЗО</span><h1>Консультации</h1><p>' + escape(group.id) + '</p></div></div><p class="source-banner">' + (archived ? 'Архив · ' : '') + 'график обновлён ' + escape(dateText(consultations.updated)) + '. Это отдельный раздел расписания.</p>';
-    if (!events.length) {
-      return '<main class="page consultations-page" id="content">' + tabs + intro + '<div class="empty">' + icon('book') + '<h2>Для ' + escape(group.id) + ' консультаций нет</h2><p>В последнем загруженном графике эта группа отсутствует.</p><button class="secondary" data-action="session">Вернуться к установочной сессии ' + icon('arrow') + '</button></div></main>';
-    }
-    const dates = [...new Set(events.map(item => item.date))];
-    const body = dates.map(date => {
-      const rows = events.filter(item => item.date === date);
-      const cards = rows.map(item => '<article class="consult-card"><div class="consult-time">' + escape(item.time) + '</div><div class="consult-body"><span class="kind">Консультация</span><h3>' + escape(item.subject) + '</h3><div class="lesson-details">' + (item.room ? '<p class="room room-strong">' + icon('room') + '<span><strong>' + escape(item.room) + '</strong>' + (roomMeta(item.room) ? '<small>' + escape(roomMeta(item.room)) + '</small>' : '') + '</span></p>' : '') + (item.teacher ? '<p class="teacher">' + icon('user') + '<span>' + escape(item.teacher) + '</span></p>' : '') + '</div>' + (item.note ? '<p class="consult-note">' + escape(item.note) + '</p>' : '') + '</div></article>').join('');
-      return '<section class="consult-day"><div class="consult-day-head"><h2>' + escape(dateText(date,{day:'numeric',month:'long'})) + '</h2><span>' + escape(dateText(date,{weekday:'long'})) + '</span></div><div class="consult-list">' + cards + '</div></section>';
-    }).join('');
-    return '<main class="page consultations-page" id="content">' + tabs + intro + body + '</main>';
+    return `<main class="page teachers-page" id="content">${tabs}${body}</main>`;
   }
 
   function renderProfile() {
     const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    return `<main class="page" id="content"><div class="screen-heading"><h1>Моя группа</h1></div><section class="profile-group"><div><h2>${escape(group.id)}</h2><p>${group.course} курс · заочное отделение</p></div><button class="secondary" data-action="group">Сменить ${icon('right')}</button></section><section class="profile-period"><span>Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><p>${plural([...new Set(groupLessons().map(item=>item.date))].length,['учебный день','учебных дня','учебных дней'])} · ${plural(mergeLessons(groupLessons()).length,['занятие','занятия','занятий'])}</p><button class="text-button" data-action="calendar">Открыть календарь ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="theme-setting"><h2>Оформление</h2><div class="segments" aria-label="Оформление">${[['auto','Авто'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<button data-action="theme" data-value="${id}" aria-pressed="${state.theme===id}">${label}</button>`).join('')}</div></div><div class="settings-row"><div><h2>Расписание</h2><p>Обновлено ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div>${isAndroid?`<button class="link-row" data-action="app-update"><span>Проверить обновления приложения</span>${icon('refresh')}</button>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Расписание на главном экране</h2><p>Открывай одним касанием.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<section class="about-card"><div class="about-head"><span class="unofficial-chip large">Неофициальное</span><h2>Студенческий проект ФЗО</h2></div><p>Сделано студентом 1 курса РГАТУ для удобного просмотра расписания. Это не официальный сервис университета.</p><a class="link-row" href="https://www.rsatu.ru/zaochnoe/"><span>Официальный раздел «Заочное обучение»<small>Сайт РГАТУ</small></span>${icon('arrow')}</a><a class="link-row" href="https://t.me/falseheat"><span>Смирнов Иван · @falseheat<small>Связь, идеи и ошибки в расписании</small></span>${icon('arrow')}</a></section></main>`;
+    return `<main class="page" id="content"><div class="screen-heading"><h1>Моя группа</h1></div><section class="profile-group"><div><h2>${escape(group.id)}</h2><p>${group.course} курс · заочное отделение</p></div><button class="secondary" data-action="group">Сменить ${icon('right')}</button></section><section class="profile-period"><span>Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><p>${plural([...new Set(groupLessons().map(item=>item.date))].length,['учебный день','учебных дня','учебных дней'])} · ${plural(groupLessons().length,['занятие','занятия','занятий'])}</p><button class="text-button" data-action="calendar">Открыть календарь ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="theme-setting"><h2>Оформление</h2><div class="segments" aria-label="Оформление">${[['auto','Авто'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<button data-action="theme" data-value="${id}" aria-pressed="${state.theme===id}">${label}</button>`).join('')}</div></div><div class="settings-row"><div><h2>Расписание</h2><p>Обновлено ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div>${isAndroid?`<button class="link-row" data-action="app-update"><span>Проверить обновления приложения</span>${icon('refresh')}</button>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Расписание на главном экране</h2><p>Открывай одним касанием.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<section class="about-card"><div class="about-head"><span class="unofficial-chip large">Неофициальное</span><h2>Студенческий проект ФЗО</h2></div><p>Сделано студентом 1 курса РГАТУ для удобного просмотра расписания. Это не официальный сервис университета.</p><a class="link-row" href="https://www.rsatu.ru/zaochnoe/"><span>Официальный раздел «Заочное обучение»<small>Сайт РГАТУ</small></span>${icon('arrow')}</a><a class="link-row" href="https://t.me/falseheat"><span>Смирнов Иван · @falseheat<small>Связь, идеи и ошибки в расписании</small></span>${icon('arrow')}</a></section></main>`;
   }
   function render() {
     const page = route();
     if (page === 'group') {renderPicker(); return;}
-    const screens = {day:renderDay,calendar:renderCalendar,search:renderSearch,bells:renderBells,profile:renderProfile,consultations:renderConsultations};
+    const screens = {day:renderDay,calendar:renderCalendar,search:renderSearch,bells:renderBells,profile:renderProfile,teachers:renderTeachers};
     root.innerHTML = `<div class="shell">${header()}${screens[page]()}${nav(page)}</div>`;
     if (page === 'search') updateSearchResults();
   }
@@ -279,6 +258,7 @@
   root.addEventListener('input', event => {
     if (event.target.id === 'group-search') {state.query=event.target.value;state.limit=18;updateGroupResults();}
     if (event.target.id === 'subject-search') {state.subject=event.target.value;updateSearchResults();}
+    if (event.target.id === 'teacher-search') {state.teacherQuery=event.target.value;render();setTimeout(()=>{const input=document.getElementById('teacher-search');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length);}},0);}
   });
   root.addEventListener('keydown', event => {
     if (!event.target.matches('.group-row') || !['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'].includes(event.key)) return;
@@ -318,13 +298,16 @@
       case 'prev-month': state.month=time.shiftMonth(state.month || state.date.slice(0,7),-1);render();break;
       case 'next-month': state.month=time.shiftMonth(state.month || state.date.slice(0,7),1);render();break;
       case 'back-day': go('day');break;
-      case 'session': go('day');window.scrollTo(0,0);break;
+      case 'group-schedule': go('day');window.scrollTo(0,0);break;
       case 'profile': go('profile');window.scrollTo(0,0);break;
-      case 'consultations': go('consultations');window.scrollTo(0,0);break;
+      case 'teachers': state.teacherQuery='';go('teachers');window.scrollTo(0,0);break;
       case 'bells': go('bells');window.scrollTo(0,0);break;
       case 'bell-kind': state.bellKind=value;render();break;
       case 'search': state.subject='';go('search');window.scrollTo(0,0);break;
       case 'search-subject': state.subject=value;document.getElementById('subject-search').value=value;updateSearchResults();break;
+      case 'choose-teacher': state.teacher=value;state.teacherQuery='';write('rgatu.teacher',value);render();window.scrollTo(0,0);break;
+      case 'clear-teacher': state.teacher='';write('rgatu.teacher','');state.teacherQuery='';render();window.scrollTo(0,0);break;
+      case 'clear-teacher-search': state.teacherQuery='';render();break;
       case 'reset-subject': state.subject='';document.getElementById('subject-search').value='';updateSearchResults();break;
       case 'theme': state.theme=value;write('rgatu.theme',state.theme);applyTheme();root.querySelectorAll('[data-action=theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.value===value)));break;
       case 'focus-lesson': {
