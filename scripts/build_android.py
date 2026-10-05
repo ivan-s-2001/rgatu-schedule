@@ -57,7 +57,7 @@ def main():
         password_file.write_text(secrets.token_urlsafe(30),encoding='utf-8')
         password_file.chmod(0o600)
         run('keytool','-genkeypair','-keystore',key,'-storepass:file',password_file,'-keypass:file',password_file,'-alias','rgatu-pairs','-keyalg','RSA','-keysize','2048','-validity','10000','-dname','CN=RGATU Pairs, O=Student Community, C=RU')
-    final = ROOT/'dist/RgatuLite-1.3.3.apk'
+    final = ROOT/'dist/RgatuLite-1.3.4.apk'
     final.parent.mkdir(exist_ok=True)
     run(tools/'apksigner','sign','--ks',key,'--ks-pass','file:'+str(password_file),'--ks-key-alias','rgatu-pairs','--out',final,out/'aligned.apk')
     run(tools/'apksigner','verify','--verbose',final)
