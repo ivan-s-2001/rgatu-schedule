@@ -1171,7 +1171,7 @@ html[data-theme=dark] .bottom-nav{background:#0f1728}
     min-height:100dvh;
     margin:0;
     display:grid;
-    grid-template-columns:minmax(210px,250px) minmax(0,1fr);
+    grid-template-columns:calc(max(0px,(100vw - 1280px)/2) + 250px) minmax(0,1fr);
     grid-template-rows:auto 1fr;
     align-items:start;
     background:var(--page-bg);
@@ -1209,7 +1209,7 @@ html[data-theme=dark] .bottom-nav{background:#0f1728}
     width:100%;
     max-width:none;
     min-height:calc(100dvh - 82px);
-    padding:30px 18px;
+    padding:30px 18px 30px calc(max(0px,(100vw - 1280px)/2) + 18px);
     transform:none;
     display:flex;
     flex-direction:column;
