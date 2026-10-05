@@ -302,12 +302,13 @@
   document.addEventListener('visibilitychange',updateClock);
   render();
   if(!isAndroid && 'serviceWorker' in navigator) {
+    const wasControlled = Boolean(navigator.serviceWorker.controller);
     navigator.serviceWorker.register('./sw.js').then(registration=>{
       if(registration.waiting) registration.waiting.postMessage('ACTIVATE');
       registration.addEventListener('updatefound',()=>{const worker=registration.installing;worker?.addEventListener('statechange',()=>{if(worker.state==='installed'&&navigator.serviceWorker.controller)worker.postMessage('ACTIVATE');});});
     }).catch(()=>{});
     let reloading = false;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloading&&navigator.serviceWorker.controller){reloading=true;location.reload();}});
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(wasControlled&&!reloading&&navigator.serviceWorker.controller){reloading=true;location.reload();}});
   }
   refreshSchedule();
 })();
