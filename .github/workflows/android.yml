@@ -38,10 +38,13 @@ jobs:
           python3 scripts/generate_assets.py
           node scripts/test_timetable.cjs
           python3 scripts/build_android.py --unsigned
+          cp "$ANDROID_SDK_ROOT/build-tools/34.0.0/lib/apksigner.jar" dist/apksigner.jar
       - uses: actions/upload-artifact@v4
         with:
           name: android-unsigned
-          path: dist/RgatuLite-unsigned.apk
+          path: |
+            dist/RgatuLite-unsigned.apk
+            dist/apksigner.jar
           retention-days: 7
       - name: Make build available for private signing
         env:
