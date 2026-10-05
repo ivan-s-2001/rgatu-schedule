@@ -10,14 +10,14 @@ const path=require('node:path');
   // Keep future CI runs anchored to the supplied October session.
   await context.addInitScript(()=>{const D=Date;window.Date=class extends D{constructor(...args){super(...(args.length?args:['2026-10-05T12:45:00+03:00']));}static now(){return D.parse('2026-10-05T12:45:00+03:00');}};});
   const page=await context.newPage();
-  async function screenClick(selector,screen){await page.click(selector);await page.waitForSelector({day:'.date-title',calendar:'.month-grid',search:'#subject-search',bells:'.bells-list',profile:'.about-card',consultations:'.consultations-page'}[screen]);}
+  async function screenClick(selector,screen){await page.click(selector);await page.waitForSelector({day:'.date-title',calendar:'.month-grid',search:'#subject-search',bells:'.bells-list',profile:'.about-card',teachers:'.teachers-page'}[screen]);}
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const out=path.resolve('build/screenshots');fs.mkdirSync(out,{recursive:true});
   async function fits(label){
     const issues=await page.evaluate(()=>{
       const issues=[];
       if(document.documentElement.scrollWidth>innerWidth+1)issues.push('page overflows');
-      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.schedule-tab,.unofficial-chip,.primary,.secondary,.subject-row,.consult-card,.live-summary,.live-place,.next-preview,.room-strong')){
+      for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.schedule-tab,.unofficial-chip,.primary,.secondary,.subject-row,.live-summary,.live-place,.next-preview,.room-strong')){
         if(el.hidden||!el.getClientRects().length)continue;
         if(el.scrollWidth>el.clientWidth+2)issues.push(el.className+': '+el.textContent.slice(0,70));
         const style=getComputedStyle(el);
@@ -35,12 +35,18 @@ const path=require('node:path');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
   assert.equal(await page.locator('.nav-link').count(),3);assert.equal(await page.locator('a[href="#session"]').count(),0);
   assert.equal(await page.locator('.schedule-tab').count(),2);
-  assert.match(await page.locator('.schedule-switcher').innerText(),/Установочная\s+сессия[\s\S]*Консультации/);
-  await screenClick('[data-action="consultations"]','consultations');
-  await page.waitForFunction(()=>document.querySelector('.consultations-page .day-done, .consultations-page .empty, .consultations-page .consult-day'));
+  assert.match(await page.locator('.schedule-switcher').innerText(),/По группе[\s\S]*По преподавателю/);
+  assert.match(await page.locator('.lesson').nth(0).innerText(),/1\s*пара[\s\S]*08:30–10:05/);
+  assert.match(await page.locator('.lesson').nth(1).innerText(),/2\s*пара[\s\S]*10:15–11:50/);
+  assert.doesNotMatch(await page.locator('.lessons').innerText(),/1\s*[–-]\s*2\s*пары?/);
+  await screenClick('[data-action="teachers"]','teachers');
+  await page.fill('#teacher-search','Фоменко');
+  await page.locator('[data-action="choose-teacher"]').filter({hasText:'Фоменко С.А.'}).click();
+  assert.match(await page.locator('.teacher-summary').innerText(),/Фоменко С\.А\./);
+  assert.ok(await page.locator('.teacher-day .lesson').count()>=2);
+  assert.match(await page.locator('.teacher-day .together').first().innerText(),/Группы:/);
   assert.equal(await page.locator('.nav-link[href="#day"]').getAttribute('aria-current'),'page');
-  await screenClick('[data-action="session"]','day');
-  assert.match(await page.locator('.lesson').first().innerText(),/08:30–11:50/);
+  await screenClick('[data-action="group-schedule"]','day');
   assert.match(await page.locator('.lesson').first().innerText(),/Экономика|Фоменко С\.А\.|1-212/);
   assert.match(await page.locator('.lesson').first().innerText(),/1 корпус[\s\S]*2 этаж/);
   assert.match(await page.locator('.live-summary').innerText(),/Экономика|1-212/);
@@ -81,8 +87,8 @@ const path=require('node:path');
     await page.setViewportSize(size);
     for(const font of [16,24,32]){
       await page.addStyleTag({content:'html{font-size:'+font+'px!important}'});
-      for(const screen of ['day','consultations','calendar','bells','profile','search']){
-        if(screen==='consultations'){await screenClick('a[href="#day"]','day');await screenClick('[data-action="consultations"]','consultations');}
+      for(const screen of ['day','teachers','calendar','bells','profile','search']){
+        if(screen==='teachers'){await screenClick('a[href="#day"]','day');await screenClick('[data-action="teachers"]','teachers');}
         else if(screen==='calendar'){await screenClick('a[href="#day"]','day');await screenClick('.date-title','calendar');}
         else if(screen==='search'){await screenClick('a[href="#day"]','day');await screenClick('[data-action="search"]','search');}
         else await screenClick('a[href="#'+screen+'"]',screen);
@@ -102,12 +108,12 @@ const path=require('node:path');
   await page.setViewportSize({width:375,height:812});await page.addStyleTag({content:'html{font-size:16px!important}'});
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="light"]');
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
-  await page.screenshot({path:path.join(out,'day.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="consultations"]','consultations');await page.screenshot({path:path.join(out,'consultations.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="session"]','day');await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:false,animations:'disabled'});
+  await page.screenshot({path:path.join(out,'day.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="teachers"]','teachers');await page.screenshot({path:path.join(out,'teachers.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="group-schedule"]','day');await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:false,animations:'disabled'});
   await page.reload();assert.match(await page.locator('.group-switch').innerText(),/ЗВС-26/);
   await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await screenClick('a[href="#day"]','day');assert.ok(await page.locator('.lesson').count()>0);
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
   assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
   assert.deepEqual(errors,[]);
-  console.log('PASS: next-class dashboard, room building/floor hints, session/consultation tabs, free-day continuation, month selection, search, exact bells, shared groups, author/contact, persistence, offline and no clipping at 100/150/200% text.');
+  console.log('PASS: separate lesson cards, group/teacher schedule tabs, next-class dashboard, room building/floor hints, free-day continuation, month selection, search, exact bells, shared groups, author/contact, persistence, offline and no clipping at 100/150/200% text.');
   await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});
