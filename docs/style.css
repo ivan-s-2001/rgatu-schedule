@@ -2,3 +2,18 @@
 
 p,h1,h2,a,li,summary,footer{overflow-wrap:anywhere}.platform-heading{flex-wrap:wrap}.badge{white-space:normal}.platform-heading h2{min-width:0}.button span{flex-shrink:0}footer a{display:inline-block;min-height:44px;padding:8px 0;font-weight:600}@media(max-width:359px){.wrap{padding-left:16px;padding-right:16px}.platform{padding:18px}.intro h1{font-size:2.65rem}.badge{margin-left:0}}
 .unofficial{font-size:clamp(1.3rem,4vw,1.65rem);font-weight:750;line-height:1.25;border-left:4px solid #a28e42;padding-left:14px;margin-bottom:24px;max-width:100%}.author{margin-top:20px;font-size:.875rem;color:var(--muted)}.author a{display:inline-block;min-height:44px;padding:8px 0;font-weight:650;color:var(--ink)}
+
+
+/* RSATU FZO identity — intentionally university-inspired, visibly unofficial. */
+:root{--bg:#f4f7fb;--surface:#fff;--ink:#18213c;--muted:#66738e;--line:#dce3ef;--accent:#e8edff;--blue:#3038c8;--red:#e52431}
+body{background:var(--bg)}
+.brand img{box-shadow:0 5px 14px #3038c824}.brand strong{color:#1f2a67;font-weight:800}.brand p{margin-top:2px}
+.intro{position:relative}.intro::after{content:"";position:absolute;right:0;top:44px;width:72px;height:4px;border-radius:99px;background:linear-gradient(90deg,var(--blue) 0 78%,var(--red) 78%)}
+.unofficial{font-size:clamp(1.2rem,4vw,1.55rem);color:#8f1f28;border-left-color:var(--red);background:#fff6f7;border-radius:0 12px 12px 0;padding:10px 14px}
+h1{font-family:inherit;font-weight:800;color:#172052}
+.android{background:var(--accent);border-color:#cfd8ff}.badge{background:#fff;color:#2636ad;border:1px solid #c8d0ff}
+.primary{background:var(--blue)}.primary:hover{background:#252eaa}.secondary{border-color:#8b97d9;color:#202d8f}.secondary:hover{background:#eef1ff}
+.platform{box-shadow:0 6px 20px #24356a0b}.platform-icon{color:var(--blue)}
+a:focus-visible,summary:focus-visible{outline-color:#4b59dd}.author a{color:#2636ad}
+.changes{border-top-color:var(--line)}footer{border-top-color:var(--line)}
+@media(max-width:640px){.intro::after{top:24px;width:52px}}
