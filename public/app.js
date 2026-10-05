@@ -4,6 +4,7 @@
   const time = window.RGATU_TIME;
   const root = document.getElementById('app');
   const isAndroid = /RgatuLiteAndroid\//.test(navigator.userAgent);
+  document.documentElement.classList.toggle('android-app', isAndroid);
   const read = (key, fallback = null) => { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, value); return true; } catch { return false; } };
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -31,7 +32,10 @@
   };
   const validData = data => data && data.schema === 1 && typeof data.version === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.updated) && Array.isArray(data.groups) && data.groups.length > 0 && Array.isArray(data.lessons) && data.groups.every(g => typeof g.id === 'string' && Array.isArray(g.dates) && g.dates.length && Array.isArray(g.lessons) && g.lessons.every(i => Number.isInteger(i) && i >= 0 && i < data.lessons.length)) && data.lessons.every(l => /^\d{4}-\d{2}-\d{2}$/.test(l.date) && l.slot >= 1 && l.slot <= 7 && typeof l.subject === 'string');
   let data = window.RGATU_DATA;
-  try { const cached = JSON.parse(read('rgatu.schedule', 'null')); if (validData(cached) && cached.updated >= data.updated) data = cached; } catch {}
+  try {
+    const cached = JSON.parse(read('rgatu.schedule', 'null'));
+    if (validData(cached) && (cached.updated > data.updated || cached.updated === data.updated && cached.version === data.version)) data = cached;
+  } catch {}
   if (!validData(data)) {
     root.innerHTML = '<main class="page"><h1>Расписание не открылось</h1><p class="profile-info">Попробуй открыть приложение ещё раз.</p><button class="primary" onclick="location.reload()">Попробовать снова</button></main>';
     return;
@@ -42,8 +46,12 @@
   const dateText = (date, options = {day:'numeric', month:'long'}) => new Intl.DateTimeFormat('ru-RU', {...options, timeZone:'Europe/Moscow'}).format(dateObject(date));
   const shiftDate = (date, amount) => { const d = new Date(date + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + amount); return d.toISOString().slice(0,10); };
   const plural = (n, forms) => `${n} ${forms[n % 100 >= 11 && n % 100 <= 14 ? 2 : n % 10 === 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 ? 1 : 2]}`;
-  const groupById = id => data.groups.find(g => g.id === id);
-  let group = groupById(read('rgatu.group'));
+  const groupsById = new Map(data.groups.map(g => [g.id,g]));
+  const groupById = id => groupsById.get(id);
+  const canonicalGroupId = id => String(id || '').replace(/-(1|2)$/,'');
+  const savedGroupId = canonicalGroupId(read('rgatu.group'));
+  let group = groupById(savedGroupId);
+  if (group && read('rgatu.group') !== group.id) write('rgatu.group',group.id);
   const initialDate = g => {
     const today = nowDate();
     if (today < g.dates[0]) return g.dates[0];
@@ -90,24 +98,29 @@
     const matches = filteredGroups();
     const visible = matches.slice(0,state.limit);
     const selectedVisible = visible.some(g => g.id === state.chosen);
-    document.getElementById('group-results').innerHTML = `<p class="results-count" role="status">${plural(matches.length,['группа','группы','групп'])}</p><div class="group-list" id="group-list" role="radiogroup" aria-label="Выберите группу">${visible.map((g,i) => `<button class="group-row" role="radio" aria-checked="${state.chosen===g.id}" tabindex="${state.chosen===g.id || !selectedVisible && i===0 ? '0' : '-1'}" data-action="choose-group" data-value="${escape(g.id)}"><div><div class="group-code">${escape(g.id)}</div><div class="group-hint">${g.course} курс · ${g.id.match(/-\d{2}-(\d)$/) ? 'подгруппа ' + g.id.at(-1) : 'заочное отделение'}</div></div><span class="choice-dot">${state.chosen===g.id?icon('check'):''}</span></button>`).join('')}</div>${matches.length>visible.length?`<button class="secondary show-more" data-action="more-groups">Показать ещё ${icon('down')}</button>`:''}${!matches.length?'<div class="empty"><h2>Такой группы здесь нет</h2><p>Проверь номер или выбери другой курс.</p><button class="secondary" data-action="reset-groups">Показать все группы</button></div>':''}`;
+    document.getElementById('group-results').innerHTML = `<p class="results-count" role="status">${plural(matches.length,['группа','группы','групп'])}</p><div class="group-list" id="group-list" role="radiogroup" aria-label="Выберите группу">${visible.map((g,i) => `<button class="group-row" role="radio" aria-checked="${state.chosen===g.id}" tabindex="${state.chosen===g.id || !selectedVisible && i===0 ? '0' : '-1'}" data-action="choose-group" data-value="${escape(g.id)}"><div><div class="group-code">${escape(g.id)}</div><div class="group-hint">${g.course} курс · ${'заочное отделение'}</div></div><span class="choice-dot">${state.chosen===g.id?icon('check'):''}</span></button>`).join('')}</div>${matches.length>visible.length?`<button class="secondary show-more" data-action="more-groups">Показать ещё ${icon('down')}</button>`:''}${!matches.length?'<div class="empty"><h2>Такой группы здесь нет</h2><p>Проверь номер или выбери другой курс.</p><button class="secondary" data-action="reset-groups">Показать все группы</button></div>':''}`;
     const button = document.getElementById('continue-group');
     button.disabled = !state.chosen;
     button.innerHTML = `${state.chosen?'Продолжить':'Выбери группу'}${icon('arrow')}`;
     root.querySelectorAll('[data-action=course]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.value===state.course)));
     if (focusId) [...root.querySelectorAll('.group-row')].find(b => b.dataset.value === focusId)?.focus();
   }
-  const groupLessons = () => group.lessons.map(i => data.lessons[i]).sort((a,b) => a.date.localeCompare(b.date) || a.slot-b.slot);
+  const subgroupFor = (groupId, lessonId) => Number(groupsById.get(groupId)?.subgroups?.[String(lessonId)] || 0) || null;
+  const audienceLabel = (groupId, lessonId) => {
+    const subgroup = subgroupFor(groupId,lessonId);
+    return subgroup ? groupId + ' · ' + subgroup + ' подгруппа' : groupId;
+  };
+  const groupLessons = () => group.lessons.map(i => ({...data.lessons[i],subgroup:subgroupFor(group.id,i)})).sort((a,b) => a.date.localeCompare(b.date) || a.slot-b.slot);
   const lessonsOn = date => groupLessons().filter(l => l.date === date);
   const allTeachers = () => [...new Set(data.lessons.map(lesson => String(lesson.teacher || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));
   const teacherLessons = teacher => data.lessons.filter(lesson => lesson.teacher === teacher).sort((a,b)=>a.date.localeCompare(b.date) || a.slot-b.slot);
   const typeLabel = type => ({'Л':'Лекция','П':'Практика','ЛР':'Лабораторная','К':'Занятие'})[type] || type || 'Занятие';
   const lessonView = lesson => ({...lesson,slots:[lesson.slot],ids:[lesson.id],peers:sharedGroups.get(lesson.id) || []});
-  function together(peers) {
+  function together(peers, lessonId) {
     const others = peers.filter(id=>id!==group.id);
-    return others.length ? `<p class="together">${icon('people')}<span>Вместе с ${others.map(escape).join(', ')}</span></p>` : '';
+    return others.length ? `<p class="together">${icon('people')}<span>Вместе с ${others.map(id=>escape(audienceLabel(id,lessonId))).join(', ')}</span></p>` : '';
   }
-  const teacherGroups = peers => peers.length ? `<p class="together">${icon('people')}<span>Группы: ${peers.map(escape).join(', ')}</span></p>` : '';
+  const teacherGroups = (peers, lessonId) => peers.length ? `<p class="together">${icon('people')}<span>Группы: ${peers.map(id=>escape(audienceLabel(id,lessonId))).join(', ')}</span></p>` : '';
   const rangeText = lesson => {
     const slot = lesson.slots ? lesson.slots[0] : lesson.slot;
     const bell = time.bells(lesson.date)[slot-1];
@@ -131,7 +144,7 @@
     const cards = lessons.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.slot-b.slot).map(lessonView);
     return `<div class="lessons">${cards.map(l => {
       const current = focus?.current && l.ids.includes(focus.lesson.id);
-      return `<article class="lesson${current?' lesson-current':''}" data-lesson-ids="${l.ids.join(',')}" aria-label="${l.slot} пара, ${rangeText(l)}, ${escape(l.subject)}"><div class="slot"><strong>${l.slot}</strong><span>пара</span><span class="current-dot" aria-label="Идёт сейчас"${current?'':' hidden'}></span></div><div class="lesson-body"><div class="lesson-time"><span>${rangeText(l)}</span><span class="kind ${l.type==='П'?'practice':l.type==='ЛР'?'lab':''}">${escape(typeLabel(l.type))}</span><span class="current-word"${current?'':' hidden'}>Сейчас</span></div><h3>${escape(l.subject)}</h3><div class="lesson-details">${l.room?`<p class="room room-strong">${icon('room')}<span><strong>${escape(l.room)}</strong>${roomMeta(l.room)?`<small>${escape(roomMeta(l.room))}</small>`:''}</span></p>`:''}${!teacherMode&&l.teacher?`<p class="teacher">${icon('user')}<span>${escape(l.teacher)}</span></p>`:''}</div>${teacherMode?teacherGroups(l.peers):together(l.peers)}</div></article>`;
+      return `<article class="lesson${current?' lesson-current':''}" data-lesson-ids="${l.ids.join(',')}" aria-label="${l.slot} пара, ${rangeText(l)}, ${escape(l.subject)}"><div class="slot"><strong>${l.slot}</strong><span>пара</span><span class="current-dot" aria-label="Идёт сейчас"${current?'':' hidden'}></span></div><div class="lesson-body"><div class="lesson-time"><span>${rangeText(l)}</span><span class="kind ${l.type==='П'?'practice':l.type==='ЛР'?'lab':''}">${escape(typeLabel(l.type))}</span>${!teacherMode&&l.subgroup?`<span class="subgroup-note">${l.subgroup} подгруппа</span>`:''}<span class="current-word"${current?'':' hidden'}>Сейчас</span></div><h3>${escape(l.subject)}</h3><div class="lesson-details">${l.room?`<p class="room room-strong">${icon('room')}<span><strong>${escape(l.room)}</strong>${roomMeta(l.room)?`<small>${escape(roomMeta(l.room))}</small>`:''}</span></p>`:''}${!teacherMode&&l.teacher?`<p class="teacher">${icon('user')}<span>${escape(l.teacher)}</span></p>`:''}</div>${teacherMode?teacherGroups(l.peers,l.id):together(l.peers,l.id)}</div></article>`;
     }).join('')}</div>`;
   }
   function renderFocus() {
@@ -141,7 +154,9 @@
     if (!focus) return today<=group.dates.at(-1) ? '<div class="day-done"><strong>На сегодня всё</strong><span>Ближайших занятий в этой сессии больше нет.</span></div>' : '';
     const {lesson,current,minutes} = focus;
     const sameDay = lesson.date===today;
-    const label = current ? `Сейчас · ${lesson.slot} пара` : sameDay ? `Следующая · ${lesson.slot} пара` : lesson.date===shiftDate(today,1) ? 'Завтра' : 'Ближайшая · '+dateText(lesson.date);
+    const subgroup = subgroupFor(group.id,lesson.id);
+    const labelBase = current ? `Сейчас · ${lesson.slot} пара` : sameDay ? `Следующая · ${lesson.slot} пара` : lesson.date===shiftDate(today,1) ? 'Завтра' : 'Ближайшая · '+dateText(lesson.date);
+    const label = subgroup ? labelBase + ' · ' + subgroup + ' подгруппа' : labelBase;
     const timing = current ? `ещё ${plural(minutes,['минута','минуты','минут'])}` : sameDay ? `в ${focus.time.start} · через ${plural(minutes,['минуту','минуты','минут'])}` : `в ${focus.time.start}`;
     const place = lessonPlace(lesson);
     return `<button class="live-summary${current?' is-current':''}" data-action="focus-lesson" data-value="${lesson.date}" data-lesson-id="${lesson.id}"><span class="live-symbol">${current?'<span class="current-dot"></span>':icon('clock')}</span><span class="live-copy"><span class="live-kicker">${escape(label)} · ${escape(timing)}</span><strong>${escape(lesson.subject)}</strong>${place?`<span class="live-place">${icon('room')}${escape(place)}</span>`:''}</span>${icon('arrow')}</button>`;
