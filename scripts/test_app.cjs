@@ -81,9 +81,10 @@ const path=require('node:path');
   await fits('long-name group');await screenClick('[data-action="search"]','search');await page.fill('#subject-search',longest.subject);
   assert.ok(await page.locator('.lesson').count()>0);await fits('longest source subject at 200%');
   // Save reviewable phone screens at ordinary text size.
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="light"]');
   await page.setViewportSize({width:375,height:812});await page.addStyleTag({content:'html{font-size:16px!important}'});
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
-  await page.screenshot({path:path.join(out,'day.png'),fullPage:true});await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:true});
+  await page.screenshot({path:path.join(out,'day.png'),fullPage:false,animations:'disabled'});await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:false,animations:'disabled'});
   await page.reload();assert.match(await page.locator('.group-switch').innerText(),/ЗВС-26/);
   await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await screenClick('a[href="#day"]','day');assert.ok(await page.locator('.lesson').count()>0);
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
