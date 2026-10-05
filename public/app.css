@@ -105,6 +105,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
 }
 .brand{min-width:0;flex:1 1 auto;display:flex;align-items:center;gap:12px}
 .brand>div:last-child{min-width:0}
+.brand-title{overflow-wrap:anywhere}
+.brand>div:last-child{min-width:0}
 .brand-logo{width:44px;height:44px;object-fit:contain;flex:none}
 .brand-kicker{
   display:block;
@@ -895,6 +897,7 @@ html[data-theme=dark] .teacher-summary h1{color:var(--body)}
   text-align:center;
 }
 .nav-link .ui-icon{width:19px;height:19px}
+.nav-link span{max-width:100%;overflow-wrap:anywhere;hyphens:auto}
 .nav-link:hover{color:#fff}
 .nav-link[aria-current=page]{color:var(--aqua)}
 .nav-link[aria-current=page] .ui-icon{color:var(--aqua)}
@@ -1108,7 +1111,9 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .brand-logo{width:36px;height:36px}
   .brand-kicker{display:none}
   .brand-title{font-size:.8rem;line-height:1.18}
-  .group-switch{max-width:35%;padding:7px 8px;font-size:.72rem}
+  .header-actions{max-width:38%;min-width:0}
+  .group-switch{max-width:100%;min-width:0;padding:7px 8px;font-size:.72rem}
+  .group-switch span{min-width:0;overflow-wrap:anywhere}
   .picker-hero{padding:34px 0 42px}
   .picker-hero-inner{width:calc(100% - 26px)}
   .picker-hero h1{font-size:clamp(30px,12vw,40px)}
