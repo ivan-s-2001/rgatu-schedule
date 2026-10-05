@@ -6,17 +6,17 @@ root = Path(__file__).resolve().parents[1]
 
 def calendar(size, maskable=False):
     scale = 4
-    canvas = Image.new('RGB', (512*scale,512*scale), '#252824')
+    canvas = Image.new('RGB', (512*scale,512*scale), '#3038c8')
     draw = ImageDraw.Draw(canvas)
     def box(coords, radius, fill):
         draw.rounded_rectangle(tuple(round(c*scale) for c in coords), radius=radius*scale, fill=fill)
-    box((120,128,392,408),28,'#f6f5f1')
-    draw.rectangle((120*scale,182*scale,392*scale,220*scale),fill='#ece3bd')
+    box((120,128,392,408),28,'#ffffff')
+    draw.rectangle((120*scale,182*scale,392*scale,220*scale),fill='#e52431')
     for x in (180,332):
-        box((x-12,104,x+12,160),12,'#f6f5f1')
+        box((x-12,104,x+12,160),12,'#ffffff')
     for x in (176,278):
         for y in (274,330):
-            box((x-11,y-11,x+69,y+11),11,'#252824')
+            box((x-11,y-11,x+69,y+11),11,'#3038c8')
     return canvas.resize((size,size),Image.Resampling.LANCZOS)
 
 icons = root/'public/icons'
