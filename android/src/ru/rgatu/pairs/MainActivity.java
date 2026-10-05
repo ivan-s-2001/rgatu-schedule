@@ -54,7 +54,7 @@ public final class MainActivity extends Activity {
         settings.setSupportZoom(true);
         settings.setBuiltInZoomControls(true);
         settings.setDisplayZoomControls(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " RgatuLiteAndroid/1.2.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " RgatuLiteAndroid/1.3.0");
         updater = new AppUpdater(this);
         web.addJavascriptInterface(updater,"RgatuApp");
         web.setWebChromeClient(new WebChromeClient());
