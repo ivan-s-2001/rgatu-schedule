@@ -143,7 +143,7 @@ public final class AppUpdater {
         if(ready==null) return;
         if(!activity.getPackageManager().canRequestPackageInstalls()) {
             new AlertDialog.Builder(activity).setTitle("Разреши обновления")
-                .setMessage("Android попросит один раз разрешить установку из «РГАТУ Пары». После этого вернись сюда.")
+                .setMessage("Android попросит один раз разрешить установку из «Расписание ФЗО». После этого вернись сюда.")
                 .setPositiveButton("Продолжить",(dialog,which)->{
                     try {waitingForPermission=true;activity.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+activity.getPackageName())));}
                     catch(Exception exception) {waitingForPermission=false;message("Не удалось открыть разрешение. Попробуй позже.");}
