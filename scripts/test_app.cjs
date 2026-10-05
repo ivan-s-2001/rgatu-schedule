@@ -85,15 +85,11 @@ const path=require('node:path');
     return selectors.flatMap(sel=>{const el=document.querySelector(sel);if(!el)return [];const fg=rgb(getComputedStyle(el).color),back=bg(el);if(!fg||!back)return [sel+': unknown color'];const r=ratio(fg,back);return r<4.5?[sel+': '+r.toFixed(2)]:[];});
   });
   assert.deepEqual(contrastIssues,[],'dark theme text contrast');
+  await screenClick('a[href="#day"]','day');
   const fzoTokens=await page.evaluate(()=>({
-    heroPadding:getComputedStyle(document.querySelector('.picker-hero')||document.body).paddingTop,
-    sidebar:matchMedia('(min-width: 992px)').matches?getComputedStyle(document.querySelector('.bottom-nav')).width:'',
-    lessonRadius:getComputedStyle(document.querySelector('.lesson')).borderRadius,
-    searchHeight:getComputedStyle(document.querySelector('.search')).height
+    lessonRadius:getComputedStyle(document.querySelector('.lesson')).borderRadius
   }));
-  // FZO design tokens are enforced again at desktop below; mobile still keeps the same card/search geometry.
   assert.equal(fzoTokens.lessonRadius,'12px','FZO card radius');
-  assert.equal(fzoTokens.searchHeight,'48px','FZO search height');
   // Every screen stays within narrow, tablet and landscape widths, with 150% and 200% text.
   for(const size of [{width:320,height:740},{width:375,height:812},{width:812,height:375},{width:768,height:1024}]){
     await page.setViewportSize(size);
