@@ -200,6 +200,16 @@ const path=require('node:path');
     assert.ok(Math.abs(desktopLayout.navLeft-workspaceLeft)<=2&&Math.abs((desktopLayout.navRight-desktopLayout.navLeft)-264)<=2,'desktop navigation matches 264px FZO menu');
     assert.ok(Math.abs((desktopLayout.mainLeft-desktopLayout.navRight)-44)<=2&&desktopLayout.mainWidth>700,'desktop content keeps the 44px FZO column gap');
     assert.ok(desktopLayout.sidebarRight+20<desktopLayout.dayMainLeft,'desktop day view has separate controls and lesson columns');
+    await page.click('[data-action="group"]');
+    await page.waitForSelector('.sticky-action');
+    const desktopAction=await page.evaluate(()=>{
+      const action=document.querySelector('.sticky-action').getBoundingClientRect();
+      const form=document.querySelector('.picker-form').getBoundingClientRect();
+      return {left:action.left,right:action.right,formLeft:form.left,formRight:form.right,viewport:innerWidth};
+    });
+    assert.ok(desktopAction.left>=desktopAction.formLeft-2,'desktop confirmation action follows content column');
+    assert.ok(desktopAction.right<=desktopAction.formRight+2,'desktop confirmation action does not span outside content');
+    await page.click('[data-action="cancel-group"]');
     await fits('desktop day '+size.width);
     await screenClick('[data-action="teachers"]','teachers');await fits('desktop teachers '+size.width);
     await screenClick('a[href="#profile"]','profile');await fits('desktop profile '+size.width);
