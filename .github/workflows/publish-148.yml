@@ -1,0 +1,91 @@
+name: Publish signed Android 1.4.8
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-148.yml
+permissions:
+  contents: write
+concurrency:
+  group: publish-android-1.4.8
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct verified signed APK
+        run: |
+          set -euo pipefail
+          command -v zstd >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq zstd; }
+          git fetch origin android-build-37455434154:refs/remotes/origin/android-build-37455434154
+          git show origin/android-build-37455434154:unsigned.apk > /tmp/RgatuLite-unsigned.apk
+          printf '%s  %s\n' '19befe020ea5fb273bd39f902306cc8b583c6018f9c4862f08d461db19d162dd' /tmp/RgatuLite-unsigned.apk | sha256sum -c -
+          cat .release/v1.4.8/patch.*.b64 | tr -d '\n' | base64 -d > /tmp/RgatuLite-1.4.8.zstpatch
+          printf '%s  %s\n' '37ef9df540dd6e21bcc8c773f6a49ac7a21bcd8f393392b004ae1b934b5d46a8' /tmp/RgatuLite-1.4.8.zstpatch | sha256sum -c -
+          mkdir -p docs/download
+          zstd -q -f -d --patch-from=/tmp/RgatuLite-unsigned.apk /tmp/RgatuLite-1.4.8.zstpatch -o docs/download/RgatuLite.apk
+          printf '%s  %s\n' 'be19ecc2892ae0eb9cb49ada965213e29ed0490f1f7fa5ad9dcb518955ceee9b' docs/download/RgatuLite.apk | sha256sum -c -
+          test "$(stat -c '%s' docs/download/RgatuLite.apk)" = "177392"
+
+      - name: Prepare 1.4.8 release metadata
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          version_path=Path('version.json')
+          meta=json.loads(version_path.read_text(encoding='utf-8'))
+          meta['version']='1.4.8'
+          meta['versionCode']=17
+          meta['released']='2026-10-06'
+          meta['artifact']={
+            'sha256':'be19ecc2892ae0eb9cb49ada965213e29ed0490f1f7fa5ad9dcb518955ceee9b',
+            'bytes':177392,
+          }
+          meta['pwa']['cache']='rgatu-pairs-web-v1.4.8'
+          version_path.write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          releases_path=Path('releases.json')
+          history=json.loads(releases_path.read_text(encoding='utf-8'))
+          for row in history.get('public',[]):
+              row['status']='superseded'
+          history['public']=[{
+              'version':'1.4.8',
+              'versionCode':17,
+              'date':'2026-10-06',
+              'bytes':177392,
+              'sha256':'be19ecc2892ae0eb9cb49ada965213e29ed0490f1f7fa5ad9dcb518955ceee9b',
+              'status':'stable',
+          }]+[row for row in history.get('public',[]) if row.get('version')!='1.4.8']
+          history['current']='1.4.8'
+          releases_path.write_text(json.dumps(history,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          Path('RELEASE_NOTES.md').write_text(
+              'Расписание ФЗО 1.4.8\n\n'
+              '- Исправлена тёмная тема: выбранный день недели снова хорошо читается.\n'
+              '- Маркер дня с парами снова отображается компактной круглой точкой.\n'
+              '- Android получил те же исправления интерфейса, что уже опубликованы в веб-версии.\n'
+              '- Package ru.rgatu.pairs и прежняя подпись сохранены для обновления поверх установленного приложения.\n',
+              encoding='utf-8'
+          )
+          PY
+          python3 scripts/versioning.py sync
+
+      - name: Commit signed Android 1.4.8
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             docs/download/RgatuLite.apk             version.json package.json             android/AndroidManifest.xml             docs/version.json docs/index.html             public/sw.js             releases.json RELEASE_NOTES.md
+          git diff --cached --quiet && exit 0
+          git commit -m "release: publish Android 1.4.8"
+          git pull --rebase origin main
+          git push origin HEAD:main
