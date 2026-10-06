@@ -55,9 +55,13 @@ const path=require('node:path');
   assert.equal(iconAudit.missingBi,0,'all internal SVG icons identify their Bootstrap icon');
   const mobileChrome=await page.evaluate(()=>{
     const h=document.querySelector('.topbar').getBoundingClientRect();
-    const n=document.querySelector('.bottom-nav').getBoundingClientRect();
-    return {h:[h.x,h.y,h.width,h.height],n:[n.x,n.y,n.width,n.height]};
+    const nav=document.querySelector('.bottom-nav');
+    const n=nav.getBoundingClientRect();
+    const active=document.querySelector('.nav-link[aria-current="page"]');
+    return {h:[h.x,h.y,h.width,h.height],n:[n.x,n.y,n.width,n.height],navBg:getComputedStyle(nav).backgroundColor,activeBg:getComputedStyle(active).backgroundColor};
   });
+  assert.equal(mobileChrome.navBg,'rgb(255, 255, 255)','light PWA bottom navigation is a light app surface');
+  assert.equal(mobileChrome.activeBg,'rgb(246, 250, 250)','active PWA navigation uses FZO accent surface');
   await page.evaluate(()=>{window.__rgatuHeader=document.querySelector('.topbar');window.__rgatuNav=document.querySelector('.bottom-nav');});
   for(const [selector,screen] of [['[data-action="teachers"]','teachers'],['a[href="#day"]','day'],['.date-title','calendar'],['a[href="#bells"]','bells'],['a[href="#profile"]','profile']]){
     await screenClick(selector,screen);
@@ -193,15 +197,18 @@ const path=require('node:path');
   await page.setViewportSize({width:1280,height:900});
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="light"]');await screenClick('a[href="#day"]','day');
   const archiveDesktop=await page.evaluate(()=>{
-    const nav=document.querySelector('.bottom-nav'),link=document.querySelector('.nav-link[aria-current="page"]'),pageEl=document.querySelector('.page');
-    const ns=getComputedStyle(nav),ls=getComputedStyle(link),ps=getComputedStyle(pageEl);
-    return {navBg:ns.backgroundColor,linkPad:ls.padding,linkRadius:ls.borderRadius,linkSize:ls.fontSize,pageBg:ps.backgroundColor};
+    const shell=document.querySelector('.shell'),nav=document.querySelector('.bottom-nav'),link=document.querySelector('.nav-link[aria-current="page"]'),pageEl=document.querySelector('.page');
+    const ns=getComputedStyle(nav),ls=getComputedStyle(link),ps=getComputedStyle(pageEl),ss=getComputedStyle(shell,'::before');
+    return {navBg:ns.backgroundColor,linkPad:ls.padding,linkRadius:ls.borderRadius,linkSize:ls.fontSize,pageBg:ps.backgroundColor,sidebarBackdropBg:ss.backgroundColor,sidebarBackdropW:parseFloat(ss.width),sidebarBackdropH:parseFloat(ss.height),navRight:nav.getBoundingClientRect().right};
   });
   assert.equal(archiveDesktop.navBg,'rgb(238, 241, 244)','archive sidebar #eef1f4');
   assert.equal(archiveDesktop.linkPad,'9px 14px','archive sidebar link padding');
   assert.equal(archiveDesktop.linkRadius,'0px','archive sidebar links are square');
   assert.equal(archiveDesktop.linkSize,'14.5px','archive sidebar link typography');
   assert.equal(archiveDesktop.pageBg,'rgb(255, 255, 255)','archive content canvas is white');
+  assert.equal(archiveDesktop.sidebarBackdropBg,'rgb(238, 241, 244)','archive sidebar backdrop uses #eef1f4');
+  assert.ok(archiveDesktop.sidebarBackdropW>=archiveDesktop.navRight-1,'archive sidebar backdrop reaches through the whole left column');
+  assert.ok(archiveDesktop.sidebarBackdropH>700,'archive sidebar backdrop extends through the desktop workspace');
   await page.screenshot({path:path.join(out,'desktop-day-light.png'),fullPage:false,animations:'disabled'});
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="dark"]');await screenClick('a[href="#day"]','day');
   await page.screenshot({path:path.join(out,'desktop-day-dark.png'),fullPage:false,animations:'disabled'});
