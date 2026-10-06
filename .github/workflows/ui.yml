@@ -4,6 +4,10 @@ on:
     branches: [main]
     paths:
       - public/**
+      - version.json
+      - releases.json
+      - RELEASE_NOTES.md
+      - scripts/versioning.py
       - docs/**
       - scripts/test_app.cjs
       - scripts/test_download_page.cjs
@@ -31,6 +35,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Check schedule and mobile screens
         run: |
+          python3 scripts/versioning.py check
           node scripts/test_timetable.cjs
           python3 scripts/serve.py > /tmp/rgatu-preview.log 2>&1 &
           node scripts/test_app.cjs
