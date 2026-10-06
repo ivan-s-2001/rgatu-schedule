@@ -158,7 +158,7 @@
     const a = roomParts(prev.room), b = roomParts(next.room);
     let transition = '';
     if (prev.room && next.room) {
-      if (a.text === b.text) transition = 'Можно оставаться в аудитории';
+      if (a.text === b.text) transition = 'Аудитория не меняется · ' + b.text;
       else if (a.building && b.building && a.buildingCode === b.buildingCode) {
         transition = a.floor && b.floor && a.floor !== b.floor
           ? `Переход внутри ${b.building}: ${a.text} → ${b.text} · на ${b.floor} этаж`
