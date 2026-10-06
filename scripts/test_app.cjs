@@ -282,7 +282,7 @@ const path=require('node:path');
   assert.match(androidSource,/setDecorFitsSystemWindows\(false\)/,'Android enables explicit edge-to-edge inset handling');
   assert.match(androidSource,/Type\.systemBars\(\)[\s\S]*Type\.displayCutout\(\)/,'Android reserves status bar, cutout and navigation system bars');
   assert.match(androidSource,/setPadding\(bars\.left,bars\.top,bars\.right,bars\.bottom\)/,'Android applies system insets to WebView container');
-  const androidContext=await browser.newContext({viewport:{width:360,height:800},timezoneId:'Europe/Moscow',locale:'ru-RU',userAgent:'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36 RgatuLiteAndroid/1.4.4'});
+  const androidContext=await browser.newContext({viewport:{width:360,height:800},timezoneId:'Europe/Moscow',locale:'ru-RU',userAgent:'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36 RgatuLiteAndroid/1.4.5'});
   await androidContext.addInitScript(()=>{const D=Date;window.Date=class extends D{constructor(...args){super(...(args.length?args:['2026-10-05T12:45:00+03:00']));}static now(){return D.parse('2026-10-05T12:45:00+03:00');}};});
   const androidPage=await androidContext.newPage();
   await androidPage.goto(url);await androidPage.waitForSelector('#group-search');
