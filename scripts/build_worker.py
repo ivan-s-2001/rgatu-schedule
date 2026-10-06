@@ -40,7 +40,7 @@ export default {
   async fetch(request) {
     const url = new URL(request.url);
     let path = url.pathname;
-    if (path === '/health') return Response.json({ok:true,app:'rgatu-pairs',version:'1.4.4'},{headers:{'Cache-Control':'no-store',...COMMON}});
+    if (path === '/health') return Response.json({ok:true,app:'rgatu-pairs',version:'1.4.5'},{headers:{'Cache-Control':'no-store',...COMMON}});
     if (!['GET','HEAD'].includes(request.method)) return new Response('Method not allowed',{status:405,headers:{'Allow':'GET, HEAD',...COMMON}});
     if (path === '/') path = '/index.html';
     if (path === '/install' || path === '/install/') path = '/install/index.html';
@@ -49,7 +49,7 @@ export default {
       try {
         const upstream = await fetch(APK_URL,{redirect:'follow',headers:{'Accept-Encoding':'identity','Cache-Control':'no-cache'}});
         if (!upstream.ok) throw new Error('APK upstream '+upstream.status);
-        const headers = {'Content-Type':'application/vnd.android.package-archive','Content-Disposition':'attachment; filename="RgatuLite-1.4.4.apk"','Cache-Control':'no-store',...COMMON};
+        const headers = {'Content-Type':'application/vnd.android.package-archive','Content-Disposition':'attachment; filename="RgatuLite-1.4.5.apk"','Cache-Control':'no-store',...COMMON};
         const length = upstream.headers.get('Content-Length');
         if (length) headers['Content-Length'] = length;
         return new Response(request.method === 'HEAD' ? null : upstream.body,{status:200,headers});
@@ -63,7 +63,7 @@ export default {
     const etag = '"m1-'+asset.hash+'"';
     const headers = {'Content-Type':asset.mime,'Cache-Control':url.pathname==='/api/schedule'?'no-store':'public, max-age=0, must-revalidate','ETag':etag,'Vary':'Accept-Encoding',...COMMON};
     if (path === '/sw.js') headers['Service-Worker-Allowed'] = '/';
-    if (path === '/download/android') headers['Content-Disposition'] = 'attachment; filename="RgatuLite-1.4.4.apk"';
+    if (path === '/download/android') headers['Content-Disposition'] = 'attachment; filename="RgatuLite-1.4.5.apk"';
     if (request.headers.get('If-None-Match') === etag && url.pathname !== '/api/schedule') return new Response(null,{status:304,headers});
     const compressed = assetBytes(asset);
     let body;
