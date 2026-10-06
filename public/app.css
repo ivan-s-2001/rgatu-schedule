@@ -644,8 +644,6 @@ html[data-theme=dark] .break-rail span{box-shadow:0 0 0 4px var(--white)}
 }
 .lesson{
   margin:0;
-
-.lesson{
   display:grid;
   grid-template-columns:52px minmax(0,1fr);
   gap:16px;
