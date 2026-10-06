@@ -1,4 +1,5 @@
 name: Publish signed Android 1.4.8
+# canonical signer republish
 on:
   workflow_dispatch:
   push:
