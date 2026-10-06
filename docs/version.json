@@ -1,9 +1,9 @@
 {
-  "version": "1.4.0",
-  "versionCode": 9,
+  "version": "1.4.1",
+  "versionCode": 10,
   "updated": "2026-10-06",
   "download": "./download/RgatuLite.apk",
-  "sha256": "fcdbc93d21374722d539796e3b719cfd9fc634dee55f40d073be93149cb09879",
+  "sha256": "96e8f66ebe80b8784a96bd8a5e0ad7a2236aa7cef1ace27d45cee5d8586f009a",
   "bytes": 177392,
   "pwa": "https://rgatu-lite.ivan-s-2001.workers.dev/"
 }
