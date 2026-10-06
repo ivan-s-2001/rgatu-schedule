@@ -33,6 +33,7 @@ const path=require('node:path');
   assert.equal(await page.locator('#group-search').evaluate(el=>document.activeElement===el),true,'hero action focuses group search');
   const firstHero=await page.locator('.picker-hero').boundingBox();assert.ok(firstHero&&Math.abs(firstHero.y)<=1,'first-run hero must start at viewport top');
   assert.ok(firstHero&&firstHero.width>=374,'first-run hero spans viewport');
+  await page.screenshot({path:path.join(out,'picker-mobile.png'),fullPage:false,animations:'disabled'});
   await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
   await page.waitForSelector('#group-search');
   assert.match(await page.locator('.unofficial-card').innerText(),/неофициальное[\s\S]*студентом 1 курса/i);
@@ -189,9 +190,25 @@ const path=require('node:path');
     await screenClick('[data-action="teachers"]','teachers');await fits('desktop teachers '+size.width);
     await screenClick('a[href="#profile"]','profile');await fits('desktop profile '+size.width);
   }
-  await page.setViewportSize({width:1280,height:900});await screenClick('a[href="#day"]','day');await page.screenshot({path:path.join(out,'desktop-day.png'),fullPage:false,animations:'disabled'});
+  await page.setViewportSize({width:1280,height:900});
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="light"]');await screenClick('a[href="#day"]','day');
+  const archiveDesktop=await page.evaluate(()=>{
+    const nav=document.querySelector('.bottom-nav'),link=document.querySelector('.nav-link[aria-current="page"]'),pageEl=document.querySelector('.page');
+    const ns=getComputedStyle(nav),ls=getComputedStyle(link),ps=getComputedStyle(pageEl);
+    return {navBg:ns.backgroundColor,linkPad:ls.padding,linkRadius:ls.borderRadius,linkSize:ls.fontSize,pageBg:ps.backgroundColor};
+  });
+  assert.equal(archiveDesktop.navBg,'rgb(238, 241, 244)','archive sidebar #eef1f4');
+  assert.equal(archiveDesktop.linkPad,'9px 14px','archive sidebar link padding');
+  assert.equal(archiveDesktop.linkRadius,'0px','archive sidebar links are square');
+  assert.equal(archiveDesktop.linkSize,'14.5px','archive sidebar link typography');
+  assert.equal(archiveDesktop.pageBg,'rgb(255, 255, 255)','archive content canvas is white');
+  await page.screenshot({path:path.join(out,'desktop-day-light.png'),fullPage:false,animations:'disabled'});
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="dark"]');await screenClick('a[href="#day"]','day');
+  await page.screenshot({path:path.join(out,'desktop-day-dark.png'),fullPage:false,animations:'disabled'});
+  await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="light"]');await screenClick('a[href="#day"]','day');
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.waitForSelector('.picker-hero');
   const changeHero=await page.locator('.picker-hero').boundingBox();assert.ok(changeHero&&Math.abs(changeHero.y)<=1,'group-change hero must start at viewport top');
+  await page.screenshot({path:path.join(out,'picker-desktop.png'),fullPage:false,animations:'disabled'});
   const heroContract=await page.evaluate(()=>{
     const hero=document.querySelector('.picker-hero');
     const inner=document.querySelector('.picker-hero-inner').getBoundingClientRect();
