@@ -63,7 +63,7 @@ button{border:0;background:none;cursor:pointer}
 button:disabled{cursor:default;opacity:.45}
 a{text-decoration:none}
 h1,h2,h3,p{margin:0;overflow-wrap:anywhere}
-h1,h2,h3,.brand-title,.date-title h1,.month-pager h1,.group-code,.profile-group h2{
+h1,h2,h3,.brand-title,.date-title h1,.group-code,.profile-group h2{
   font-family:"Montserrat","Segoe UI",Arial,sans-serif;
 }
 .ui-icon{display:block;flex:none;width:1em;height:1em;overflow:visible;fill:currentColor;color:inherit}
@@ -500,12 +500,11 @@ html[data-theme=dark] .date-title h1{color:var(--body)}
 .day-number{color:var(--body);font-size:.93rem;font-weight:700}
 .day-dot{width:5px;height:5px;margin-top:2px;border-radius:50%;background:var(--secondary)}
 .day-dot.no-lessons{background:transparent}
-.day.is-today,.month-day.is-today{border-color:var(--aqua)}
-.day[aria-current=date],.month-day[aria-current=date]{background:var(--dark);border-color:var(--dark);color:#fff}
+.day.is-today{border-color:var(--aqua)}
+.day[aria-current=date]{background:var(--dark);border-color:var(--dark);color:#fff}
 .day[aria-current=date] .day-name{color:#dbe4ee}
 .day[aria-current=date] .day-number{color:#fff}
 .day[aria-current=date] .day-dot:not(.no-lessons),
-.month-day[aria-current=date] .day-dot:not(.no-lessons){background:var(--aqua)}
 .day-tools{
   display:flex;
   align-items:center;
@@ -1067,11 +1066,9 @@ html[data-theme=dark] .nav-link:hover{color:var(--body)}
 
 /* dark: geometry never changes */
 html[data-theme=dark] .day[aria-current=date],
-html[data-theme=dark] .month-day[aria-current=date]{background:var(--aqua);border-color:var(--aqua);color:#101827}
 html[data-theme=dark] .day[aria-current=date] .day-name{color:#31454e}
 html[data-theme=dark] .day[aria-current=date] .day-number{color:#101827}
 html[data-theme=dark] .day[aria-current=date] .day-dot:not(.no-lessons),
-html[data-theme=dark] .month-day[aria-current=date] .day-dot:not(.no-lessons){background:#101827}
 html[data-theme=dark] .primary{background:#dfe7f5;border-color:#dfe7f5;color:#111a2b}
 html[data-theme=dark] .primary:hover:not(:disabled){background:var(--aqua);border-color:var(--aqua);color:#111a2b}
 html[data-theme=dark] .primary .ui-icon{color:var(--secondary)}
@@ -1311,7 +1308,6 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .live-after{font-size:11.5px}
   .week{gap:2px}
   .day{min-height:58px}
-  .month-weekdays,.month-grid{gap:2px}
   .teacher-summary{flex-direction:column;padding:20px}
   .teacher-change{width:100%}
   .profile-group{padding:20px}
