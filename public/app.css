@@ -709,28 +709,13 @@ html[data-theme=dark] .picker-action{
   margin:0 auto;
 }
 .context-action{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:calc(70px + env(safe-area-inset-bottom));
-  z-index:50;
-  margin:0;
-  padding:9px 16px;
-  border-top:1px solid var(--line);
-  background:rgba(255,255,255,.96);
-  box-shadow:0 -10px 28px rgba(31,39,75,.10);
-  backdrop-filter:blur(14px);
+  margin-top:14px;
+  padding:0;
 }
-html[data-theme=dark] .context-action{
-  background:rgba(17,26,43,.97);
-  border-top-color:var(--line);
-  box-shadow:0 -12px 30px rgba(0,0,0,.30);
+.context-action .primary,.context-action .secondary{
+  width:auto;
+  max-width:100%;
 }
-.context-action .primary{
-  width:min(420px,100%);
-  margin:0 auto;
-}
-.page.has-context-action{padding-bottom:calc(174px + env(safe-area-inset-bottom))}
 .picker-page{padding-bottom:calc(118px + env(safe-area-inset-bottom))}
 .picker-submit{width:100%;max-width:420px}
 
@@ -1371,9 +1356,9 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
 }
 
 
-/* Only commit/next-step actions are pinned. Navigation and filters stay local. */
+/* Only the group-confirmation step is pinned; contextual actions stay in content flow. */
 @media(min-width:992px){
-  .picker-action,.context-action{
+  .picker-action{
     left:auto;
     right:max(18px,calc((100vw - 1160px)/2));
     bottom:12px;
@@ -1385,31 +1370,19 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
     box-shadow:none;
     backdrop-filter:none;
   }
-  html[data-theme=dark] .picker-action,
-  html[data-theme=dark] .context-action{
+  html[data-theme=dark] .picker-action{
     background:transparent;
     border:0;
     box-shadow:none;
   }
-  .picker-action .primary,.context-action .primary{
+  .picker-action .primary{
     width:auto;
+    min-width:260px;
     min-height:42px;
     margin:0;
     padding:9px 16px;
     box-shadow:0 8px 24px rgba(31,39,75,.14);
   }
-  .picker-action .primary{min-width:260px}
-  .context-action .primary{min-width:220px}
-  .page.has-context-action{padding-bottom:112px}
-}
-@media(max-width:767.98px){
-  html.android-app .context-action{
-    left:0;
-    right:0;
-    bottom:70px;
-    padding:9px 16px;
-  }
-  html.android-app .page.has-context-action{padding-bottom:166px}
 }
 
 @media(prefers-reduced-motion:reduce){
