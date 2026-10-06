@@ -1155,6 +1155,7 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
 
   .picker-page{
     width:min(1160px,calc(100% - 36px));
+    margin:0 auto;
     padding:40px 0 56px;
   }
   .picker-form{width:100%;margin:0}
