@@ -106,7 +106,7 @@ const path=require('node:path');
   assert.match(await page.locator('.lesson').nth(1).innerText(),/2\s*пара[\s\S]*10:15–11:50/);
   assert.doesNotMatch(await page.locator('.lessons').innerText(),/1\s*[–-]\s*2\s*пары?/);
   assert.ok(await page.locator('.lesson-break').count()>=4,'break and transition blocks connect lessons');
-  assert.match(await page.locator('.lesson-break').nth(0).innerText(),/Перерыв[\s\S]*10 минут[\s\S]*10:05–10:15[\s\S]*Можно оставаться в аудитории/);
+  assert.match(await page.locator('.lesson-break').nth(0).innerText(),/Перерыв[\s\S]*10 минут[\s\S]*10:05–10:15[\s\S]*Аудитория не меняется/);
   assert.match(await page.locator('.lesson-break').nth(1).innerText(),/Окно[\s\S]*155 минут[\s\S]*11:50–14:25[\s\S]*1 корпус[\s\S]*3 корпус[\s\S]*3-215/);
   assert.match(await page.locator('.lesson-break').nth(2).innerText(),/Перерыв[\s\S]*10 минут[\s\S]*3 корпус[\s\S]*на 3 этаж/);
   const breakVisual=await page.locator('.lesson-break').nth(0).evaluate(el=>({border:getComputedStyle(el).borderStyle,background:getComputedStyle(el).backgroundColor}));
