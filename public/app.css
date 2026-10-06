@@ -1159,30 +1159,6 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .picker-form{width:100%;margin:0}
   .picker-form>.screen-heading,.picker-form>.label,.picker-form>.search-wrap,.picker-form>.filters{max-width:760px}
   .group-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-  .sticky-action{
-    --action-bottom:calc(12px + env(safe-area-inset-bottom));
-    left:auto;
-    right:max(18px,calc((100vw - 1160px)/2));
-    bottom:var(--action-bottom);
-    width:max-content;
-    height:max-content;
-    max-width:calc(100vw - 36px);
-    min-height:0;
-    padding:0;
-    border:0;
-    background:transparent;
-    box-shadow:none;
-    backdrop-filter:none;
-  }
-  .sticky-action .primary{
-    width:auto;
-    max-width:100%;
-    min-width:0;
-    min-height:42px;
-    margin:0;
-    padding:9px 16px;
-    box-shadow:0 8px 24px rgba(31,39,75,.14);
-  }
     .toast{bottom:28px}
 }
 
@@ -1370,12 +1346,7 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   html.android-app .hero-link{width:100%;min-height:48px}
   html.android-app .hero-card{padding:18px;border-radius:12px;box-shadow:none}
   html.android-app .picker-page{padding:26px 16px 36px}
-  html.android-app .sticky-action{
-    left:0;
-    right:0;
-    padding:9px 16px;
-  }
-  html.android-app .picker-action{
+    html.android-app .picker-action{
     left:0;
     right:0;
     bottom:0;
