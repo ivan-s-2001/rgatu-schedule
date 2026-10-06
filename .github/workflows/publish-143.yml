@@ -1,0 +1,67 @@
+name: Publish Android 1.4.3
+on:
+  push:
+    branches: [main]
+    paths:
+      - release/signature-1.4.3.patch.zst
+      - .github/workflows/publish-143.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Reconstruct verified signed APK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zstd
+          git fetch origin android-build-37417337846:refs/remotes/origin/android-build-37417337846
+          git show origin/android-build-37417337846:unsigned.apk > /tmp/RgatuLite-unsigned.apk
+          echo "8a2787d5ef62c5c09d43c6fc07fe8fb2b99d9e07ffd61ec76aa5949bfc8046d9  /tmp/RgatuLite-unsigned.apk" | sha256sum -c -
+          zstd -d --patch-from=/tmp/RgatuLite-unsigned.apk release/signature-1.4.3.patch.zst -q -f -o docs/download/RgatuLite.apk
+          echo "012116483e4ab01240575bf70db50f218599126f97ec9bef897fe2295c5b3179  docs/download/RgatuLite.apk" | sha256sum -c -
+          test "$(stat -c %s docs/download/RgatuLite.apk)" = "177392"
+      - name: Switch install metadata to 1.4.3
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("docs/version.json")
+          data=json.loads(p.read_text())
+          data.update({
+            "version":"1.4.3",
+            "versionCode":12,
+            "updated":"2026-10-06",
+            "download":"./download/RgatuLite.apk",
+            "sha256":"012116483e4ab01240575bf70db50f218599126f97ec9bef897fe2295c5b3179",
+            "bytes":177392,
+            "pwa":"https://rgatu-lite.ivan-s-2001.workers.dev/"
+          })
+          p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+"\n")
+          for name in ["docs/index.html","scripts/test_download_page.cjs"]:
+              q=Path(name)
+              text=q.read_text()
+              text=text.replace("1.4.2","1.4.3")
+              q.write_text(text)
+          PY
+      - name: Publish release files to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/download/RgatuLite.apk docs/version.json docs/index.html scripts/test_download_page.cjs
+          git commit -m "release: publish signed Android 1.4.3"
+          git push origin HEAD:main
+      - name: Start final checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 3
+          gh workflow run release.yml --ref main
+          gh workflow run pages.yml --ref main
+          gh workflow run ui.yml --ref main
