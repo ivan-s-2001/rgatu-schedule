@@ -148,6 +148,9 @@
     const meta = roomMeta(lesson.room);
     return meta ? lesson.room + ' · ' + meta : lesson.room;
   };
+  const durationText = minutes => minutes >= 60
+    ? Math.floor(minutes/60) + ' ч' + (minutes%60 ? ' ' + (minutes%60) + ' мин' : '')
+    : plural(minutes,['минута','минуты','минут']);
   const gapInfo = (prev,next) => {
     if (!prev || !next || prev.date !== next.date) return null;
     const from = time.bounds(prev), to = time.bounds(next);
@@ -161,17 +164,17 @@
       if (a.text === b.text) transition = 'Аудитория не меняется · ' + b.text;
       else if (a.building && b.building && a.buildingCode === b.buildingCode) {
         transition = a.floor && b.floor && a.floor !== b.floor
-          ? `Переход внутри ${b.building}: ${a.text} → ${b.text} · на ${b.floor} этаж`
-          : `Переход внутри ${b.building}: ${a.text} → ${b.text}`;
-      } else if (a.building && b.building) transition = `Переход: ${a.building} → ${b.building} · ${b.text}`;
-      else transition = `Переход: ${a.text || prev.room} → ${b.text || next.room}`;
-    } else if (next.room) transition = `Дальше: ${lessonPlace(next)}`;
+          ? `${b.building} · ${a.text} → ${b.text} · ${b.floor} этаж`
+          : `${b.building} · ${a.text} → ${b.text}`;
+      } else if (a.building && b.building) transition = `${a.building} → ${b.building} · аудитория ${b.text}`;
+      else transition = `${a.text || prev.room} → ${b.text || next.room}`;
+    } else if (next.room) transition = `Следующая аудитория · ${lessonPlace(next)}`;
     return {minutes,title,from:from.end,to:to.start,transition};
   };
   const breakBlock = (prev,next) => {
     const gap = gapInfo(prev,next);
     if (!gap) return '';
-    return `<div class="lesson-break" aria-label="${escape(gap.title)}, ${gap.minutes} минут"><div class="break-rail"><span></span></div><div class="break-copy"><div class="break-head"><strong>${escape(gap.title)}</strong><span>${plural(gap.minutes,['минута','минуты','минут'])} · ${gap.from}–${gap.to}</span></div>${gap.transition?`<p class="break-transition">${icon('arrow')}${escape(gap.transition)}</p>`:''}<p class="break-next">Следующая пара в ${gap.to}</p></div></div>`;
+    return `<div class="lesson-break" aria-label="${escape(gap.title)}, ${gap.minutes} минут"><div class="break-rail"><span></span></div><div class="break-copy"><div class="break-head"><strong>${escape(gap.title)}</strong><span>${durationText(gap.minutes)} · ${gap.from}–${gap.to}</span></div>${gap.transition?`<p class="break-transition">${icon('arrow')}${escape(gap.transition)}</p>`:''}<p class="break-next">Следующая пара в ${gap.to}</p></div></div>`;
   };
   function lessonCards(lessons,{teacherMode=false,focusLessons=null}={}) {
     const focus = time.focus(focusLessons || groupLessons());
@@ -207,7 +210,7 @@
     const subgroup = subgroupFor(group.id,lesson.id);
     const labelBase = current ? `Сейчас · ${lesson.slot} пара` : sameDay ? `Следующая · ${lesson.slot} пара` : lesson.date===shiftDate(today,1) ? 'Завтра' : 'Ближайшая · '+dateText(lesson.date);
     const label = subgroup ? labelBase + ' · ' + subgroup + ' подгруппа' : labelBase;
-    const countdown = current ? `до конца ${plural(minutes,['минута','минуты','минут'])}` : sameDay ? `через ${plural(minutes,['минуту','минуты','минут'])}` : dateText(lesson.date,{weekday:'short',day:'numeric',month:'short'});
+    const countdown = current ? `до конца ${durationText(minutes)}` : sameDay ? `через ${durationText(minutes)}` : dateText(lesson.date,{weekday:'short',day:'numeric',month:'short'});
     const place = lessonPlace(lesson);
     const bounds = time.bounds(lesson);
     const nextLesson = current ? todayLessons.find(l=>l.slot>lesson.slot && time.bounds(l).startAt>now) : null;
