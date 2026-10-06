@@ -1,10 +1,10 @@
 {
-  "version": "1.4.5",
-  "versionCode": 14,
+  "version": "1.4.6",
+  "versionCode": 15,
   "channel": "stable",
   "updated": "2026-10-06",
   "download": "./download/RgatuLite.apk",
-  "sha256": "e03b97c9acc0b409bbf8e5094672e658f6e850191dd110f1b93e69923d6d22f4",
-  "bytes": 177392,
+  "sha256": "dade9ff98f9ca92d72f24f09dd645a4ab04cfdb3455a622e299606f97271df43",
+  "bytes": 181488,
   "pwa": "https://rgatu-lite.ivan-s-2001.workers.dev/"
 }
