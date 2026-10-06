@@ -8,6 +8,9 @@ import mimetypes
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+VERSION_META = json.loads((ROOT/'version.json').read_text(encoding='utf-8'))
+APP_VERSION = VERSION_META['version']
+APK_FILENAME = f"RgatuLite-{APP_VERSION}.apk"
 assets = {}
 paths = [(path,'/'+str(path.relative_to(ROOT/'public'))) for path in sorted((ROOT/'public').rglob('*'))]
 paths += [(path,'/install/'+str(path.relative_to(ROOT/'docs'))) for path in sorted((ROOT/'docs').rglob('*')) if path.name!='.nojekyll' and 'download' not in path.relative_to(ROOT/'docs').parts]
@@ -40,7 +43,7 @@ export default {
   async fetch(request) {
     const url = new URL(request.url);
     let path = url.pathname;
-    if (path === '/health') return Response.json({ok:true,app:'rgatu-pairs',version:'1.4.7'},{headers:{'Cache-Control':'no-store',...COMMON}});
+    if (path === '/health') return Response.json({ok:true,app:'rgatu-pairs',version:'__APP_VERSION__'},{headers:{'Cache-Control':'no-store',...COMMON}});
     if (!['GET','HEAD'].includes(request.method)) return new Response('Method not allowed',{status:405,headers:{'Allow':'GET, HEAD',...COMMON}});
     if (path === '/') path = '/index.html';
     if (path === '/install' || path === '/install/') path = '/install/index.html';
@@ -49,7 +52,7 @@ export default {
       try {
         const upstream = await fetch(APK_URL,{redirect:'follow',headers:{'Accept-Encoding':'identity','Cache-Control':'no-cache'}});
         if (!upstream.ok) throw new Error('APK upstream '+upstream.status);
-        const headers = {'Content-Type':'application/vnd.android.package-archive','Content-Disposition':'attachment; filename="RgatuLite-1.4.7.apk"','Cache-Control':'no-store',...COMMON};
+        const headers = {'Content-Type':'application/vnd.android.package-archive','Content-Disposition':'attachment; filename="__APK_FILENAME__"','Cache-Control':'no-store',...COMMON};
         const length = upstream.headers.get('Content-Length');
         if (length) headers['Content-Length'] = length;
         return new Response(request.method === 'HEAD' ? null : upstream.body,{status:200,headers});
@@ -79,7 +82,7 @@ export default {
   }
 };
 '''
-worker = template.replace('__ASSETS__',json.dumps(assets,separators=(',',':'))).replace('__APK_URL__',APK_URL)
+worker = template.replace('__ASSETS__',json.dumps(assets,separators=(',',':'))).replace('__APK_URL__',APK_URL).replace('__APP_VERSION__',APP_VERSION).replace('__APK_FILENAME__',APK_FILENAME)
 dist = ROOT/'dist'
 dist.mkdir(exist_ok=True)
 (dist/'worker.mjs').write_text(worker,encoding='utf-8')
