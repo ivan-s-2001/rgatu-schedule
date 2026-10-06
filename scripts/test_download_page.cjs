@@ -2,6 +2,7 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const appVersion=JSON.parse(fs.readFileSync('version.json','utf8')).version;
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  const page=await browser.newPage({viewport:{width:375,height:812},locale:'ru-RU'});
@@ -14,7 +15,7 @@ const path=require('node:path');
  assert.ok(pageIcons.bi>=5,'Bootstrap Icons on install page');
  assert.equal(pageIcons.other,0,'no custom inline SVG icons on install page');
  assert.equal(pageIcons.main,1,'main FZO mark remains separate');
- assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.4.7.apk');
+ assert.equal(await page.locator('.primary').getAttribute('download'),`RgatuLite-${appVersion}.apk`);
  await page.setViewportSize({width:1280,height:900});
  const fzo=await page.evaluate(()=>{
    const header=document.querySelector('.header-inner').getBoundingClientRect();
