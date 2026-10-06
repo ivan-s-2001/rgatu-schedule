@@ -67,7 +67,12 @@ public final class MainActivity extends Activity {
         settings.setLoadWithOverviewMode(false);
         if (Build.VERSION.SDK_INT >= 33) settings.setAlgorithmicDarkeningAllowed(false);
         else if (Build.VERSION.SDK_INT >= 29) settings.setForceDark(WebSettings.FORCE_DARK_OFF);
-        settings.setUserAgentString(settings.getUserAgentString() + " RgatuLiteAndroid/1.4.7");
+        String appVersion = "0";
+        try {
+            android.content.pm.PackageInfo info = getPackageManager().getPackageInfo(getPackageName(),0);
+            if (info.versionName != null) appVersion = info.versionName;
+        } catch (Exception ignored) {}
+        settings.setUserAgentString(settings.getUserAgentString() + " RgatuLiteAndroid/" + appVersion);
         updater = new AppUpdater(this);
         web.addJavascriptInterface(updater,"RgatuApp");
         web.setWebChromeClient(new WebChromeClient());
