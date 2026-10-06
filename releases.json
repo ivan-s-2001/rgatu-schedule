@@ -1,0 +1,126 @@
+{
+  "current": "1.4.7",
+  "public": [
+    {
+      "version": "1.4.7",
+      "versionCode": 16,
+      "date": "2026-10-06",
+      "bytes": 177392,
+      "sha256": "daa4135413ac576a820bcf97a8333bb637e8c822c0e4a14055f6fb44dc8b3b83",
+      "status": "stable"
+    },
+    {
+      "version": "1.4.6",
+      "versionCode": 15,
+      "date": "2026-10-06",
+      "bytes": 181488,
+      "sha256": "dade9ff98f9ca92d72f24f09dd645a4ab04cfdb3455a622e299606f97271df43",
+      "status": "superseded"
+    },
+    {
+      "version": "1.4.5",
+      "versionCode": 14,
+      "date": "2026-10-06",
+      "bytes": 177392,
+      "sha256": "e03b97c9acc0b409bbf8e5094672e658f6e850191dd110f1b93e69923d6d22f4",
+      "status": "superseded"
+    },
+    {
+      "version": "1.4.4",
+      "versionCode": 13,
+      "date": "2026-10-06",
+      "bytes": 177392,
+      "sha256": "e3c558aa57462585ab59f553c9225db5e179534c65114b99c98260c74636a70d",
+      "status": "superseded"
+    },
+    {
+      "version": "1.4.3",
+      "versionCode": 12,
+      "date": "2026-10-06",
+      "bytes": 177392,
+      "sha256": "012116483e4ab01240575bf70db50f218599126f97ec9bef897fe2295c5b3179",
+      "status": "superseded"
+    },
+    {
+      "version": "1.4.2",
+      "versionCode": 11,
+      "date": "2026-10-06",
+      "bytes": 177392,
+      "sha256": "c4b3ceede963eb9d5549b1b59be2c2a458f19571deb83c0e6037aaff2f649ccb",
+      "status": "superseded"
+    },
+    {
+      "version": "1.4.1",
+      "versionCode": 10,
+      "date": "2026-10-06",
+      "bytes": 177392,
+      "sha256": "96e8f66ebe80b8784a96bd8a5e0ad7a2236aa7cef1ace27d45cee5d8586f009a",
+      "status": "superseded"
+    },
+    {
+      "version": "1.4.0",
+      "versionCode": 9,
+      "date": "2026-10-05",
+      "bytes": 177392,
+      "sha256": "fcdbc93d21374722d539796e3b719cfd9fc634dee55f40d073be93149cb09879",
+      "status": "superseded"
+    },
+    {
+      "version": "1.3.4",
+      "versionCode": 8,
+      "date": "2026-10-05",
+      "bytes": 177392,
+      "sha256": "81dc3727bd478f64063fe5916d3187172aec4ff9a54320a75bb0976e6197715b",
+      "status": "superseded"
+    },
+    {
+      "version": "1.3.3",
+      "versionCode": 7,
+      "date": "2026-10-05",
+      "bytes": 177392,
+      "sha256": "b88c862629136cccb1676402aa7c8301da4a97580bd801c5f90a134c97d8e847",
+      "status": "superseded"
+    },
+    {
+      "version": "1.3.2",
+      "versionCode": 6,
+      "date": "2026-10-05",
+      "bytes": 173296,
+      "sha256": "d0d6065d8cd85804051ef2eca2d7ef13bd298a01f588b1bec09fa0097d8bf5bb",
+      "status": "superseded"
+    },
+    {
+      "version": "1.3.1",
+      "versionCode": 5,
+      "date": "2026-10-05",
+      "bytes": 161008,
+      "sha256": "5a9d80ba0498afbd69513155c17855df287548e8331067e0130e511981b57328",
+      "status": "superseded"
+    },
+    {
+      "version": "1.3.0",
+      "versionCode": 4,
+      "date": "2026-10-05",
+      "bytes": 151933,
+      "sha256": "33ef7ea144224bce19479f3df3912661ab691ac79d3138c08308add844ac3c53",
+      "status": "superseded"
+    },
+    {
+      "version": "1.2.0",
+      "versionCode": 3,
+      "date": "2026-10-05",
+      "bytes": 111856,
+      "sha256": "be7376a9c41cf522ee6c8c223ebcf4705564182d3669840bd32c9e88a7b3dfc4",
+      "status": "superseded"
+    },
+    {
+      "version": "1.1.0",
+      "versionCode": 2,
+      "date": "2026-10-05",
+      "bytes": 103664,
+      "sha256": "ffcf6451514097c57aadb8c691ec4dc95d8df5528fadda5c56712dfe72d37a7a",
+      "status": "superseded"
+    }
+  ],
+  "notes": "Public GitHub release history. Initial 1.0.0 was a private/bootstrap build and is not part of the public release channel."
+}
