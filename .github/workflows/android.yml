@@ -4,6 +4,10 @@ on:
     branches: [main]
     paths:
       - android/**
+      - version.json
+      - releases.json
+      - RELEASE_NOTES.md
+      - scripts/versioning.py
       - public/**
       - scripts/build_android.py
       - .github/workflows/android.yml
@@ -38,6 +42,7 @@ jobs:
           printf 'ANDROID_SDK_ROOT=%s\n' "$sdk_root" >> "$GITHUB_ENV"
       - name: Verify and build unsigned APK
         run: |
+          python3 scripts/versioning.py check
           python3 -m pip install --disable-pip-version-check pillow cairosvg
           python3 scripts/generate_assets.py
           node scripts/test_timetable.cjs
