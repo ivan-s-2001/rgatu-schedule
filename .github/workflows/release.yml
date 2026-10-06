@@ -7,6 +7,10 @@ on:
       - docs/version.json
       - RELEASE_NOTES.md
       - .github/workflows/release.yml
+      - version.json
+      - releases.json
+      - RELEASE_NOTES.md
+      - scripts/versioning.py
   workflow_dispatch:
 permissions:
   contents: write
@@ -16,11 +20,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
+      - name: Verify release version
+        run: python3 scripts/versioning.py check
       - name: Publish signed Android release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          app_version=$(python3 -c 'import json; print(json.load(open("docs/version.json"))["version"])')
+          app_version=$(python3 -c 'import json; print(json.load(open("version.json"))["version"])')
           app_tag="v$app_version"
           if gh release view "$app_tag" > /dev/null 2>&1; then
             gh release upload "$app_tag" docs/download/RgatuLite.apk --clobber
