@@ -58,7 +58,7 @@
     if (today > g.dates.at(-1)) return g.dates.at(-1);
     return today;
   };
-  const state = {date: group ? initialDate(group) : nowDate(), month:'', chosen: group?.id || '', course: '', query:'', limit:18, subject:'', teacherQuery:'', teacher:read('rgatu.teacher',''), theme:read('rgatu.theme','auto'), refreshing:false, bellKind:''};
+  const state = {date: group ? initialDate(group) : nowDate(), chosen: group?.id || '', course: '', query:'', limit:18, subject:'', teacherQuery:'', teacher:read('rgatu.teacher',''), theme:read('rgatu.theme','auto'), refreshing:false, bellKind:''};
   let installPrompt = null;
   let noticeTimer;
   function toast(message) {
@@ -76,13 +76,13 @@
   }
   applyTheme();
   darkPreference.addEventListener?.('change', applyTheme);
-  function route() { return group ? ['day','calendar','search','profile','group','bells','teachers'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
+  function route() { return group ? ['day','search','profile','group','bells','teachers'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'day' : 'group'; }
   function go(page) { if (location.hash === '#' + page) render(); else location.hash = page; }
   function header() {
     return `<header class="topbar"><div class="topbar-inner"><div class="brand"><img class="brand-logo" src="./icons/icon.svg" alt="" aria-hidden="true"><div><span class="brand-kicker">Факультет заочного обучения</span><strong class="brand-title">Расписание ФЗО</strong><span class="brand-mobile-note">неофициальное · от студента</span></div></div><div class="header-actions"><span class="header-unofficial">неофициальное · от студента</span><button class="group-switch" data-action="group" aria-label="Сменить группу, сейчас ${escape(group.id)}"><span>${escape(group.id)}</span>${icon('down')}</button></div></div></header>`;
   }
   function nav(page) {
-    return `<nav class="bottom-nav" aria-label="Главное меню"><span class="desktop-nav-title">Заочное обучение</span>${[['day','calendar','Расписание'],['bells','clock','Звонки'],['profile','user','Моя группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['calendar','search','teachers'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
+    return `<nav class="bottom-nav" aria-label="Главное меню"><span class="desktop-nav-title">Заочное обучение</span>${[['day','book','Расписание'],['bells','clock','Звонки'],['profile','user','Моя группа']].map(([id,glyph,label]) => `<a class="nav-link" href="#${id}"${(page===id || id==='day' && ['search','teachers'].includes(page))?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span></a>`).join('')}</nav>`;
   }
   function scheduleTabs(active) {
     return `<div class="schedule-switcher" role="tablist" aria-label="Вид расписания"><button class="schedule-tab" role="tab" data-action="group-schedule" aria-selected="${active==='group'}" aria-controls="content"><span>По группе</span></button><button class="schedule-tab" role="tab" data-action="teachers" aria-selected="${active==='teachers'}" aria-controls="content"><span>По преподавателю</span></button></div>`;
@@ -112,6 +112,16 @@
   };
   const groupLessons = () => group.lessons.map(i => ({...data.lessons[i],subgroup:subgroupFor(group.id,i)})).sort((a,b) => a.date.localeCompare(b.date) || a.slot-b.slot);
   const lessonsOn = date => groupLessons().filter(l => l.date === date);
+  const studyDates = () => [...new Set(groupLessons().map(lesson => lesson.date))].sort();
+  const previousStudyDate = () => [...studyDates()].reverse().find(date => date < state.date) || '';
+  const nextStudyDate = () => studyDates().find(date => date > state.date) || '';
+  const firstStudyDate = () => studyDates()[0] || group.dates[0];
+  const lastStudyDate = () => studyDates().at(-1) || group.dates.at(-1);
+  const studyProgress = () => {
+    const dates = studyDates();
+    const index = dates.indexOf(state.date);
+    return index >= 0 ? `${index+1} из ${dates.length} учебных дней` : '';
+  };
   const allTeachers = () => [...new Set(data.lessons.map(lesson => String(lesson.teacher || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));
   const teacherLessons = teacher => data.lessons.filter(lesson => lesson.teacher === teacher).sort((a,b)=>a.date.localeCompare(b.date) || a.slot-b.slot);
   const typeLabel = type => ({'Л':'Лекция','П':'Практика','ЛР':'Лабораторная','К':'Занятие'})[type] || type || 'Занятие';
@@ -223,32 +233,34 @@
     return `<main class="page bells-page" id="content"><div class="screen-heading"><h1>Звонки</h1><p>Московское время</p></div><div class="segments" aria-label="Дни звонков">${[['weekday','Будни'],['weekend','Выходные']].map(([id,label])=>`<button data-action="bell-kind" data-value="${id}" aria-pressed="${weekend === (id==='weekend')}">${label}</button>`).join('')}</div><section class="bells-section"><h2>${weekend?'Суббота и воскресенье':'Понедельник — пятница'}</h2><ol class="bells-list">${rows.map(([start,end],i)=>`<li><span><strong>${i+1}</strong> пара</span><time>${start}–${end}</time></li>`).join('')}</ol></section><p class="section-note">${weekend?'В выходные третья пара начинается в 12:00.':'Большой перерыв после второй пары — 50 минут.'}</p></main>`;
   }
   function emptyDay() {
-    const next = group.dates.find(date => date > state.date && lessonsOn(date).length);
+    const next = nextStudyDate();
+    const previous = previousStudyDate();
     const nextLesson = next ? lessonsOn(next).slice().sort((a,b)=>a.slot-b.slot)[0] : null;
     const nextTime = nextLesson ? time.bounds(nextLesson).start : '';
     const nextPlace = nextLesson ? lessonPlace(nextLesson) : '';
     const nextAudience = nextLesson?.subgroup ? nextLesson.subgroup + ' подгруппа' : '';
-    const message = state.date > group.dates.at(-1) ? 'Установочная сессия закончилась. Расписание осталось в архиве.' : state.date < group.dates[0] ? 'Установочная сессия ещё не началась.' : 'Сегодня занятий нет.';
+    const message = state.date > lastStudyDate() ? 'Установочная сессия закончилась. Расписание осталось в архиве.' : state.date < firstStudyDate() ? 'Установочная сессия ещё не началась.' : 'Сегодня занятий нет.';
     const action = nextLesson
-      ? `<button class="primary" data-action="date" data-value="${next}">Следующий учебный день ${icon('arrow')}</button>`
-      : `<button class="primary" data-action="calendar">Открыть календарь ${icon('calendar')}</button>`;
-    return `<div class="empty day-empty">${icon('book')}<h2>${escape(message)}</h2>${nextLesson?`<div class="next-preview"><span>Дальше</span><strong>${escape(dateText(next,{weekday:'short',day:'numeric',month:'short'}))} · ${escape(nextTime)} · ${escape(nextLesson.subject)}${nextAudience?' · '+escape(nextAudience):''}</strong>${nextPlace?`<small>${escape(nextPlace)}</small>`:''}</div>`:`<p>${state.date > group.dates.at(-1) ? 'Прошедшие дни можно посмотреть в календаре.' : 'Дальше занятий в опубликованной сессии нет.'}</p>`}</div><div class="context-action" aria-label="Действие дня">${action}</div>`;
+      ? `<button class="primary" data-action="next-study-day">Следующий учебный день ${icon('arrow')}</button>`
+      : previous
+        ? `<button class="secondary" data-action="last-study-day">Последний учебный день</button>`
+        : '';
+    return `<div class="empty day-empty">${icon('book')}<h2>${escape(message)}</h2>${nextLesson?`<div class="next-preview"><span>Дальше</span><strong>${escape(dateText(next,{weekday:'short',day:'numeric',month:'short'}))} · ${escape(nextTime)} · ${escape(nextLesson.subject)}${nextAudience?' · '+escape(nextAudience):''}</strong>${nextPlace?`<small>${escape(nextPlace)}</small>`:''}</div>`:`<p>${state.date > lastStudyDate() ? 'Можно вернуться к последнему учебному дню.' : 'Дальше занятий в опубликованной сессии нет.'}</p>`}</div>${action?`<div class="context-action" aria-label="Действие дня">${action}</div>`:''}`;
   }
   function renderDay() {
     const lessons = lessonsOn(state.date);
     const today = nowDate();
     const week = time.weekDates(state.date);
-    const past = today > group.dates.at(-1);
-    const future = today < group.dates[0];
+    const past = today > lastStudyDate();
+    const future = today < firstStudyDate();
+    const previousStudy = previousStudyDate();
+    const nextStudy = nextStudyDate();
+    const progress = studyProgress();
     const relative = state.date===today ? 'Сегодня' : state.date===shiftDate(today,1) ? 'Завтра' : state.date===shiftDate(today,-1) ? 'Вчера' : '';
     const dayTime = lessons.length ? time.bounds(lessons[0]).start+'–'+time.bounds(lessons.at(-1)).end : 'Свободный день';
-    return `<main class="page day-page" id="content">${scheduleTabs('group')}<div class="day-layout"><aside class="day-sidebar"><div id="live-focus">${renderFocus()}</div><section class="day-controls" aria-label="Выбор дня"><div class="date-pager"><button class="icon-button" data-action="prev-day" aria-label="Предыдущий день">${icon('left')}</button><button class="date-title" data-action="calendar" aria-label="Открыть календарь, ${escape(dateText(state.date))}"><span class="day-caption">${relative?relative+' · ':''}${escape(dateText(state.date,{weekday:'long'}))}</span><h1>${escape(dateText(state.date))}${icon('down')}</h1></button><button class="icon-button" data-action="next-day" aria-label="Следующий день">${icon('right')}</button></div><div class="week" aria-label="Дни недели">${week.map(date=>`<button class="day${date===today?' is-today':''}" data-action="date" data-value="${date}"${date===state.date?' aria-current="date"':''} aria-label="${escape(dateText(date,{weekday:'long',day:'numeric',month:'long'}))}, ${plural(lessonsOn(date).length,['пара','пары','пар'])}"><span class="day-name">${escape(dateText(date,{weekday:'short'}))}</span><span class="day-number">${Number(date.slice(-2))}</span><span class="day-dot ${lessonsOn(date).length?'':'no-lessons'}"></span></button>`).join('')}</div><div class="day-tools"><button class="text-button" data-action="calendar">${icon('calendar')}Календарь</button><button class="text-button" data-action="today"${state.date===today?' disabled':''}>Сегодня</button><button class="icon-button search-button" data-action="search" aria-label="Найти предмет, преподавателя или аудиторию">${icon('search')}</button></div></section>${past?'<p class="source-banner">Прошедшая сессия · расписание сохранено</p>':future?`<p class="source-banner">Сессия с ${escape(dateText(group.dates[0]))}</p>`:''}</aside><section class="day-main"><div class="date-description"><h2>${lessons.length?plural(lessons.length,['пара','пары','пар']):'Твой день'}</h2><span>${dayTime}</span></div>${lessons.length?lessonCards(lessons):emptyDay()}<p class="time-note">Московское время</p></section></div></main>`;
+    return `<main class="page day-page" id="content">${scheduleTabs('group')}<div class="day-layout"><aside class="day-sidebar"><div id="live-focus">${renderFocus()}</div><section class="day-controls" aria-label="Выбор дня"><div class="date-pager"><button class="icon-button" data-action="prev-study-day" aria-label="Предыдущий учебный день"${previousStudy?'':' disabled'}>${icon('left')}</button><div class="date-title" aria-label="${escape(dateText(state.date))}"><span class="day-caption">${relative?relative+' · ':''}${escape(dateText(state.date,{weekday:'long'}))}</span><h1>${escape(dateText(state.date))}</h1></div><button class="icon-button" data-action="next-study-day" aria-label="Следующий учебный день"${nextStudy?'':' disabled'}>${icon('right')}</button></div><div class="week" aria-label="Дни недели">${week.map(date=>`<button class="day${date===today?' is-today':''}" data-action="date" data-value="${date}"${date===state.date?' aria-current="date"':''} aria-label="${escape(dateText(date,{weekday:'long',day:'numeric',month:'long'}))}, ${plural(lessonsOn(date).length,['пара','пары','пар'])}"><span class="day-name">${escape(dateText(date,{weekday:'short'}))}</span><span class="day-number">${Number(date.slice(-2))}</span><span class="day-dot ${lessonsOn(date).length?'':'no-lessons'}"></span></button>`).join('')}</div><div class="day-tools">${progress?`<span class="study-progress">${escape(progress)}</span>`:'<span class="study-progress">Свободный день</span>'}<button class="text-button" data-action="today"${state.date===today?' disabled':''}>Сегодня</button><button class="icon-button search-button" data-action="search" aria-label="Найти предмет, преподавателя или аудиторию">${icon('search')}</button></div></section>${past?'<p class="source-banner">Прошедшая сессия · расписание сохранено</p>':future?`<p class="source-banner">Сессия с ${escape(dateText(firstStudyDate()))}</p>`:''}</aside><section class="day-main"><div class="date-description"><h2>${lessons.length?plural(lessons.length,['пара','пары','пар']):'Твой день'}</h2><span>${dayTime}${progress?' · '+escape(progress):''}</span></div>${lessons.length?lessonCards(lessons):emptyDay()}<p class="time-note">Московское время</p></section></div></main>`;
   }
-  function renderCalendar() {
-    const month = state.month || state.date.slice(0,7);
-    const today = nowDate();
-    return `<main class="page calendar-page" id="content"><div class="back-row"><button class="back-button" data-action="back-day">${icon('left')}К расписанию</button><button class="text-button" data-action="calendar-today">Этот месяц</button></div><div class="month-pager"><button class="icon-button" data-action="prev-month" aria-label="Предыдущий месяц">${icon('left')}</button><h1>${escape(dateText(month+'-01',{month:'long',year:'numeric'}))}</h1><button class="icon-button" data-action="next-month" aria-label="Следующий месяц">${icon('right')}</button></div><div class="month-weekdays" aria-hidden="true">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(day=>`<span>${day}</span>`).join('')}</div><div class="month-grid" aria-label="Календарь ${escape(dateText(month+'-01',{month:'long',year:'numeric'}))}">${time.monthDates(month).map(date=>`<button class="month-day${date.slice(0,7)!==month?' outside-month':''}${date===today?' is-today':''}" data-action="date" data-value="${date}"${date===state.date?' aria-current="date"':''} aria-label="${escape(dateText(date,{weekday:'long',day:'numeric',month:'long'}))}, ${plural(lessonsOn(date).length,['пара','пары','пар'])}"><span>${Number(date.slice(-2))}</span><span class="day-dot ${lessonsOn(date).length?'':'no-lessons'}"></span></button>`).join('')}</div><p class="calendar-legend"><span class="day-dot"></span>Дни с парами</p><button class="period-card" data-action="date" data-value="${group.dates[0]}"><span>${icon('book')}Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><span>${group.course} курс · ${escape(group.id)} ${icon('arrow')}</span></button></main>`;
-  }
+
   function renderSearch() {
     return `<main class="page search-page" id="content"><div class="back-row"><button class="back-button" data-action="back-day">${icon('left')}К расписанию</button></div><div class="screen-heading"><h1>Найти пару</h1><p>В расписании твоей группы</p></div><label class="label" for="subject-search">Предмет, преподаватель или аудитория</label><div class="search-wrap">${icon('search')}<input id="subject-search" class="search" type="search" placeholder="Что ищем?" value="${escape(state.subject)}" aria-controls="search-results" autocomplete="off"></div><div id="search-results"></div></main>`;
   }
@@ -288,14 +300,14 @@
 
   function renderProfile() {
     const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    return `<main class="page profile-page" id="content"><div class="screen-heading"><h1>Моя группа</h1></div><section class="profile-group"><div><h2>${escape(group.id)}</h2><p>${group.course} курс · заочное отделение</p></div><button class="secondary" data-action="group">Сменить ${icon('right')}</button></section><section class="profile-period"><span>Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><p>${plural([...new Set(groupLessons().map(item=>item.date))].length,['учебный день','учебных дня','учебных дней'])} · ${plural(groupLessons().length,['занятие','занятия','занятий'])}</p><button class="text-button" data-action="calendar">Открыть календарь ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="theme-setting"><h2>Оформление</h2><div class="segments" aria-label="Оформление">${[['auto','Авто'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<button data-action="theme" data-value="${id}" aria-pressed="${state.theme===id}">${label}</button>`).join('')}</div></div><div class="settings-row"><div><h2>Расписание</h2><p>Обновлено ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div>${isAndroid?`<button class="link-row" data-action="app-update"><span>Проверить обновления приложения</span>${icon('refresh')}</button>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Расписание на главном экране</h2><p>Открывай одним касанием.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<section class="about-card"><div class="about-head"><span class="unofficial-chip large">Неофициальное</span><h2>Студенческий проект ФЗО</h2></div><p>Сделано студентом 1 курса РГАТУ для удобного просмотра расписания. Это не официальный сервис университета.</p><a class="link-row" href="https://www.rsatu.ru/zaochnoe/"><span>Официальный раздел «Заочное обучение»<small>Сайт РГАТУ</small></span>${icon('arrow')}</a><a class="link-row" href="https://t.me/falseheat"><span>Смирнов Иван · @falseheat<small>Связь, идеи и ошибки в расписании</small></span>${icon('arrow')}</a></section></main>`;
+    return `<main class="page profile-page" id="content"><div class="screen-heading"><h1>Моя группа</h1></div><section class="profile-group"><div><h2>${escape(group.id)}</h2><p>${group.course} курс · заочное отделение</p></div><button class="secondary" data-action="group">Сменить ${icon('right')}</button></section><section class="profile-period"><span>Установочная сессия</span><strong>${escape(dateText(group.dates[0]))} — ${escape(dateText(group.dates.at(-1)))}</strong><p>${plural([...new Set(groupLessons().map(item=>item.date))].length,['учебный день','учебных дня','учебных дней'])} · ${plural(groupLessons().length,['занятие','занятия','занятий'])}</p><button class="text-button" data-action="first-study-day">Первый учебный день ${icon('arrow')}</button></section><section class="settings" aria-label="Настройки"><div class="theme-setting"><h2>Оформление</h2><div class="segments" aria-label="Оформление">${[['auto','Авто'],['light','Светлое'],['dark','Тёмное']].map(([id,label])=>`<button data-action="theme" data-value="${id}" aria-pressed="${state.theme===id}">${label}</button>`).join('')}</div></div><div class="settings-row"><div><h2>Расписание</h2><p>Обновлено ${escape(dateText(data.updated))}</p></div><button class="icon-button" data-action="refresh" aria-label="Обновить расписание"${state.refreshing?' disabled':''}>${icon('refresh')}</button></div>${isAndroid?`<button class="link-row" data-action="app-update"><span>Проверить обновления приложения</span>${icon('refresh')}</button>`:''}</section>${!isAndroid&&!standalone?`<section class="install-block"><h2>Расписание на главном экране</h2><p>Открывай одним касанием.</p><button class="primary" data-action="install">Добавить на главный экран ${icon('download')}</button><div id="install-guide"></div><a class="link-row" href="${DOWNLOAD_URL}"><span>Скачать для Android</span>${icon('right')}</a></section>`:''}<section class="about-card"><div class="about-head"><span class="unofficial-chip large">Неофициальное</span><h2>Студенческий проект ФЗО</h2></div><p>Сделано студентом 1 курса РГАТУ для удобного просмотра расписания. Это не официальный сервис университета.</p><a class="link-row" href="https://www.rsatu.ru/zaochnoe/"><span>Официальный раздел «Заочное обучение»<small>Сайт РГАТУ</small></span>${icon('arrow')}</a><a class="link-row" href="https://t.me/falseheat"><span>Смирнов Иван · @falseheat<small>Связь, идеи и ошибки в расписании</small></span>${icon('arrow')}</a></section></main>`;
   }
   function syncNav(page) {
     const navigation = root.querySelector('.bottom-nav');
     if (!navigation) return;
     navigation.querySelectorAll('.nav-link').forEach(link => {
       const id = link.getAttribute('href').slice(1);
-      const current = page === id || id === 'day' && ['calendar','search','teachers'].includes(page);
+      const current = page === id || id === 'day' && ['search','teachers'].includes(page);
       if (current) link.setAttribute('aria-current','page');
       else link.removeAttribute('aria-current');
     });
@@ -303,7 +315,7 @@
   function render() {
     const page = route();
     if (page === 'group') {renderPicker(); return;}
-    const screens = {day:renderDay,calendar:renderCalendar,search:renderSearch,bells:renderBells,profile:renderProfile,teachers:renderTeachers};
+    const screens = {day:renderDay,search:renderSearch,bells:renderBells,profile:renderProfile,teachers:renderTeachers};
     const screen = screens[page]();
     const shell = root.querySelector('.app-shell');
     if (!shell) {
@@ -319,12 +331,10 @@
   }
   function selectDate(date) {
     state.date = date;
-    state.month = date.slice(0,7);
     state.bellKind = '';
     go('day');
     window.scrollTo(0,0);
   }
-  function openCalendar() { state.month=state.date.slice(0,7);go('calendar');window.scrollTo(0,0); }
   async function refreshSchedule(userInitiated = false) {
     if (state.refreshing) return;
     if (!navigator.onLine) { if(userInitiated) toast('Сейчас нет интернета. Сохранённое расписание уже доступно.'); return; }
@@ -390,7 +400,7 @@
       case 'save-group': {
         const chosen = groupById(state.chosen);
         if(!chosen) return;
-        group = chosen;state.date=initialDate(group);state.month='';state.subject='';state.bellKind='';
+        group = chosen;state.date=initialDate(group);state.subject='';state.bellKind='';
         const saved = write('rgatu.group',group.id);
         go('day');window.scrollTo(0,0);
         if(!saved) toast('Группу не удалось запомнить на этом устройстве.');
@@ -403,12 +413,10 @@
       case 'reset-groups': state.course='';state.query='';state.limit=18;document.getElementById('group-search').value='';updateGroupResults();break;
       case 'today': selectDate(nowDate());break;
       case 'date': selectDate(value);break;
-      case 'prev-day': selectDate(shiftDate(state.date,-1));break;
-      case 'next-day': selectDate(shiftDate(state.date,1));break;
-      case 'calendar': openCalendar();break;
-      case 'calendar-today': state.month=nowDate().slice(0,7);render();break;
-      case 'prev-month': state.month=time.shiftMonth(state.month || state.date.slice(0,7),-1);render();break;
-      case 'next-month': state.month=time.shiftMonth(state.month || state.date.slice(0,7),1);render();break;
+      case 'prev-study-day': {const date=previousStudyDate();if(date)selectDate(date);break;}
+      case 'next-study-day': {const date=nextStudyDate();if(date)selectDate(date);break;}
+      case 'first-study-day': selectDate(firstStudyDate());break;
+      case 'last-study-day': selectDate(lastStudyDate());break;
       case 'back-day': go('day');break;
       case 'group-schedule': go('day');window.scrollTo(0,0);break;
       case 'profile': go('profile');window.scrollTo(0,0);break;
@@ -445,7 +453,7 @@
     if (!swipeStart || route()!=='day' || !event.changedTouches.length) return;
     const dx=event.changedTouches[0].clientX-swipeStart.x, dy=event.changedTouches[0].clientY-swipeStart.y;
     swipeStart=null;
-    if (Math.abs(dx)>72 && Math.abs(dx)>Math.abs(dy)*1.8) selectDate(shiftDate(state.date,dx<0?1:-1));
+    if (Math.abs(dx)>72 && Math.abs(dx)>Math.abs(dy)*1.8) {const date=dx<0?nextStudyDate():previousStudyDate();if(date)selectDate(date);}
   },{passive:true});
   root.addEventListener('touchcancel',()=>{swipeStart=null;},{passive:true});
   window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);});
