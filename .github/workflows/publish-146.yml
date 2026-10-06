@@ -1,0 +1,72 @@
+name: Publish signed Android 1.4.6
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-146.yml
+permissions:
+  contents: write
+concurrency:
+  group: publish-android-1.4.6
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Reconstruct verified signed APK
+        run: |
+          set -euo pipefail
+          command -v zstd >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq zstd; }
+          git fetch origin android-build-37445255705:refs/remotes/origin/android-build-37445255705
+          git show origin/android-build-37445255705:unsigned.apk > /tmp/RgatuLite-unsigned.apk
+          printf '%s  %s\n' '901882630c02ef786b07b85c55fc9531ae803f84ac88aa055c1f9cf779a3ba7e' /tmp/RgatuLite-unsigned.apk | sha256sum -c -
+          cat .release/v1.4.6/patch.*.b64 | tr -d '\n' | base64 -d > /tmp/RgatuLite-1.4.6.zstpatch
+          printf '%s  %s\n' 'f5fe62b44e62da6b80d59c8efa8f129c363f750568d18b89f42b835256eaf618' /tmp/RgatuLite-1.4.6.zstpatch | sha256sum -c -
+          mkdir -p docs/download
+          zstd -q -f -d --patch-from=/tmp/RgatuLite-unsigned.apk /tmp/RgatuLite-1.4.6.zstpatch -o docs/download/RgatuLite.apk
+          printf '%s  %s\n' 'dade9ff98f9ca92d72f24f09dd645a4ab04cfdb3455a622e299606f97271df43' docs/download/RgatuLite.apk | sha256sum -c -
+          test "$(stat -c '%s' docs/download/RgatuLite.apk)" = "181488"
+      - name: Update 1.4.6 public metadata
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          version={
+            "version":"1.4.6",
+            "versionCode":15,
+            "channel":"stable",
+            "updated":"2026-10-06",
+            "download":"./download/RgatuLite.apk",
+            "sha256":"dade9ff98f9ca92d72f24f09dd645a4ab04cfdb3455a622e299606f97271df43",
+            "bytes":181488,
+            "pwa":"https://rgatu-lite.ivan-s-2001.workers.dev/"
+          }
+          Path("docs/version.json").write_text(json.dumps(version,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          p=Path("docs/index.html")
+          text=p.read_text(encoding="utf-8").replace("1.4.5","1.4.6")
+          needle='<li>Каждая пара показана отдельно, даже если предмет идёт несколько пар подряд.</li>'
+          extra='<li>Перерывы и окна показаны прямо между парами: длительность, время и маршрут до следующей аудитории.</li>'
+          if extra not in text:
+              text=text.replace(needle,needle+extra)
+          p.write_text(text,encoding="utf-8")
+          p=Path("scripts/test_download_page.cjs")
+          p.write_text(p.read_text(encoding="utf-8").replace("1.4.5","1.4.6"),encoding="utf-8")
+          p=Path("RELEASE_NOTES.md")
+          p.write_text(p.read_text(encoding="utf-8").replace("версия 1.4.5","версия 1.4.6"),encoding="utf-8")
+          PY
+      - name: Commit signed 1.4.6 release
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/download/RgatuLite.apk docs/version.json docs/index.html scripts/test_download_page.cjs RELEASE_NOTES.md
+          git diff --cached --quiet && exit 0
+          git commit -m "release: publish Android 1.4.6"
+          git pull --rebase origin main
+          git push origin HEAD:main
