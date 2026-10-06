@@ -117,6 +117,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
   text-transform:uppercase;
 }
 .brand-title{display:block;color:#fff;font-size:.98rem;font-weight:700;line-height:1.2}
+.brand-mobile-note{display:none;color:#c9d5e0;font-size:9.5px;line-height:1.2;white-space:nowrap}
 .header-actions{display:flex;align-items:center;gap:14px;flex:none}
 .header-unofficial{
   color:#c9d5e0;
@@ -1124,7 +1125,8 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .brand{gap:8px}
   .brand-logo{width:36px;height:36px}
   .brand-kicker{display:none}
-  .brand-title{font-size:.8rem;line-height:1.18}
+  .brand-title{font-size:.8rem;line-height:1.16}
+  .brand-mobile-note{display:block;margin-top:2px}
   .header-actions{max-width:38%;min-width:0}
   .group-switch{max-width:100%;min-width:0;padding:7px 8px;font-size:.72rem}
   .group-switch span{min-width:0;overflow-wrap:anywhere}
@@ -1172,7 +1174,8 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   html.android-app .brand{gap:9px}
   html.android-app .brand-logo{width:36px;height:36px}
   html.android-app .brand-kicker{display:none}
-  html.android-app .brand-title{font-size:.86rem}
+  html.android-app .brand-title{font-size:.84rem;line-height:1.14}
+  html.android-app .brand-mobile-note{display:block;margin-top:2px;font-size:9px}
   html.android-app .header-actions{max-width:42%;gap:8px}
   html.android-app .header-unofficial{display:none}
   html.android-app .group-switch{
