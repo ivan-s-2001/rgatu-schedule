@@ -1,6 +1,6 @@
 {
   "name": "rgatu-pairs",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "private": true,
   "description": "Неофициальное расписание ФЗО РГАТУ от студента для студентов",
   "scripts": {
