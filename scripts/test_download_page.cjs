@@ -14,7 +14,7 @@ const path=require('node:path');
  assert.ok(pageIcons.bi>=5,'Bootstrap Icons on install page');
  assert.equal(pageIcons.other,0,'no custom inline SVG icons on install page');
  assert.equal(pageIcons.main,1,'main FZO mark remains separate');
- assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.4.6.apk');
+ assert.equal(await page.locator('.primary').getAttribute('download'),'RgatuLite-1.4.7.apk');
  await page.setViewportSize({width:1280,height:900});
  const fzo=await page.evaluate(()=>{
    const header=document.querySelector('.header-inner').getBoundingClientRect();
