@@ -5,6 +5,8 @@ on:
     paths:
       - docs/download/RgatuLite.apk
       - docs/version.json
+      - RELEASE_NOTES.md
+      - .github/workflows/release.yml
   workflow_dispatch:
 permissions:
   contents: write
@@ -22,6 +24,7 @@ jobs:
           app_tag="v$app_version"
           if gh release view "$app_tag" > /dev/null 2>&1; then
             gh release upload "$app_tag" docs/download/RgatuLite.apk --clobber
+            gh release edit "$app_tag" --title "Расписание ФЗО $app_version" --notes-file RELEASE_NOTES.md
           else
             gh release create "$app_tag" docs/download/RgatuLite.apk --target "$GITHUB_SHA" --title "Расписание ФЗО $app_version" --notes-file RELEASE_NOTES.md
           fi
