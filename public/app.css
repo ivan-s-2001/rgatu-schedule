@@ -704,7 +704,7 @@ html[data-theme=dark] .sticky-action{box-shadow:0 -12px 30px rgba(0,0,0,.32)}
   width:min(420px,100%);
   margin:0 auto;
 }
-.picker-page{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+.picker-page{padding-bottom:calc(118px + env(safe-area-inset-bottom))}
 .picker-submit{width:100%;max-width:420px}
 
 /* subject / document-style lists */
@@ -1149,18 +1149,26 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .picker-form>.screen-heading,.picker-form>.label,.picker-form>.search-wrap,.picker-form>.filters{max-width:760px}
   .group-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   .sticky-action{
-    position:static;
-    width:auto;
-    max-width:420px;
-    margin:18px 0 8px;
-    padding:0;
-    border:0;
-    background:transparent;
-    box-shadow:none;
-    backdrop-filter:none;
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:50;
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding:12px max(18px,calc((100vw - 1160px)/2)) calc(12px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);
+    background:var(--white);
+    box-shadow:0 -10px 28px rgba(31,39,75,.10);
+    backdrop-filter:blur(14px);
   }
-  .sticky-action .primary{width:auto;margin:0}
-  .picker-submit{width:auto;min-width:260px}
+  .sticky-action .primary{
+    width:320px;
+    max-width:100%;
+    margin:0 0 0 auto;
+  }
+  .picker-submit{min-width:260px}
   .toast{bottom:28px}
 }
 
