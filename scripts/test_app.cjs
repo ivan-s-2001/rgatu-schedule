@@ -28,12 +28,12 @@ const path=require('node:path');
     assert.deepEqual(issues,[],label);
   }
   await page.goto(url);await page.waitForSelector('#group-search');
-  await page.click('[data-action="picker-focus"]');
-  assert.notEqual(new URL(page.url()).hash,'#picker-form','hero action must not enter router hash');
-  assert.equal(await page.locator('#group-search').evaluate(el=>document.activeElement===el),true,'hero action focuses group search');
   const firstHero=await page.locator('.picker-hero').boundingBox();assert.ok(firstHero&&Math.abs(firstHero.y)<=1,'first-run hero must start at viewport top');
   assert.ok(firstHero&&firstHero.width>=374,'first-run hero spans viewport');
   await page.screenshot({path:path.join(out,'picker-mobile.png'),fullPage:false,animations:'disabled'});
+  await page.click('[data-action="picker-focus"]');
+  assert.notEqual(new URL(page.url()).hash,'#picker-form','hero action must not enter router hash');
+  assert.equal(await page.locator('#group-search').evaluate(el=>document.activeElement===el),true,'hero action focuses group search');
   await page.evaluate(async()=>{if('serviceWorker' in navigator)await navigator.serviceWorker.ready;});await page.waitForLoadState('networkidle');
   await page.waitForSelector('#group-search');
   assert.match(await page.locator('.unofficial-card').innerText(),/неофициальное[\s\S]*студентом 1 курса/i);
