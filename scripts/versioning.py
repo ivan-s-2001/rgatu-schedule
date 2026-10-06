@@ -11,7 +11,7 @@ VERSION_FILE = ROOT / "version.json"
 
 def load():
     meta = json.loads(VERSION_FILE.read_text(encoding="utf-8"))
-    required = ["version","versionCode","channel","released","package","android","artifact","pwa","urls"]
+    required = ["version","versionCode","channel","released","package","android","artifact","pwa","urls","schedule"]
     missing = [key for key in required if key not in meta]
     if missing:
         raise SystemExit("version.json missing: " + ", ".join(missing))
@@ -93,6 +93,15 @@ def check():
             if row.get(key) != value:
                 errors.append(f"releases.json {v} {key} mismatch")
 
+    schedule = json.loads(read("public/schedule.json"))
+    for key in ("version","updated"):
+        if schedule.get(key) != m["schedule"].get(key):
+            errors.append(f"schedule {key}={schedule.get(key)!r} expected {m['schedule'].get(key)!r}")
+    if len(schedule.get("groups") or []) != m["schedule"].get("groups"):
+        errors.append("schedule group count mismatch")
+    if len(schedule.get("lessons") or []) != m["schedule"].get("lessons"):
+        errors.append("schedule lesson count mismatch")
+
     notes = read("RELEASE_NOTES.md").splitlines()
     if not notes or notes[0].strip() != f"Расписание ФЗО {v}":
         errors.append("RELEASE_NOTES.md title is not synced")
@@ -104,6 +113,7 @@ def check():
         raise SystemExit(1)
     print(f"VERSION OK: {v} (code {code}, {m['channel']})")
     print(f"APK: {m['artifact']['bytes']} bytes · sha256:{m['artifact']['sha256']}")
+    print(f"Schedule: {m['schedule']['version']} · {m['schedule']['groups']} groups · {m['schedule']['lessons']} lessons")
 
 def sync():
     m = load()
@@ -136,6 +146,19 @@ def sync():
     sw = sw_path.read_text(encoding="utf-8")
     sw = re.sub(r"const CACHE = '[^']+'", f"const CACHE = '{m['pwa']['cache']}'", sw, count=1)
     sw_path.write_text(sw,encoding="utf-8")
+
+    page_path = ROOT/"docs/index.html"
+    page = page_path.read_text(encoding="utf-8")
+    page = re.sub(r'<span class="badge">\d+\.\d+\.\d+</span>', f'<span class="badge">{v}</span>', page)
+    page = re.sub(r'download="RgatuLite-\d+\.\d+\.\d+\.apk"', f'download="RgatuLite-{v}.apk"', page)
+    page = re.sub(r'<span>Версия \d+\.\d+\.\d+</span>', f'<span>Версия {v}</span>', page)
+    page_path.write_text(page,encoding="utf-8")
+
+    notes_path = ROOT/"RELEASE_NOTES.md"
+    lines = notes_path.read_text(encoding="utf-8").splitlines()
+    if lines:
+        lines[0] = f"Расписание ФЗО {v}"
+        notes_path.write_text("\n".join(lines)+"\n",encoding="utf-8")
 
     print(f"Synced source metadata to {v} / code {code}")
     check()
