@@ -9,6 +9,8 @@
     "build:android": "python3 scripts/build_android.py",
     "build:worker": "python3 scripts/build_worker.py",
     "test": "node scripts/test_timetable.cjs && node scripts/test_offline.cjs",
-    "test:browser": "node scripts/test_app.cjs"
+    "test:browser": "node scripts/test_app.cjs",
+    "version:check": "python3 scripts/versioning.py check",
+    "version:sync": "python3 scripts/versioning.py sync"
   }
 }
