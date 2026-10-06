@@ -117,7 +117,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
   text-transform:uppercase;
 }
 .brand-title{display:block;color:#fff;font-size:.98rem;font-weight:700;line-height:1.2}
-.brand-mobile-note{display:none;color:#c9d5e0;font-size:9.5px;line-height:1.2;white-space:nowrap}
+.brand-mobile-note{display:none;max-width:100%;color:#c9d5e0;font-size:9.5px;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
 .header-actions{display:flex;align-items:center;gap:14px;flex:none}
 .header-unofficial{
   color:#c9d5e0;
