@@ -1149,27 +1149,26 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .picker-form>.screen-heading,.picker-form>.label,.picker-form>.search-wrap,.picker-form>.filters{max-width:760px}
   .group-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   .sticky-action{
-    position:sticky;
-    left:auto;
-    right:auto;
+    position:fixed;
+    left:max(308px,calc((100vw - 1160px)/2 + 308px));
+    right:max(18px,calc((100vw - 1160px)/2));
     bottom:0;
-    z-index:12;
-    width:min(760px,100%);
+    z-index:50;
+    width:auto;
+    height:auto;
     max-width:none;
-    margin:18px 0 0;
-    padding:12px 0;
+    min-height:0;
+    margin:0;
+    padding:6px 0 calc(6px + env(safe-area-inset-bottom));
     border-top:1px solid var(--line);
     background:var(--white);
-    box-shadow:0 -8px 22px rgba(31,39,75,.08);
+    box-shadow:0 -8px 22px rgba(31,39,75,.09);
     backdrop-filter:blur(12px);
-  }
-  html[data-theme=dark] .sticky-action{
-    background:var(--white);
-    box-shadow:0 -10px 24px rgba(0,0,0,.24);
   }
   .sticky-action .primary{
     width:320px;
     max-width:100%;
+    min-height:46px;
     margin:0;
   }
   .picker-submit{min-width:260px}
