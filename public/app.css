@@ -686,12 +686,11 @@ html[data-theme=dark] .group-code{color:var(--body)}
 .choice-dot .ui-icon{width:13px;height:13px}
 .group-row[aria-checked=true] .choice-dot{border-color:var(--secondary);background:var(--secondary);color:#fff}
 .show-more{width:100%;margin-top:12px}
-.sticky-action{
-  --action-bottom:0px;
+.picker-action{
   position:fixed;
   left:0;
   right:0;
-  bottom:var(--action-bottom);
+  bottom:0;
   z-index:50;
   margin:0;
   padding:10px 16px calc(10px + env(safe-area-inset-bottom));
@@ -700,16 +699,23 @@ html[data-theme=dark] .group-code{color:var(--body)}
   box-shadow:0 -10px 28px rgba(31,39,75,.12);
   backdrop-filter:blur(14px);
 }
-html[data-theme=dark] .sticky-action{background:rgba(17,26,43,.97);border-top-color:var(--line);box-shadow:0 -12px 30px rgba(0,0,0,.32)}
-.sticky-action .primary{
+html[data-theme=dark] .picker-action{
+  background:rgba(17,26,43,.97);
+  border-top-color:var(--line);
+  box-shadow:0 -12px 30px rgba(0,0,0,.32);
+}
+.picker-action .primary{
   width:min(420px,100%);
   margin:0 auto;
 }
 .context-action{
-  --action-bottom:calc(67px + env(safe-area-inset-bottom));
-  padding:9px 16px;
+  margin-top:14px;
+  padding:0;
 }
-.page.has-context-action{padding-bottom:calc(170px + env(safe-area-inset-bottom))}
+.context-action .primary,.context-action .secondary{
+  width:auto;
+  max-width:100%;
+}
 .picker-page{padding-bottom:calc(118px + env(safe-area-inset-bottom))}
 .picker-submit{width:100%;max-width:420px}
 
@@ -1177,8 +1183,7 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
     padding:9px 16px;
     box-shadow:0 8px 24px rgba(31,39,75,.14);
   }
-  .page.has-context-action{padding-bottom:112px}
-  .toast{bottom:28px}
+    .toast{bottom:28px}
 }
 
 @media(max-width:767.98px){
@@ -1370,10 +1375,13 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
     right:0;
     padding:9px 16px;
   }
-  html.android-app .picker-action{--action-bottom:0px}
-  html.android-app .context-action{--action-bottom:69px}
-  html.android-app .page.has-context-action{padding-bottom:164px}
-  html.android-app .picker-page{padding-bottom:100px}
+  html.android-app .picker-action{
+    left:0;
+    right:0;
+    bottom:0;
+    padding:9px 16px 9px;
+  }
+      html.android-app .picker-page{padding-bottom:100px}
 }
 
 @media(prefers-reduced-motion:reduce){
