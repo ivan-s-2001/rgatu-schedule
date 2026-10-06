@@ -1,0 +1,66 @@
+name: Publish signed Android 1.4.7
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-147.yml
+permissions:
+  contents: write
+concurrency:
+  group: publish-android-1.4.7
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Reconstruct verified signed APK
+        run: |
+          set -euo pipefail
+          command -v zstd >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq zstd; }
+          git fetch origin android-build-37450715712:refs/remotes/origin/android-build-37450715712
+          git show origin/android-build-37450715712:unsigned.apk > /tmp/RgatuLite-unsigned.apk
+          printf '%s  %s\n' '61ce203e1d063533a27b8e7acc13220520b697df5036b128aa4f1011fec0c74d' /tmp/RgatuLite-unsigned.apk | sha256sum -c -
+          cat .release/v1.4.7/patch.*.b64 | tr -d '\n' | base64 -d > /tmp/RgatuLite-1.4.7.zstpatch
+          printf '%s  %s\n' '8ebd71b6e94edf91d3c01486b6e28d4f12ff6606dc45a2b170c3b027ab547050' /tmp/RgatuLite-1.4.7.zstpatch | sha256sum -c -
+          mkdir -p docs/download
+          zstd -q -f -d --patch-from=/tmp/RgatuLite-unsigned.apk /tmp/RgatuLite-1.4.7.zstpatch -o docs/download/RgatuLite.apk
+          printf '%s  %s\n' 'daa4135413ac576a820bcf97a8333bb637e8c822c0e4a14055f6fb44dc8b3b83' docs/download/RgatuLite.apk | sha256sum -c -
+          test "$(stat -c '%s' docs/download/RgatuLite.apk)" = "177392"
+      - name: Update 1.4.7 public metadata
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          version={
+            "version":"1.4.7",
+            "versionCode":16,
+            "channel":"stable",
+            "updated":"2026-10-06",
+            "download":"./download/RgatuLite.apk",
+            "sha256":"daa4135413ac576a820bcf97a8333bb637e8c822c0e4a14055f6fb44dc8b3b83",
+            "bytes":177392,
+            "pwa":"https://rgatu-lite.ivan-s-2001.workers.dev/"
+          }
+          Path("docs/version.json").write_text(json.dumps(version,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          p=Path("docs/index.html")
+          text=p.read_text(encoding="utf-8").replace("1.4.6","1.4.7")
+          p.write_text(text,encoding="utf-8")
+          p=Path("scripts/test_download_page.cjs")
+          p.write_text(p.read_text(encoding="utf-8").replace("1.4.6","1.4.7"),encoding="utf-8")
+          PY
+      - name: Commit signed 1.4.7 release
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/download/RgatuLite.apk docs/version.json docs/index.html scripts/test_download_page.cjs
+          git diff --cached --quiet && exit 0
+          git commit -m "release: publish Android 1.4.7"
+          git pull --rebase origin main
+          git push origin HEAD:main
