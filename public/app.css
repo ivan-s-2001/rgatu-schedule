@@ -504,7 +504,7 @@ html[data-theme=dark] .date-title h1{color:var(--body)}
 .day[aria-current=date]{background:var(--dark);border-color:var(--dark);color:#fff}
 .day[aria-current=date] .day-name{color:#dbe4ee}
 .day[aria-current=date] .day-number{color:#fff}
-.day[aria-current=date] .day-dot:not(.no-lessons),
+.day[aria-current=date] .day-dot:not(.no-lessons){background:var(--aqua)}
 .day-tools{
   display:flex;
   align-items:center;
@@ -1065,10 +1065,10 @@ html[data-theme=dark] .nav-link:hover{color:var(--body)}
 .visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* dark: geometry never changes */
-html[data-theme=dark] .day[aria-current=date],
+html[data-theme=dark] .day[aria-current=date]{background:#dfe7f5;border-color:#dfe7f5;color:#111a2b}
 html[data-theme=dark] .day[aria-current=date] .day-name{color:#31454e}
 html[data-theme=dark] .day[aria-current=date] .day-number{color:#101827}
-html[data-theme=dark] .day[aria-current=date] .day-dot:not(.no-lessons),
+html[data-theme=dark] .day[aria-current=date] .day-dot:not(.no-lessons){background:var(--secondary)}
 html[data-theme=dark] .primary{background:#dfe7f5;border-color:#dfe7f5;color:#111a2b}
 html[data-theme=dark] .primary:hover:not(:disabled){background:var(--aqua);border-color:var(--aqua);color:#111a2b}
 html[data-theme=dark] .primary .ui-icon{color:var(--secondary)}
