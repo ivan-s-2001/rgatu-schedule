@@ -19,8 +19,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
-      - name: Verify schedule logic
-        run: node scripts/test_timetable.cjs
+      - name: Verify release metadata and schedule logic
+        run: |
+          python3 scripts/versioning.py check
+          node scripts/test_timetable.cjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
