@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build a small installable APK with the Android SDK, without Gradle dependencies."""
 import argparse
+import json
 import os
 from pathlib import Path
 import secrets
@@ -9,6 +10,7 @@ import subprocess
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+VERSION = json.loads((ROOT/'version.json').read_text(encoding='utf-8'))['version']
 
 def run(*arguments):
     subprocess.run([str(a) for a in arguments],check=True,cwd=ROOT)
@@ -57,7 +59,7 @@ def main():
         password_file.write_text(secrets.token_urlsafe(30),encoding='utf-8')
         password_file.chmod(0o600)
         run('keytool','-genkeypair','-keystore',key,'-storepass:file',password_file,'-keypass:file',password_file,'-alias','rgatu-pairs','-keyalg','RSA','-keysize','2048','-validity','10000','-dname','CN=RGATU Pairs, O=Student Community, C=RU')
-    final = ROOT/'dist/RgatuLite-1.4.7.apk'
+    final = ROOT/f'dist/RgatuLite-{VERSION}.apk'
     final.parent.mkdir(exist_ok=True)
     run(tools/'apksigner','sign','--ks',key,'--ks-pass','file:'+str(password_file),'--ks-key-alias','rgatu-pairs','--out',final,out/'aligned.apk')
     run(tools/'apksigner','verify','--verbose',final)
