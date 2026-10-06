@@ -16,7 +16,13 @@ const path=require('node:path');
   async function fits(label){
     const issues=await page.evaluate(()=>{
       const issues=[];
-      if(document.documentElement.scrollWidth>innerWidth+1)issues.push('page overflows');
+      if(document.documentElement.scrollWidth>innerWidth+1){
+        const offenders=[...document.querySelectorAll('body *')].map(el=>{
+          const r=el.getBoundingClientRect();
+          return {el,over:Math.max(0,r.right-innerWidth)+Math.max(0,-r.left),left:r.left,right:r.right,width:r.width};
+        }).filter(x=>x.over>1).sort((a,b)=>b.over-a.over).slice(0,5);
+        issues.push('page overflows '+document.documentElement.scrollWidth+'/'+innerWidth+' :: '+offenders.map(x=>x.el.className+':'+Math.round(x.left)+'..'+Math.round(x.right)+' w'+Math.round(x.width)).join(' | '));
+      }
       for(const el of document.querySelectorAll('h1,h2,h3,p,.group-code,.group-hint,.brand,.nav-link,.link-row,.kind,.date-title,.day,.month-day,.segments button,.schedule-tab,.unofficial-chip,.primary,.secondary,.subject-row,.live-summary,.live-place,.next-preview,.room-strong,.subgroup-note')){
         if(el.hidden||!el.getClientRects().length)continue;
         if(el.scrollWidth>el.clientWidth+2)issues.push(el.className+': '+el.textContent.slice(0,70));
