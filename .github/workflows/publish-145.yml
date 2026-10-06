@@ -29,7 +29,7 @@ jobs:
           cat .release/v1.4.5/patch.*.b64 | tr -d '\n' | base64 -d > /tmp/RgatuLite-1.4.5.zstpatch
           printf '%s  %s\n' '4dce802f8b262b9d94b60cc694927b3c6a489c8d52e1c237a75c8f5b1bca0016' /tmp/RgatuLite-1.4.5.zstpatch | sha256sum -c -
           mkdir -p docs/download
-          zstd -q -d --patch-from=/tmp/RgatuLite-unsigned.apk /tmp/RgatuLite-1.4.5.zstpatch -o docs/download/RgatuLite.apk
+          zstd -q -f -d --patch-from=/tmp/RgatuLite-unsigned.apk /tmp/RgatuLite-1.4.5.zstpatch -o docs/download/RgatuLite.apk
           printf '%s  %s\n' 'e03b97c9acc0b409bbf8e5094672e658f6e850191dd110f1b93e69923d6d22f4' docs/download/RgatuLite.apk | sha256sum -c -
           test "$(stat -c '%s' docs/download/RgatuLite.apk)" = "177392"
       - name: Update version metadata
