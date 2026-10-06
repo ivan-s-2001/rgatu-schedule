@@ -204,11 +204,15 @@ const path=require('node:path');
     await page.waitForSelector('.sticky-action');
     const desktopAction=await page.evaluate(()=>{
       const action=document.querySelector('.sticky-action').getBoundingClientRect();
+      const button=document.querySelector('.sticky-action .primary').getBoundingClientRect();
       const form=document.querySelector('.picker-form').getBoundingClientRect();
-      return {left:action.left,right:action.right,formLeft:form.left,formRight:form.right,viewport:innerWidth};
+      return {left:action.left,right:action.right,width:action.width,height:action.height,bottom:action.bottom,buttonWidth:button.width,buttonHeight:button.height,formLeft:form.left,formRight:form.right,viewport:innerWidth,viewportHeight:innerHeight};
     });
-    assert.ok(desktopAction.left>=desktopAction.formLeft-2,'desktop confirmation action follows content column');
-    assert.ok(desktopAction.right<=desktopAction.formRight+2,'desktop confirmation action does not span outside content');
+    assert.ok(desktopAction.left>=desktopAction.formLeft-2,'desktop confirmation action follows content area');
+    assert.ok(desktopAction.right<=desktopAction.formRight+2,'desktop confirmation action stays inside content area');
+    assert.ok(desktopAction.width<=322&&desktopAction.buttonWidth<=322,'desktop confirmation action is content-width');
+    assert.ok(desktopAction.height<=48&&desktopAction.buttonHeight<=48,'desktop confirmation action is content-height');
+    assert.ok(desktopAction.viewportHeight-desktopAction.bottom>=10&&desktopAction.viewportHeight-desktopAction.bottom<=16,'desktop confirmation action keeps compact bottom offset');
     await page.click('[data-action="cancel-group"]');
     await fits('desktop day '+size.width);
     await screenClick('[data-action="teachers"]','teachers');await fits('desktop teachers '+size.width);
