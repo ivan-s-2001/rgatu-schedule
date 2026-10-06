@@ -1,0 +1,23 @@
+{
+  "version": "1.4.7",
+  "versionCode": 16,
+  "channel": "stable",
+  "released": "2026-10-06",
+  "package": "ru.rgatu.pairs",
+  "android": {
+    "minSdk": 26,
+    "targetSdk": 35,
+    "apk": "RgatuLite.apk"
+  },
+  "artifact": {
+    "sha256": "daa4135413ac576a820bcf97a8333bb637e8c822c0e4a14055f6fb44dc8b3b83",
+    "bytes": 177392
+  },
+  "pwa": {
+    "cache": "rgatu-pairs-web-v1.4.7"
+  },
+  "urls": {
+    "pwa": "https://rgatu-lite.ivan-s-2001.workers.dev/",
+    "download": "https://ivan-s-2001.github.io/rgatu-schedule/download/RgatuLite.apk"
+  }
+}
