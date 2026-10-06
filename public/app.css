@@ -876,44 +876,6 @@ html[data-theme=dark] .subject-row{border-bottom-color:var(--line)}
 html[data-theme=dark] .day-group-heading strong{color:var(--body)}
 .day-group-heading span{display:block;color:var(--muted);font-size:12.5px}
 
-/* month calendar */
-.month-pager{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;gap:10px;margin:8px 0 20px}
-.month-pager h1{color:var(--dark);font-size:18px;font-weight:700;text-align:center;text-transform:capitalize}
-html[data-theme=dark] .month-pager h1{color:var(--body)}
-.month-weekdays,.month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.month-weekdays{margin-bottom:7px;color:var(--faint);font-size:11.5px;text-align:center}
-.month-day{
-  min-width:0;
-  min-height:50px;
-  padding:5px 1px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  border:1px solid transparent;
-  border-radius:8px;
-  color:var(--body);
-  font-size:14.5px;
-  font-variant-numeric:tabular-nums;
-}
-.month-day:hover{background:var(--hover)}
-.outside-month{color:var(--faint)}
-.outside-month:not([aria-current]){background:var(--soft)}
-.calendar-legend{display:flex;align-items:center;justify-content:center;gap:8px;margin:15px 0 22px;color:var(--muted);font-size:12.5px}
-.calendar-legend .day-dot{margin:0}
-.period-card{
-  width:100%;
-  padding:18px;
-  color:var(--body);
-  text-align:left;
-}
-.period-card>span{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
-.period-card strong{display:block;margin:7px 0;color:var(--dark);font-size:15px}
-html[data-theme=dark] .period-card strong{color:var(--body)}
-.period-card .ui-icon{width:15px;height:15px;color:var(--secondary)}
-.period-card>span:last-child .ui-icon{margin-left:auto}
-
 /* FZO bells */
 .segments{display:flex;border-bottom:1px solid var(--line2)}
 .segments button{
@@ -1237,18 +1199,6 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .day-main .date-description{margin-top:0}
   .day-main .lesson{padding:18px 20px}
 
-  .calendar-page{
-    display:grid;
-    grid-template-columns:minmax(0,1fr) 300px;
-    gap:0 36px;
-    align-content:start;
-  }
-  .calendar-page .back-row,
-  .calendar-page .month-pager,
-  .calendar-page .month-weekdays,
-  .calendar-page .month-grid,
-  .calendar-page .calendar-legend{grid-column:1}
-  .calendar-page .period-card{grid-column:2;grid-row:2/6;align-self:start}
 
   .search-page .search-wrap,.search-page #search-results,
   .teachers-page .search-wrap,.teachers-page #teacher-results{max-width:820px}
