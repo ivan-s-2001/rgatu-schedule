@@ -57,7 +57,7 @@ node scripts/test_offline.cjs
 
 Источник публикации в Settings → Pages — **GitHub Actions**. GitHub Pages включён. Страница скачивания публикуется по адресу https://ivan-s-2001.github.io/rgatu-schedule/ из `docs/`. На момент выпуска репозиторий публичный; ключ подписи и пароль в него не включены.
 
-Workflow `pages.yml` публикует `docs/` при изменении `main`. `release.yml` создаёт Android-релиз из уже подписанного APK. Чтобы выпустить новую версию: увеличить `versionCode`/`versionName`, сохранить ключ подписи, собрать APK, заменить `docs/download/RgatuLite.apk`, обновить `docs/version.json`, страницу и заметки релиза. При установке поверх версии 1.0.0 группа сохраняется.
+Workflow `pages.yml` публикует `docs/`, `release.yml` создаёт GitHub Release из уже подписанного APK. Для нового релиза меняется только корневой `version.json` (SemVer + следующий `versionCode`), затем выполняется `npm run version:sync`. После сборки и подписи в `version.json` фиксируются SHA-256 и размер APK, обновляется строка в `releases.json`, а `npm run version:check` обязан пройти до публикации. При установке поверх старых совместимых версий группа сохраняется.
 
 ## Публикация
 
