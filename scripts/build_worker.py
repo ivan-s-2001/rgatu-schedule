@@ -16,13 +16,11 @@ for path, relative in paths:
     mime = {'js':'application/javascript; charset=utf-8','json':'application/json; charset=utf-8','webmanifest':'application/manifest+json; charset=utf-8','svg':'image/svg+xml','html':'text/html; charset=utf-8','css':'text/css; charset=utf-8'}.get(path.suffix[1:],mimetypes.guess_type(str(path))[0] or 'application/octet-stream')
     content = path.read_bytes()
     assets[relative] = {'mime':mime,'body':base64.b64encode(gzip.compress(content,mtime=0)).decode(),'hash':hashlib.sha256(content).hexdigest()[:20]}
-apk = ROOT/'dist/RgatuLite-1.4.4.apk'
-if not apk.exists(): raise SystemExit('Build the Android APK before the Worker')
-content = apk.read_bytes()
-assets['/download/android'] = {'mime':'application/vnd.android.package-archive','body':base64.b64encode(content).decode(),'raw':True,'hash':hashlib.sha256(content).hexdigest()[:20]}
+APK_URL = 'https://ivan-s-2001.github.io/rgatu-schedule/download/RgatuLite.apk'
 template = r'''
 const ASSETS = __ASSETS__;
 const DECODED = new Map();
+const APK_URL = '__APK_URL__';
 function assetBytes(asset) {
   const existing = DECODED.get(asset.hash);
   if (existing) return existing;
@@ -47,6 +45,18 @@ export default {
     if (path === '/') path = '/index.html';
     if (path === '/install' || path === '/install/') path = '/install/index.html';
     if (path === '/install/download/RgatuLite.apk') path = '/download/android';
+    if (path === '/download/android') {
+      try {
+        const upstream = await fetch(APK_URL,{redirect:'follow',headers:{'Accept-Encoding':'identity','Cache-Control':'no-cache'}});
+        if (!upstream.ok) throw new Error('APK upstream '+upstream.status);
+        const headers = {'Content-Type':'application/vnd.android.package-archive','Content-Disposition':'attachment; filename="RgatuLite-1.4.4.apk"','Cache-Control':'no-store',...COMMON};
+        const length = upstream.headers.get('Content-Length');
+        if (length) headers['Content-Length'] = length;
+        return new Response(request.method === 'HEAD' ? null : upstream.body,{status:200,headers});
+      } catch (error) {
+        return new Response('Обновление временно недоступно',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store',...COMMON}});
+      }
+    }
     if (path === '/api/schedule') path = '/schedule.json';
     const asset = ASSETS[path];
     if (!asset) return new Response('Страница не найдена',{status:404,headers:{'Content-Type':'text/plain; charset=utf-8',...COMMON}});
@@ -69,9 +79,9 @@ export default {
   }
 };
 '''
-worker = template.replace('__ASSETS__',json.dumps(assets,separators=(',',':')))
+worker = template.replace('__ASSETS__',json.dumps(assets,separators=(',',':'))).replace('__APK_URL__',APK_URL)
 dist = ROOT/'dist'
 dist.mkdir(exist_ok=True)
 (dist/'worker.mjs').write_text(worker,encoding='utf-8')
-(dist/'deployment.json').write_text(json.dumps({'name':'rgatu-lite','url':'https://rgatu-lite.ivan-s-2001.workers.dev','workerBytes':len(worker.encode()),'apkBytes':apk.stat().st_size,'files':len(assets)},indent=2),encoding='utf-8')
+(dist/'deployment.json').write_text(json.dumps({'name':'rgatu-lite','url':'https://rgatu-lite.ivan-s-2001.workers.dev','workerBytes':len(worker.encode()),'apkSource':APK_URL,'files':len(assets)},indent=2),encoding='utf-8')
 print((dist/'deployment.json').read_text())
