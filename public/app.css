@@ -1173,7 +1173,6 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
     padding:9px 16px;
     box-shadow:0 8px 24px rgba(31,39,75,.14);
   }
-  .picker-submit{min-width:260px}
   .toast{bottom:28px}
 }
 
