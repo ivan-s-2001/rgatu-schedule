@@ -10,7 +10,7 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.split('?')[0] == '/api/schedule': self.path = '/schedule.json'
         if self.path.split('?')[0] == '/download/android':
-            path = ROOT/'dist/RgatuLite-1.4.3.apk'
+            path = ROOT/'dist/RgatuLite-1.4.4.apk'
             if not path.exists(): self.send_error(404);return
             content = path.read_bytes()
             self.send_response(200)
