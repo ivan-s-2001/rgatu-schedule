@@ -41,7 +41,7 @@ const path=require('node:path');
   await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');await page.waitForSelector('.date-title');
   const headerBox=await page.locator('.topbar').boundingBox();assert.ok(headerBox&&Math.abs(headerBox.y)<=1,'app header must start at viewport top');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
-  assert.equal(await page.locator('.nav-link').count(),3);assert.equal(await page.locator('a[href="#session"]').count(),0);
+  assert.equal(await page.locator('.nav-link').count(),3);assert.match(await page.locator('.brand-mobile-note').innerText(),/неофициальное/i);assert.equal(await page.locator('a[href="#session"]').count(),0);
   assert.equal(await page.locator('.brand-logo').evaluate(el=>el.tagName),'IMG','main FZO mark stays separate from Bootstrap UI icons');
   const iconAudit=await page.evaluate(()=>({
     count:document.querySelectorAll('svg.ui-icon.bi').length,
@@ -247,7 +247,7 @@ const path=require('node:path');
   await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await screenClick('a[href="#day"]','day');assert.ok(await page.locator('.lesson').count()>0);
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
   assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
-  const androidContext=await browser.newContext({viewport:{width:360,height:800},timezoneId:'Europe/Moscow',locale:'ru-RU',userAgent:'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36 RgatuLiteAndroid/1.4.0'});
+  const androidContext=await browser.newContext({viewport:{width:360,height:800},timezoneId:'Europe/Moscow',locale:'ru-RU',userAgent:'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36 RgatuLiteAndroid/1.4.1'});
   await androidContext.addInitScript(()=>{const D=Date;window.Date=class extends D{constructor(...args){super(...(args.length?args:['2026-10-05T12:45:00+03:00']));}static now(){return D.parse('2026-10-05T12:45:00+03:00');}};});
   const androidPage=await androidContext.newPage();
   await androidPage.goto(url);await androidPage.waitForSelector('#group-search');
