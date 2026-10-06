@@ -45,14 +45,14 @@ const path=require('node:path');
   assert.match(await page.locator('.unofficial-card').innerText(),/неофициальное[\s\S]*студентом 1 курса/i);
   assert.equal(await page.locator('.group-row').filter({hasText:/-(1|2)\\s/}).count(),0,'technical subgroup rows are hidden from group picker');
   await page.locator('.group-row').first().click();
-  const stickyAction=await page.evaluate(()=>{
+  const pickerConfirm=await page.evaluate(()=>{
     const el=document.querySelector('.picker-action');
     window.scrollTo(0,Math.max(0,document.documentElement.scrollHeight/2));
     const r=el.getBoundingClientRect();
     return {position:getComputedStyle(el).position,top:r.top,bottom:r.bottom,height:innerHeight};
   });
-  assert.equal(stickyAction.position,'fixed','group picker confirmation is fixed to viewport bottom on mobile');
-  assert.ok(Math.abs(stickyAction.bottom-stickyAction.height)<=2,'group confirmation action stays pinned to viewport bottom');
+  assert.equal(pickerConfirm.position,'fixed','group picker confirmation is fixed to viewport bottom on mobile');
+  assert.ok(Math.abs(pickerConfirm.bottom-pickerConfirm.height)<=2,'group picker confirmation stays pinned to viewport bottom');
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');await page.waitForSelector('.date-title');
   const headerBox=await page.locator('.topbar').boundingBox();assert.ok(headerBox&&Math.abs(headerBox.y)<=1,'app header must start at viewport top');
