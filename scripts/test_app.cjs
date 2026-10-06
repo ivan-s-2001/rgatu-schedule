@@ -254,7 +254,7 @@ const path=require('node:path');
   await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await screenClick('a[href="#day"]','day');assert.ok(await page.locator('.lesson').count()>0);
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
   assert.doesNotMatch(await page.locator('body').innerText(),/PWA|API|Cloudflare|кэш|база данных|JavaScript/i);
-  const androidContext=await browser.newContext({viewport:{width:360,height:800},timezoneId:'Europe/Moscow',locale:'ru-RU',userAgent:'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36 RgatuLiteAndroid/1.4.3'});
+  const androidContext=await browser.newContext({viewport:{width:360,height:800},timezoneId:'Europe/Moscow',locale:'ru-RU',userAgent:'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36 RgatuLiteAndroid/1.4.4'});
   await androidContext.addInitScript(()=>{const D=Date;window.Date=class extends D{constructor(...args){super(...(args.length?args:['2026-10-05T12:45:00+03:00']));}static now(){return D.parse('2026-10-05T12:45:00+03:00');}};});
   const androidPage=await androidContext.newPage();
   await androidPage.goto(url);await androidPage.waitForSelector('#group-search');
