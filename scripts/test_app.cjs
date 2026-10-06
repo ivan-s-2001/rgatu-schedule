@@ -58,6 +58,14 @@ const path=require('node:path');
   const headerBox=await page.locator('.topbar').boundingBox();assert.ok(headerBox&&Math.abs(headerBox.y)<=1,'app header must start at viewport top');
   assert.equal(await page.evaluate(()=>localStorage.getItem('rgatu.group')),'ЗВС-26');
   assert.equal(await page.locator('.nav-link').count(),3);assert.match(await page.locator('.brand-mobile-note').innerText(),/неофициальное/i);assert.equal(await page.locator('a[href="#session"]').count(),0);
+  const markupAudit=await page.evaluate(()=>{
+    const ids=[...document.querySelectorAll('[id]')].map(el=>el.id);
+    const duplicates=ids.filter((id,index)=>ids.indexOf(id)!==index);
+    const nestedInteractive=[...document.querySelectorAll('button button,button a,a button,a a')].map(el=>el.outerHTML.slice(0,120));
+    return {duplicates:[...new Set(duplicates)],nestedInteractive};
+  });
+  assert.deepEqual(markupAudit.duplicates,[],'rendered screen has no duplicate HTML ids');
+  assert.deepEqual(markupAudit.nestedInteractive,[],'interactive controls are not nested');
   assert.equal(await page.locator('.brand-logo').evaluate(el=>el.tagName),'IMG','main FZO mark stays separate from Bootstrap UI icons');
   const iconAudit=await page.evaluate(()=>({
     count:document.querySelectorAll('svg.ui-icon.bi').length,
@@ -117,11 +125,23 @@ const path=require('node:path');
   assert.match(await page.locator('.lesson').first().innerText(),/1 корпус[\s\S]*2 этаж/);
   assert.match(await page.locator('.live-summary').innerText(),/Культурология|3-215/);
   assert.match(await page.locator('.together').first().innerText(),/Вместе с ЗСС-26/);
+  assert.equal(await page.locator('.context-action').count(),0,'ordinary schedule day has no sticky CTA');
   await page.click('[data-action="next-day"]');assert.match(await page.locator('.date-title').innerText(),/6 октября/);
   await page.click('[data-action="prev-day"]');assert.match(await page.locator('.date-title').innerText(),/5 октября/);
   await page.click('.week [data-value="2026-10-10"]');
   assert.match(await page.locator('.lesson').last().innerText(),/13:45–15:20/);
-  await page.click('.week [data-value="2026-10-11"]');assert.match(await page.locator('.empty').innerText(),/Сегодня занятий нет|сессия/i);assert.ok(await page.locator('.empty .secondary').count()>0);
+  await page.click('.week [data-value="2026-10-11"]');assert.match(await page.locator('.empty').innerText(),/Сегодня занятий нет|сессия/i);
+  assert.equal(await page.locator('.empty button').count(),0,'empty-state card itself contains no floating CTA');
+  assert.equal(await page.locator('.context-action .primary').count(),1,'empty day exposes one bottom next-step action');
+  const contextualAction=await page.evaluate(()=>{
+    const action=document.querySelector('.context-action').getBoundingClientRect();
+    const nav=document.querySelector('.bottom-nav').getBoundingClientRect();
+    const style=getComputedStyle(document.querySelector('.context-action'));
+    return {position:style.position,actionBottom:action.bottom,navTop:nav.top,overlap:Math.max(0,action.bottom-nav.top)};
+  });
+  assert.equal(contextualAction.position,'fixed','contextual next-step action stays pinned while scrolling');
+  assert.ok(contextualAction.actionBottom<=contextualAction.navTop+1,'contextual CTA sits above bottom navigation');
+  assert.ok(contextualAction.overlap<=1,'contextual CTA does not cover navigation');
   await screenClick('.date-title','calendar');assert.equal(await page.locator('.month-day').count(),35);
   await page.click('[data-action="next-month"]');assert.match(await page.locator('.month-pager').innerText(),/ноябрь/i);
   await page.click('[data-action="prev-month"]');await screenClick('.month-grid [data-value="2026-10-14"]','day');
@@ -310,6 +330,6 @@ const path=require('node:path');
   await androidPage.screenshot({path:path.join(out,'android-day-dark.png'),fullPage:false,animations:'disabled'});
   await androidContext.close();
   assert.deepEqual(errors,[]);
-  console.log('PASS: sticky actions, Android safe insets, PWA and Android layouts, real groups with per-lesson subgroups, separate lesson cards, teacher mode, archive-style desktop, dark theme, offline and no clipping.');
+  console.log('PASS: logical sticky actions only, no action/nav overlap, valid rendered controls, Android safe insets, PWA and Android layouts, separate lesson cards, teacher mode, archive-style desktop, dark theme, offline and no clipping.');
   await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});
