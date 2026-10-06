@@ -1150,26 +1150,27 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .group-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   .sticky-action{
     position:fixed;
-    left:max(308px,calc((100vw - 1160px)/2 + 308px));
+    left:auto;
     right:max(18px,calc((100vw - 1160px)/2));
-    bottom:0;
+    bottom:calc(12px + env(safe-area-inset-bottom));
     z-index:50;
-    width:auto;
-    height:auto;
-    max-width:none;
+    width:max-content;
+    height:max-content;
+    max-width:calc(100vw - 36px);
     min-height:0;
     margin:0;
-    padding:6px 0 calc(6px + env(safe-area-inset-bottom));
-    border-top:1px solid var(--line);
-    background:var(--white);
-    box-shadow:0 -8px 22px rgba(31,39,75,.09);
-    backdrop-filter:blur(12px);
+    padding:0;
+    border:0;
+    background:transparent;
+    box-shadow:none;
+    backdrop-filter:none;
   }
   .sticky-action .primary{
     width:320px;
     max-width:100%;
     min-height:46px;
     margin:0;
+    box-shadow:0 8px 24px rgba(31,39,75,.16);
   }
   .picker-submit{min-width:260px}
   .toast{bottom:28px}
