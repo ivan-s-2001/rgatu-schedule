@@ -66,7 +66,7 @@ export default {
     const etag = '"m1-'+asset.hash+'"';
     const headers = {'Content-Type':asset.mime,'Cache-Control':url.pathname==='/api/schedule'?'no-store':'public, max-age=0, must-revalidate','ETag':etag,'Vary':'Accept-Encoding',...COMMON};
     if (path === '/sw.js') headers['Service-Worker-Allowed'] = '/';
-    if (path === '/download/android') headers['Content-Disposition'] = 'attachment; filename="RgatuLite-1.4.7.apk"';
+    if (path === '/download/android') headers['Content-Disposition'] = 'attachment; filename="__APK_FILENAME__"';
     if (request.headers.get('If-None-Match') === etag && url.pathname !== '/api/schedule') return new Response(null,{status:304,headers});
     const compressed = assetBytes(asset);
     let body;
