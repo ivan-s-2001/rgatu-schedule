@@ -1,0 +1,58 @@
+name: Publish Android 1.4.4
+on:
+  push:
+    branches: [main]
+    paths:
+      - release/signature-1.4.4.patch.zst
+      - .github/workflows/publish-144.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Reconstruct verified signed APK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zstd
+          git fetch origin android-build-37418492204:refs/remotes/origin/android-build-37418492204
+          git show origin/android-build-37418492204:unsigned.apk > /tmp/RgatuLite-unsigned.apk
+          echo "e9922ddcb0acd38db004bcfee7ffef0a5c7dadd21dec120d2d56021fa81cd4c4  /tmp/RgatuLite-unsigned.apk" | sha256sum -c -
+          zstd -d --patch-from=/tmp/RgatuLite-unsigned.apk release/signature-1.4.4.patch.zst -q -f -o docs/download/RgatuLite.apk
+          echo "e3c558aa57462585ab59f553c9225db5e179534c65114b99c98260c74636a70d  docs/download/RgatuLite.apk" | sha256sum -c -
+          test "$(stat -c %s docs/download/RgatuLite.apk)" = "177392"
+      - name: Switch install metadata to 1.4.4
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('docs/version.json')
+          data=json.loads(p.read_text())
+          data.update({'version':'1.4.4','versionCode':13,'updated':'2026-10-06','download':'./download/RgatuLite.apk','sha256':'e3c558aa57462585ab59f553c9225db5e179534c65114b99c98260c74636a70d','bytes':177392,'pwa':'https://rgatu-lite.ivan-s-2001.workers.dev/'})
+          p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+          for name in ['docs/index.html','scripts/test_download_page.cjs']:
+              q=Path(name)
+              t=q.read_text().replace('1.4.3','1.4.4')
+              q.write_text(t)
+          PY
+      - name: Publish release files to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/download/RgatuLite.apk docs/version.json docs/index.html scripts/test_download_page.cjs
+          git commit -m "release: publish signed Android 1.4.4"
+          git push origin HEAD:main
+      - name: Start final checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 3
+          gh workflow run release.yml --ref main
+          gh workflow run pages.yml --ref main
+          gh workflow run ui.yml --ref main
