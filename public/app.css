@@ -1083,7 +1083,7 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
     grid-column:2;
     grid-row:2;
     width:calc(100% - 308px);
-    min-height:calc(100dvh - 72px);
+    min-height:0;
     margin-left:308px;
     padding:40px 0 56px;
   }
@@ -1149,19 +1149,23 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .picker-form>.screen-heading,.picker-form>.label,.picker-form>.search-wrap,.picker-form>.filters{max-width:760px}
   .group-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   .sticky-action{
-    position:fixed;
-    left:max(308px,calc((100vw - 1160px)/2 + 308px));
-    right:max(18px,calc((100vw - 1160px)/2));
+    position:sticky;
+    left:auto;
+    right:auto;
     bottom:0;
-    z-index:50;
-    width:auto;
+    z-index:12;
+    width:min(760px,100%);
     max-width:none;
-    margin:0;
-    padding:12px 0 calc(12px + env(safe-area-inset-bottom));
+    margin:18px 0 0;
+    padding:12px 0;
     border-top:1px solid var(--line);
     background:var(--white);
-    box-shadow:0 -10px 28px rgba(31,39,75,.10);
-    backdrop-filter:blur(14px);
+    box-shadow:0 -8px 22px rgba(31,39,75,.08);
+    backdrop-filter:blur(12px);
+  }
+  html[data-theme=dark] .sticky-action{
+    background:var(--white);
+    box-shadow:0 -10px 24px rgba(0,0,0,.24);
   }
   .sticky-action .primary{
     width:320px;
