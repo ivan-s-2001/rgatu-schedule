@@ -1,6 +1,7 @@
 {
   "version": "1.4.5",
   "versionCode": 14,
+  "channel": "stable",
   "updated": "2026-10-06",
   "download": "./download/RgatuLite.apk",
   "sha256": "e03b97c9acc0b409bbf8e5094672e658f6e850191dd110f1b93e69923d6d22f4",
