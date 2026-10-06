@@ -2,15 +2,17 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import argparse
+import json
 import os
 
 ROOT = Path(__file__).resolve().parents[1]
+APP_VERSION = json.loads((ROOT/'version.json').read_text(encoding='utf-8'))['version']
 
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.split('?')[0] == '/api/schedule': self.path = '/schedule.json'
         if self.path.split('?')[0] == '/download/android':
-            path = ROOT/'dist/RgatuLite-1.4.7.apk'
+            path = ROOT/f'dist/RgatuLite-{APP_VERSION}.apk'
             if not path.exists(): self.send_error(404);return
             content = path.read_bytes()
             self.send_response(200)
