@@ -176,7 +176,7 @@
     const action = nextLesson
       ? `<button class="primary" data-action="date" data-value="${next}">Следующий учебный день ${icon('arrow')}</button>`
       : `<button class="primary" data-action="calendar">Открыть календарь ${icon('calendar')}</button>`;
-    return `<div class="empty day-empty">${icon('book')}<h2>${escape(message)}</h2>${nextLesson?`<div class="next-preview"><span>Дальше</span><strong>${escape(dateText(next,{weekday:'short',day:'numeric',month:'short'}))} · ${escape(nextTime)} · ${escape(nextLesson.subject)}${nextAudience?' · '+escape(nextAudience):''}</strong>${nextPlace?`<small>${escape(nextPlace)}</small>`:''}</div>`:`<p>${state.date > group.dates.at(-1) ? 'Прошедшие дни можно посмотреть в календаре.' : 'Дальше занятий в опубликованной сессии нет.'}</p>`}</div><div class="sticky-action context-action" aria-label="Действие дня">${action}</div>`;
+    return `<div class="empty day-empty">${icon('book')}<h2>${escape(message)}</h2>${nextLesson?`<div class="next-preview"><span>Дальше</span><strong>${escape(dateText(next,{weekday:'short',day:'numeric',month:'short'}))} · ${escape(nextTime)} · ${escape(nextLesson.subject)}${nextAudience?' · '+escape(nextAudience):''}</strong>${nextPlace?`<small>${escape(nextPlace)}</small>`:''}</div>`:`<p>${state.date > group.dates.at(-1) ? 'Прошедшие дни можно посмотреть в календаре.' : 'Дальше занятий в опубликованной сессии нет.'}</p>`}</div><div class="context-action" aria-label="Действие дня">${action}</div>`;
   }
   function renderDay() {
     const lessons = lessonsOn(state.date);
