@@ -126,40 +126,93 @@
     const bell = time.bells(lesson.date)[slot-1];
     return bell[0]+'–'+bell[1];
   };
-  const roomMeta = value => {
+  const roomParts = value => {
     const text = String(value || '').trim();
     const match = text.match(/^([Гг]|\d+)\s*[-–]\s*(\d{3,4}[А-ЯA-Z]?)/);
-    if (!match) return '';
-    const building = match[1].toUpperCase() === 'Г' ? 'Главный корпус' : match[1] + ' корпус';
-    const floor = (match[2].match(/\d/) || [])[0];
-    return floor ? building + ' · ' + floor + ' этаж' : building;
+    if (!match) return {text,building:'',floor:'',room:text};
+    const code = match[1].toUpperCase();
+    return {
+      text,
+      building: code === 'Г' ? 'Главный корпус' : code + ' корпус',
+      buildingCode: code,
+      floor: (match[2].match(/\d/) || [''])[0],
+      room: text
+    };
+  };
+  const roomMeta = value => {
+    const part = roomParts(value);
+    return part.building ? part.building + (part.floor ? ' · ' + part.floor + ' этаж' : '') : '';
   };
   const lessonPlace = lesson => {
     if (!lesson?.room) return '';
     const meta = roomMeta(lesson.room);
     return meta ? lesson.room + ' · ' + meta : lesson.room;
   };
+  const gapInfo = (prev,next) => {
+    if (!prev || !next || prev.date !== next.date) return null;
+    const from = time.bounds(prev), to = time.bounds(next);
+    const minutes = Math.round((to.startAt-from.endAt)/60000);
+    if (minutes <= 0) return null;
+    const skipped = next.slot > prev.slot + 1;
+    const title = skipped ? 'Окно' : minutes >= 30 ? 'Большой перерыв' : 'Перерыв';
+    const a = roomParts(prev.room), b = roomParts(next.room);
+    let transition = '';
+    if (prev.room && next.room) {
+      if (a.text === b.text) transition = 'Можно оставаться в аудитории';
+      else if (a.building && b.building && a.buildingCode === b.buildingCode) {
+        transition = a.floor && b.floor && a.floor !== b.floor
+          ? `Переход внутри ${b.building}: ${a.text} → ${b.text} · на ${b.floor} этаж`
+          : `Переход внутри ${b.building}: ${a.text} → ${b.text}`;
+      } else if (a.building && b.building) transition = `Переход: ${a.building} → ${b.building} · ${b.text}`;
+      else transition = `Переход: ${a.text || prev.room} → ${b.text || next.room}`;
+    } else if (next.room) transition = `Дальше: ${lessonPlace(next)}`;
+    return {minutes,title,from:from.end,to:to.start,transition};
+  };
+  const breakBlock = (prev,next) => {
+    const gap = gapInfo(prev,next);
+    if (!gap) return '';
+    return `<div class="lesson-break" aria-label="${escape(gap.title)}, ${gap.minutes} минут"><div class="break-rail"><span></span></div><div class="break-copy"><div class="break-head"><strong>${escape(gap.title)}</strong><span>${plural(gap.minutes,['минута','минуты','минут'])} · ${gap.from}–${gap.to}</span></div>${gap.transition?`<p class="break-transition">${icon('arrow')}${escape(gap.transition)}</p>`:''}<p class="break-next">Следующая пара в ${gap.to}</p></div></div>`;
+  };
   function lessonCards(lessons,{teacherMode=false,focusLessons=null}={}) {
     const focus = time.focus(focusLessons || groupLessons());
     const cards = lessons.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.slot-b.slot).map(lessonView);
-    return `<div class="lessons">${cards.map(l => {
+    return `<div class="lessons">${cards.map((l,index) => {
       const current = focus?.current && l.ids.includes(focus.lesson.id);
-      return `<article class="lesson${current?' lesson-current':''}" data-lesson-ids="${l.ids.join(',')}" aria-label="${l.slot} пара, ${rangeText(l)}, ${escape(l.subject)}"><div class="slot"><strong>${l.slot}</strong><span>пара</span><span class="current-dot" aria-label="Идёт сейчас"${current?'':' hidden'}></span></div><div class="lesson-body"><div class="lesson-time"><span>${rangeText(l)}</span><span class="kind ${l.type==='П'?'practice':l.type==='ЛР'?'lab':''}">${escape(typeLabel(l.type))}</span>${!teacherMode&&l.subgroup?`<span class="subgroup-note">${l.subgroup} подгруппа</span>`:''}<span class="current-word"${current?'':' hidden'}>Сейчас</span></div><h3>${escape(l.subject)}</h3><div class="lesson-details">${l.room?`<p class="room room-strong">${icon('room')}<span><strong>${escape(l.room)}</strong>${roomMeta(l.room)?`<small>${escape(roomMeta(l.room))}</small>`:''}</span></p>`:''}${!teacherMode&&l.teacher?`<p class="teacher">${icon('user')}<span>${escape(l.teacher)}</span></p>`:''}</div>${teacherMode?teacherGroups(l.peers,l.id):together(l.peers,l.id)}</div></article>`;
+      const card = `<article class="lesson${current?' lesson-current':''}" data-lesson-ids="${l.ids.join(',')}" aria-label="${l.slot} пара, ${rangeText(l)}, ${escape(l.subject)}"><div class="slot"><strong>${l.slot}</strong><span>пара</span><span class="current-dot" aria-label="Идёт сейчас"${current?'':' hidden'}></span></div><div class="lesson-body"><div class="lesson-time"><span>${rangeText(l)}</span><span class="kind ${l.type==='П'?'practice':l.type==='ЛР'?'lab':''}">${escape(typeLabel(l.type))}</span>${!teacherMode&&l.subgroup?`<span class="subgroup-note">${l.subgroup} подгруппа</span>`:''}<span class="current-word"${current?'':' hidden'}>Сейчас</span></div><h3>${escape(l.subject)}</h3><div class="lesson-details">${l.room?`<p class="room room-strong">${icon('room')}<span><strong>${escape(l.room)}</strong>${roomMeta(l.room)?`<small>${escape(roomMeta(l.room))}</small>`:''}</span></p>`:''}${!teacherMode&&l.teacher?`<p class="teacher">${icon('user')}<span>${escape(l.teacher)}</span></p>`:''}</div>${teacherMode?teacherGroups(l.peers,l.id):together(l.peers,l.id)}</div></article>`;
+      const next = cards[index+1];
+      return card + (next && next.date===l.date ? breakBlock(l,next) : '');
     }).join('')}</div>`;
   }
   function renderFocus() {
     const today = nowDate();
     if (state.date!==today && !(today<group.dates[0] && state.date===group.dates[0])) return '';
-    const focus = time.focus(groupLessons());
+    const ordered = groupLessons();
+    const focus = time.focus(ordered);
     if (!focus) return today<=group.dates.at(-1) ? '<div class="day-done"><strong>На сегодня всё</strong><span>Ближайших занятий в этой сессии больше нет.</span></div>' : '';
+
+    const now = Date.now();
+    const todayLessons = ordered.filter(l=>l.date===today);
+    const previous = todayLessons.filter(l=>time.bounds(l).endAt<=now).at(-1);
+    const nextToday = todayLessons.find(l=>time.bounds(l).startAt>now);
+    const between = !focus.current && previous && nextToday && now>=time.bounds(previous).endAt && now<time.bounds(nextToday).startAt;
+    if (between) {
+      const gap = gapInfo(previous,nextToday);
+      const remaining = Math.max(1,Math.ceil((time.bounds(nextToday).startAt-now)/60000));
+      const subgroup = subgroupFor(group.id,nextToday.id);
+      return `<button class="live-summary is-break" data-action="focus-lesson" data-value="${nextToday.date}" data-lesson-id="${nextToday.id}"><span class="live-symbol">${icon('clock')}</span><span class="live-copy"><span class="live-status"><span class="live-kicker">Сейчас · ${escape(gap?.title || 'Перерыв')}</span><span class="live-countdown">ещё ${plural(remaining,['минута','минуты','минут'])}</span></span><strong>Дальше · ${escape(nextToday.subject)}</strong><span class="live-meta">${time.bounds(nextToday).start} · ${nextToday.slot} пара${subgroup?' · '+subgroup+' подгруппа':''}</span>${nextToday.room?`<span class="live-place">${icon('room')}${escape(lessonPlace(nextToday))}</span>`:''}${gap?.transition?`<span class="live-transition">${icon('arrow')}${escape(gap.transition)}</span>`:''}</span>${icon('right')}</button>`;
+    }
+
     const {lesson,current,minutes} = focus;
     const sameDay = lesson.date===today;
     const subgroup = subgroupFor(group.id,lesson.id);
     const labelBase = current ? `Сейчас · ${lesson.slot} пара` : sameDay ? `Следующая · ${lesson.slot} пара` : lesson.date===shiftDate(today,1) ? 'Завтра' : 'Ближайшая · '+dateText(lesson.date);
     const label = subgroup ? labelBase + ' · ' + subgroup + ' подгруппа' : labelBase;
-    const timing = current ? `ещё ${plural(minutes,['минута','минуты','минут'])}` : sameDay ? `в ${focus.time.start} · через ${plural(minutes,['минуту','минуты','минут'])}` : `в ${focus.time.start}`;
+    const countdown = current ? `до конца ${plural(minutes,['минута','минуты','минут'])}` : sameDay ? `через ${plural(minutes,['минуту','минуты','минут'])}` : dateText(lesson.date,{weekday:'short',day:'numeric',month:'short'});
     const place = lessonPlace(lesson);
-    return `<button class="live-summary${current?' is-current':''}" data-action="focus-lesson" data-value="${lesson.date}" data-lesson-id="${lesson.id}"><span class="live-symbol">${current?'<span class="current-dot"></span>':icon('clock')}</span><span class="live-copy"><span class="live-kicker">${escape(label)} · ${escape(timing)}</span><strong>${escape(lesson.subject)}</strong>${place?`<span class="live-place">${icon('room')}${escape(place)}</span>`:''}</span>${icon('arrow')}</button>`;
+    const bounds = time.bounds(lesson);
+    const nextLesson = current ? todayLessons.find(l=>l.slot>lesson.slot && time.bounds(l).startAt>now) : null;
+    const after = nextLesson ? gapInfo(lesson,nextLesson) : null;
+    return `<button class="live-summary${current?' is-current':''}" data-action="focus-lesson" data-value="${lesson.date}" data-lesson-id="${lesson.id}"><span class="live-symbol">${current?'<span class="current-dot"></span>':icon('clock')}</span><span class="live-copy"><span class="live-status"><span class="live-kicker">${escape(label)}</span><span class="live-countdown">${escape(countdown)}</span></span><strong>${escape(lesson.subject)}</strong><span class="live-meta">${bounds.start}–${bounds.end}${lesson.teacher?' · '+escape(lesson.teacher):''}</span>${place?`<span class="live-place">${icon('room')}${escape(place)}</span>`:''}${nextLesson?`<span class="live-after">Дальше ${time.bounds(nextLesson).start} · ${escape(nextLesson.subject)}${after?.transition?' · '+escape(after.transition):''}</span>`:''}</span>${icon('right')}</button>`;
   }
   function renderBells() {
     const weekend = (state.bellKind || (time.isWeekend(state.date)?'weekend':'weekday'))==='weekend';
