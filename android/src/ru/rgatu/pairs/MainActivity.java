@@ -111,7 +111,7 @@ public final class MainActivity extends Activity {
     }
 
     private void handleBack() {
-        web.evaluateJavascript("(() => {if (['#calendar','#search','#group','#bells','#teachers','#profile'].includes(location.hash)) {location.hash='#day';return true;}return false;})()", result -> {
+        web.evaluateJavascript("(() => {if (['#search','#group','#bells','#teachers','#profile'].includes(location.hash)) {location.hash='#day';return true;}return false;})()", result -> {
             if (!"true".equals(result)) finish();
         });
     }
