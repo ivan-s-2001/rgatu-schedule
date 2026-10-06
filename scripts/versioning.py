@@ -2,6 +2,7 @@
 """Version policy and consistency checks for the RGATU FZO app."""
 from __future__ import annotations
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -52,6 +53,17 @@ def check():
     for key in expected:
         if actual[key] != expected[key]:
             errors.append(f"Android {key}={actual[key]} expected {expected[key]}")
+
+    apk_path = ROOT / "docs/download/RgatuLite.apk"
+    if not apk_path.exists():
+        errors.append("docs/download/RgatuLite.apk is missing")
+    else:
+        apk_bytes = apk_path.read_bytes()
+        apk_sha = hashlib.sha256(apk_bytes).hexdigest()
+        if len(apk_bytes) != m["artifact"]["bytes"]:
+            errors.append(f"APK bytes={len(apk_bytes)} expected {m['artifact']['bytes']}")
+        if apk_sha != m["artifact"]["sha256"]:
+            errors.append(f"APK sha256={apk_sha} expected {m['artifact']['sha256']}")
 
     docs = json.loads(read("docs/version.json"))
     docs_expected = {
