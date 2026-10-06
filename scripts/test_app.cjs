@@ -10,7 +10,7 @@ const path=require('node:path');
   // Keep future CI runs anchored to the supplied October session.
   await context.addInitScript(()=>{const D=Date;window.Date=class extends D{constructor(...args){super(...(args.length?args:['2026-10-05T12:45:00+03:00']));}static now(){return D.parse('2026-10-05T12:45:00+03:00');}};});
   const page=await context.newPage();
-  async function screenClick(selector,screen){await page.click(selector);await page.waitForSelector({day:'.date-title',calendar:'.month-grid',search:'#subject-search',bells:'.bells-list',profile:'.about-card',teachers:'.teachers-page'}[screen]);}
+  async function screenClick(selector,screen){await page.click(selector);await page.waitForSelector({day:'.date-title',search:'#subject-search',bells:'.bells-list',profile:'.about-card',teachers:'.teachers-page'}[screen]);}
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const out=path.resolve('build/screenshots');fs.mkdirSync(out,{recursive:true});
   async function fits(label){
@@ -87,7 +87,7 @@ const path=require('node:path');
   assert.equal(mobileChrome.navBg,'rgb(255, 255, 255)','light PWA bottom navigation is a light app surface');
   assert.equal(mobileChrome.activeBg,'rgb(246, 250, 250)','active PWA navigation uses FZO accent surface');
   await page.evaluate(()=>{window.__rgatuHeader=document.querySelector('.topbar');window.__rgatuNav=document.querySelector('.bottom-nav');});
-  for(const [selector,screen] of [['[data-action="teachers"]','teachers'],['a[href="#day"]','day'],['.date-title','calendar'],['a[href="#bells"]','bells'],['a[href="#profile"]','profile']]){
+  for(const [selector,screen] of [['[data-action="teachers"]','teachers'],['a[href="#day"]','day'],['a[href="#bells"]','bells'],['a[href="#profile"]','profile']]){
     await screenClick(selector,screen);
     const chrome=await page.evaluate(()=>{
       const h=document.querySelector('.topbar').getBoundingClientRect();
@@ -150,10 +150,7 @@ const path=require('node:path');
   });
   assert.equal(contextualAction.position,'static','contextual next-step action stays in normal content flow');
   assert.ok(contextualAction.bottom>contextualAction.top,'contextual next-step action has normal in-flow geometry');
-  await screenClick('.date-title','calendar');assert.equal(await page.locator('.month-day').count(),35);
-  await page.click('[data-action="next-month"]');assert.match(await page.locator('.month-pager').innerText(),/ноябрь/i);
-  await page.click('[data-action="prev-month"]');await screenClick('.month-grid [data-value="2026-10-14"]','day');
-  assert.match(await page.locator('.date-title').innerText(),/14 октября/);
+  assert.equal(await page.locator('[data-action="calendar"]').count(),0,'calendar action is removed from schedule');
   await page.click('[data-action="today"]');assert.match(await page.locator('.date-title').innerText(),/5 октября/);
   await screenClick('[data-action="search"]','search');assert.equal(await page.locator('.lesson').count(),0);
   await page.fill('#subject-search','Фоменко');assert.ok(await page.locator('.lesson').count()>0);
@@ -201,9 +198,8 @@ const path=require('node:path');
     await page.setViewportSize(size);
     for(const font of [16,24,32]){
       await page.addStyleTag({content:'html{font-size:'+font+'px!important}'});
-      for(const screen of ['day','teachers','calendar','bells','profile','search']){
+      for(const screen of ['day','teachers','bells','profile','search']){
         if(screen==='teachers'){await screenClick('a[href="#day"]','day');await screenClick('[data-action="teachers"]','teachers');}
-        else if(screen==='calendar'){await screenClick('a[href="#day"]','day');await screenClick('.date-title','calendar');}
         else if(screen==='search'){await screenClick('a[href="#day"]','day');await screenClick('[data-action="search"]','search');}
         else await screenClick('a[href="#'+screen+'"]',screen);
         await fits(screen+' '+size.width+' '+font);
@@ -307,7 +303,7 @@ const path=require('node:path');
   await page.setViewportSize({width:375,height:812});await page.addStyleTag({content:'html{font-size:16px!important}'});
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="theme"][data-value="light"]');
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="group"]');await page.fill('#group-search','ЗВС-26');await page.locator('.group-row').click();await page.click('#continue-group');await page.waitForSelector('.date-title');
-  await page.screenshot({path:path.join(out,'day.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="teachers"]','teachers');await page.screenshot({path:path.join(out,'teachers.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="group-schedule"]','day');await screenClick('.date-title','calendar');await page.screenshot({path:path.join(out,'calendar.png'),fullPage:false,animations:'disabled'});
+  await page.screenshot({path:path.join(out,'day.png'),fullPage:false,animations:'disabled'});await page.screenshot({path:path.join(out,'breaks.png'),fullPage:true,animations:'disabled'});await screenClick('[data-action="teachers"]','teachers');await page.screenshot({path:path.join(out,'teachers.png'),fullPage:false,animations:'disabled'});await screenClick('[data-action="group-schedule"]','day');
   await page.reload();assert.match(await page.locator('.group-switch').innerText(),/ЗВС-26/);
   await context.setOffline(true);await page.reload();await page.waitForSelector('.group-switch');await screenClick('a[href="#day"]','day');assert.ok(await page.locator('.lesson').count()>0);
   await screenClick('a[href="#profile"]','profile');await page.click('[data-action="refresh"]');await page.waitForFunction(()=>document.getElementById('notice').textContent.length>0);assert.match(await page.locator('#notice').innerText(),/нет интернета|Не удалось обновить/);
@@ -338,6 +334,6 @@ const path=require('node:path');
   await androidPage.screenshot({path:path.join(out,'android-day-dark.png'),fullPage:false,animations:'disabled'});
   await androidContext.close();
   assert.deepEqual(errors,[]);
-  console.log('PASS: logical sticky actions only, no action/nav overlap, valid rendered controls, Android safe insets, PWA and Android layouts, separate lesson cards, teacher mode, archive-style desktop, dark theme, offline and no clipping.');
+  console.log('PASS: original day schedule flow, inline breaks/windows, no calendar screen, logical actions only, Android safe insets, PWA and Android layouts, separate lesson cards, teacher mode, archive-style desktop, dark theme, offline and no clipping.');
   await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});
