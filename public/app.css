@@ -686,6 +686,19 @@ html[data-theme=dark] .group-code{color:var(--body)}
 .choice-dot .ui-icon{width:13px;height:13px}
 .group-row[aria-checked=true] .choice-dot{border-color:var(--secondary);background:var(--secondary);color:#fff}
 .show-more{width:100%;margin-top:12px}
+.sticky-action{
+  position:sticky;
+  bottom:calc(10px + env(safe-area-inset-bottom));
+  z-index:32;
+  width:min(440px,calc(100% + 12px));
+  margin:10px -6px 8px;
+  padding:8px 6px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--white);
+  box-shadow:0 -8px 24px rgba(31,39,75,.10);
+}
+html[data-theme=dark] .sticky-action{box-shadow:0 -10px 28px rgba(0,0,0,.28)}
 .picker-submit{width:100%;max-width:420px}
 
 /* subject / document-style lists */
@@ -1129,6 +1142,17 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   .picker-form{width:100%;margin:0}
   .picker-form>.screen-heading,.picker-form>.label,.picker-form>.search-wrap,.picker-form>.filters{max-width:760px}
   .group-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .sticky-action{
+    position:static;
+    width:auto;
+    max-width:420px;
+    margin:18px 0 8px;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+  }
   .picker-submit{width:auto;min-width:260px}
   .toast{bottom:28px}
 }
@@ -1317,6 +1341,14 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
   html.android-app .hero-link{width:100%;min-height:48px}
   html.android-app .hero-card{padding:18px;border-radius:12px;box-shadow:none}
   html.android-app .picker-page{padding:26px 16px 36px}
+  html.android-app .sticky-action{
+    bottom:10px;
+    width:calc(100% + 8px);
+    margin-left:-4px;
+    margin-right:-4px;
+    padding:7px 4px;
+    border-radius:11px;
+  }
 }
 
 @media(prefers-reduced-motion:reduce){
