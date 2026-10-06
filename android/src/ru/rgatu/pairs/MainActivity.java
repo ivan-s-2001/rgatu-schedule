@@ -38,6 +38,16 @@ public final class MainActivity extends Activity {
         }
         FrameLayout container = new FrameLayout(this);
         container.setBackgroundColor(header);
+        if (Build.VERSION.SDK_INT >= 30) {
+            getWindow().setDecorFitsSystemWindows(false);
+            container.setOnApplyWindowInsetsListener((view,insets) -> {
+                android.graphics.Insets bars = insets.getInsetsIgnoringVisibility(
+                    android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.displayCutout()
+                );
+                view.setPadding(bars.left,bars.top,bars.right,bars.bottom);
+                return insets;
+            });
+        }
         web = new WebView(this);
         web.setBackgroundColor(background);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
@@ -95,6 +105,7 @@ public final class MainActivity extends Activity {
         });
         container.addView(web,new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT));
         setContentView(container);
+        if (Build.VERSION.SDK_INT >= 30) container.requestApplyInsets();
         if (Build.VERSION.SDK_INT >= 33) getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0,this::handleBack);
         if (savedState == null || web.restoreState(savedState) == null) web.loadUrl(APP_URL);
     }
