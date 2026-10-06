@@ -185,13 +185,24 @@ const appVersion=JSON.parse(fs.readFileSync('version.json','utf8')).version;
     const lum=c=>{const a=c.map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*a[0]+.7152*a[1]+.0722*a[2];};
     const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
     const bg=el=>{for(let n=el;n;n=n.parentElement){const v=getComputedStyle(n).backgroundColor;if(v&&!/rgba\\(0, 0, 0, 0\\)|transparent/.test(v))return rgb(v);}return [11,16,32];};
-    const selectors=['.lesson h3','.teacher','.live-copy strong','.live-place','.search','.schedule-tab[aria-selected="true"]','.group-row[aria-checked="true"]','.nav-link[aria-current="page"]','.unofficial-card p','.day[aria-current="date"] .day-number'];
+    const selectors=['.lesson h3','.teacher','.live-copy strong','.live-place','.search','.schedule-tab[aria-selected="true"]','.group-row[aria-checked="true"]','.nav-link[aria-current="page"]','.unofficial-card p'];
     return selectors.flatMap(sel=>{const el=document.querySelector(sel);if(!el)return [];const fg=rgb(getComputedStyle(el).color),back=bg(el);if(!fg||!back)return [sel+': unknown color'];const r=ratio(fg,back);return r<4.5?[sel+': '+r.toFixed(2)]:[];});
   });
   assert.deepEqual(contrastIssues,[],'dark theme text contrast');
-  const selectedDayDot=await page.locator('.day[aria-current="date"] .day-dot:not(.no-lessons)').evaluate(el=>{const r=el.getBoundingClientRect();return {width:r.width,height:r.height,borderTop:getComputedStyle(el).borderTopWidth};});
-  assert.ok(selectedDayDot.width<=6&&selectedDayDot.height<=6&&Math.abs(selectedDayDot.width-selectedDayDot.height)<=1&&selectedDayDot.borderTop==='0px','selected day lesson marker stays a compact dot');
   await screenClick('a[href="#day"]','day');
+  const selectedDayState=await page.evaluate(()=>{
+    const rgb=value=>{const m=value.match(/\d+(?:\.\d+)?/g);return m?m.slice(0,3).map(Number):null;};
+    const lum=c=>{const a=c.map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*a[0]+.7152*a[1]+.0722*a[2];};
+    const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+    const day=document.querySelector('.day[aria-current="date"]');
+    const number=day?.querySelector('.day-number');
+    const dot=day?.querySelector('.day-dot:not(.no-lessons)');
+    if(!day||!number||!dot)return null;
+    const rect=dot.getBoundingClientRect();
+    return {contrast:ratio(rgb(getComputedStyle(number).color),rgb(getComputedStyle(day).backgroundColor)),width:rect.width,height:rect.height,borderTop:getComputedStyle(dot).borderTopWidth};
+  });
+  assert.ok(selectedDayState&&selectedDayState.contrast>=4.5,'selected day stays legible in dark theme');
+  assert.ok(selectedDayState.width<=6&&selectedDayState.height<=6&&Math.abs(selectedDayState.width-selectedDayState.height)<=1&&selectedDayState.borderTop==='0px','selected day lesson marker stays a compact dot');
   const fzoTokens=await page.evaluate(()=>({
     lessonRadius:getComputedStyle(document.querySelector('.lesson')).borderRadius
   }));
