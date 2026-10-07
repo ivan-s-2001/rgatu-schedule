@@ -4,7 +4,10 @@
   const time = window.RGATU_TIME;
   const root = document.getElementById('app');
   const isAndroid = /RgatuLiteAndroid\//.test(navigator.userAgent);
+  const integrationParams = new URLSearchParams(location.search);
+  const isEmbedded = integrationParams.get('embed') === '1';
   document.documentElement.classList.toggle('android-app', isAndroid);
+  document.documentElement.classList.toggle('embed-mode', isEmbedded);
   const read = (key, fallback = null) => { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, value); return true; } catch { return false; } };
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -49,8 +52,9 @@
   let groupsById = new Map(data.groups.map(g => [g.id,g]));
   const groupById = id => groupsById.get(id);
   const canonicalGroupId = id => String(id || '').replace(/-(1|2)$/,'');
+  const requestedGroupId = canonicalGroupId(integrationParams.get('group'));
   const savedGroupId = canonicalGroupId(read('rgatu.group'));
-  let group = groupById(savedGroupId);
+  let group = groupById(requestedGroupId) || groupById(savedGroupId);
   if (group && read('rgatu.group') !== group.id) write('rgatu.group',group.id);
   const initialDate = g => {
     const today = nowDate();
