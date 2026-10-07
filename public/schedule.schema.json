@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rgatu-lite.ivan-s-2001.workers.dev/api/v1/schema.json",
+  "title": "University Schedule Canonical Dataset",
+  "type": "object",
+  "required": [
+    "schema",
+    "version",
+    "updated",
+    "title",
+    "timezone",
+    "groups",
+    "lessons"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "version": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date"
+    },
+    "title": {
+      "type": "string"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "institution": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "unit"
+      ],
+      "additionalProperties": true
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "course",
+          "dates",
+          "lessons"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "course": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          "lessons": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "subgroups": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "enum": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "lessons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "slot",
+          "subject"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "slot": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "subject": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "teacher": {
+            "type": "string"
+          },
+          "room": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
