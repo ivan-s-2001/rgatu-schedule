@@ -9,6 +9,9 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
+ROOT = Path(__file__).resolve().parents[1]
+INSTITUTION_PROFILE = json.loads((ROOT / 'public' / 'institution.json').read_text(encoding='utf-8'))
+
 
 def clean(value):
     return re.sub(r"\s+", " ", str(value or "")).strip()
@@ -50,7 +53,10 @@ def parse_lesson(raw, headers):
 
 def import_schedule(path):
     workbook = load_workbook(path, data_only=True)
-    sheets = [s for s in workbook if s.title.startswith("Расписание ФЗО")]
+    schedule_profile = INSTITUTION_PROFILE.get("schedule", {})
+    sheet_prefix = schedule_profile.get("sheetPrefix", "Расписание ФЗО")
+    course_reference_year = int(schedule_profile.get("courseReferenceYear", datetime.now().year))
+    sheets = [s for s in workbook if s.title.startswith(sheet_prefix)]
     raw_headers = sorted({clean(s.cell(1, c).value) for s in sheets for c in range(4, s.max_column + 1) if s.cell(1, c).value}, key=len, reverse=True)
     base_ids = sorted({group_header(header)[0] for header in raw_headers})
     groups_by_id = {}
@@ -68,7 +74,7 @@ def import_schedule(path):
                 continue
             group_id, subgroup = group_header(source_group)
             year = int(re.search(r"-(\d{2})", group_id).group(1))
-            course = 2026 - (2000 + year) + 1
+            course = course_reference_year - (2000 + year) + 1
             group = groups_by_id.setdefault(group_id, {"id": group_id, "course": course, "dates": [], "lessons": [], "subgroups": {}})
             group["dates"] = sorted(set(group["dates"]) | set(dates))
             current_date = None
@@ -126,8 +132,9 @@ def import_schedule(path):
         "version": updated + "-" + digest[:12] + "-g44",
         "updated": updated,
         "title": "Осенняя установочная сессия 2026/27",
-        "timezone": "Europe/Moscow",
-        "source": {"file": path.name, "sha256": digest},
+        "timezone": INSTITUTION_PROFILE.get("institution", {}).get("timezone", "Europe/Moscow"),
+        "institution": {"id": INSTITUTION_PROFILE.get("institution", {}).get("id", "unknown"), "unit": INSTITUTION_PROFILE.get("unit", {}).get("id", "unknown")},
+        "source": {"file": path.name, "sha256": digest, "adapter": schedule_profile.get("sourceAdapter", "xlsx")},
         "groups": groups,
         "lessons": lessons,
     }
@@ -141,6 +148,9 @@ def import_schedule(path):
         "sourceCells": occupied,
         "courses": sorted({g["course"] for g in groups}),
         "unparsed": unparsed,
+        "adapter": schedule_profile.get("sourceAdapter", "xlsx"),
+        "institution": INSTITUTION_PROFILE.get("institution", {}).get("id", "unknown"),
+        "unit": INSTITUTION_PROFILE.get("unit", {}).get("id", "unknown"),
     }
     assert {g["id"] for g in groups} == set(base_ids), "Base groups lost or duplicated"
     assert not any(re.search(r"-[12]$", g["id"]) for g in groups), "Technical subgroup leaked into group selector"
