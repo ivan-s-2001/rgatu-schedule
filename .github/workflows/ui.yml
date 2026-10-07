@@ -37,6 +37,9 @@ jobs:
         run: |
           python3 scripts/versioning.py check
           node scripts/test_timetable.cjs
+          python3 scripts/build_worker.py
+          node --check dist/worker.mjs
+          node scripts/test_integration_contract.cjs
           python3 scripts/serve.py > /tmp/rgatu-preview.log 2>&1 &
           node scripts/test_app.cjs
           node scripts/test_download_page.cjs
