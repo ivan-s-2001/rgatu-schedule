@@ -23,6 +23,9 @@ jobs:
         run: |
           python3 scripts/versioning.py check
           node scripts/test_timetable.cjs
+          python3 scripts/build_worker.py
+          node --check dist/worker.mjs
+          node scripts/test_integration_contract.cjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
