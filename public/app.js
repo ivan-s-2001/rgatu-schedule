@@ -54,7 +54,7 @@
   const canonicalGroupId = id => String(id || '').replace(/-(1|2)$/,'');
   const requestedGroupId = canonicalGroupId(integrationParams.get('group'));
   const savedGroupId = canonicalGroupId(read('rgatu.group'));
-  let group = groupById(requestedGroupId) || groupById(savedGroupId);
+  let group = requestedGroupId ? groupById(requestedGroupId) : groupById(savedGroupId);
   if (group && read('rgatu.group') !== group.id) write('rgatu.group',group.id);
   const initialDate = g => {
     const today = nowDate();
