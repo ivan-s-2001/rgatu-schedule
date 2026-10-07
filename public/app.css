@@ -1511,3 +1511,21 @@ html[data-theme=dark] .toast{background:#eef3fb;color:#101827}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+
+/* University-system integration mode: same schedule core without standalone app chrome. */
+html.embed-mode .topbar,
+html.embed-mode .bottom-nav{display:none!important}
+html.embed-mode .shell:not(.picker-shell){display:block;min-height:100dvh;overflow:visible}
+html.embed-mode .picker-hero{display:none}
+html.embed-mode .page,
+html.embed-mode .picker-page{
+  width:min(920px,100%);
+  min-height:100dvh;
+  margin:0 auto;
+  padding-top:20px;
+}
+@media(max-width:767.98px){
+  html.embed-mode .page,
+  html.embed-mode .picker-page{padding:14px 13px 24px}
+}
