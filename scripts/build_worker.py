@@ -109,7 +109,8 @@ export default {
     const asset = ASSETS[path];
     if (!asset) return new Response('Страница не найдена',{status:404,headers:{'Content-Type':'text/plain; charset=utf-8',...COMMON}});
     const etag = '"m1-'+asset.hash+'"';
-    const headers = {'Content-Type':asset.mime,'Cache-Control':url.pathname==='/api/schedule'?'no-store':'public, max-age=0, must-revalidate','ETag':etag,'Vary':'Accept-Encoding',...(url.pathname==='/api/schedule'?API_HEADERS:COMMON)};
+    const apiAsset = url.pathname==='/api/schedule' || url.pathname.startsWith('/api/v1/');
+    const headers = {'Content-Type':asset.mime,'Cache-Control':url.pathname==='/api/schedule'?'no-store':'public, max-age=0, must-revalidate','ETag':etag,'Vary':'Accept-Encoding',...(apiAsset?API_HEADERS:COMMON)};
     if (path === '/sw.js') headers['Service-Worker-Allowed'] = '/';
     if (path === '/download/android') headers['Content-Disposition'] = 'attachment; filename="__APK_FILENAME__"';
     if (request.headers.get('If-None-Match') === etag && url.pathname !== '/api/schedule') return new Response(null,{status:304,headers});
